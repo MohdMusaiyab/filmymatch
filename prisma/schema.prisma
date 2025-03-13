@@ -7,8 +7,34 @@
 generator client {
   provider = "prisma-client-js"
 }
-
+//Here use the .env.local file instead of .env
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum SecurityQuestion {
+  MOTHERS_MAIDEN_NAME
+  FIRST_PET_NAME
+  BIRTH_CITY
+  FAVORITE_TEACHER
+  CHILDHOOD_NICKNAME
+  FIRST_CAR_MODEL
+  HIGH_SCHOOL_MASCOT
+}
+
+model User {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  password         String
+  username         String           @unique
+  securityQuestion SecurityQuestion
+  securityAnswer   String
+  bio              String?
+  phone            String?
+  avatar           String?
+  emailVerified    Boolean          @default(false)
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 }
