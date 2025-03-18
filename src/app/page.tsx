@@ -2,10 +2,15 @@
 import React, { useState } from "react";
 import PasswordInput from "./components/inputFields/PasswordInput";
 import EmailInput from "./components/inputFields/EmailInput";
+import PhoneNumberInput from "./components/inputFields/PhoneNumberInput";
+import TextInput from "./components/inputFields/TextInput";
 
 const HomePage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [countryCode, setCountryCode] = useState("+1");
+  const [name, setName] = useState("");
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -15,15 +20,29 @@ const HomePage: React.FC = () => {
     setPassword(e.target.value);
   };
 
-  // Check if both email and password are filled
-  const isFormValid = email.trim() !== "" && password.trim() !== "";
+    const handlePhoneNumberChange = (value: string, country: any) => {
+    setPhoneNumber(value);
+  };
 
-  // Handle form submission
+  const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCountryCode(e.target.value);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+  };
+
+  // Check if all fields are filled
+  const isFormValid =
+    email.trim() !== "" &&
+    password.trim() !== "" &&
+    phoneNumber.trim() !== "" &&
+    name.trim() !== "";
+
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
     if (isFormValid) {
-      // Perform form submission logic here
-      console.log("Form submitted with:", { email, password });
+      console.log("Form submitted with:", { email, password, phoneNumber, countryCode, name });
     } else {
       console.log("Please fill out all fields.");
     }
@@ -32,10 +51,16 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center text-white">
-          Login
-        </h1>
+        <h1 className="text-2xl font-bold mb-6 text-center text-white">Login</h1>
         <form onSubmit={handleSubmit}>
+          <TextInput
+            label="Full Name"
+            placeholder="Enter your full name"
+            value={name}
+            onChange={handleNameChange}
+            id="name"
+            name="name"
+          />
           <EmailInput
             label="Email"
             placeholder="Enter your email"
@@ -53,13 +78,18 @@ const HomePage: React.FC = () => {
             id="password"
             name="password"
           />
+          <PhoneNumberInput
+            label="Phone Number"
+            value={phoneNumber}
+            onChange={handlePhoneNumberChange}
+            id="phone"
+            name="phone"
+          />
           <button
             type="submit"
-            disabled={!isFormValid} // Disable button if form is not valid
+            disabled={!isFormValid}
             className={`w-full mt-4 px-4 py-2 bg-[#94BBFF] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#94BBFF] focus:ring-opacity-50 ${
-              !isFormValid
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-blue-600"
+              !isFormValid ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
             }`}
           >
             Submit
