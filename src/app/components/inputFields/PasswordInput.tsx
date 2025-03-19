@@ -45,6 +45,29 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
     return () => clearTimeout(timer);
   }, [value]);
 
+  // Helper function to determine strength label
+  const getStrengthLabel = () => {
+    if (strength === 0) return "Weak";
+    if (strength <= 2) return "Weak";
+    if (strength <= 3) return "Average";
+    if (strength === 4) return "Good";
+    return "Strong";
+  };
+
+  // Helper function to determine bar color based on strength
+  const getStrengthColor = () => {
+    if (strength === 0) return "bg-red-500";
+    if (strength <= 2) return "bg-red-500";
+    if (strength <= 3) return "bg-yellow-500";
+    if (strength === 4) return "bg-blue-400";
+    return "bg-green-500";
+  };
+
+  // Calculate width percentage based on strength
+  const getStrengthWidth = () => {
+    return `${Math.max(5, (strength / 5) * 100)}%`;
+  };
+
   return (
     <div className={`mb-4 ${className}`}>
       {label && (
@@ -79,15 +102,16 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
         </button>
       </div>
 
-      {/* Password Strength Indicator */}
-      {showStrength && (
+      {/* Password Strength Indicator as a horizontal bar */}
+      {showStrength && value.length > 0 && (
         <div id="password-strength" className="mt-2">
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${strength >= 1 ? "bg-green-500" : "bg-gray-300"}`}></div>
-            <div className={`w-2 h-2 rounded-full ${strength >= 3 ? "bg-green-500" : "bg-gray-300"}`}></div>
-            <div className={`w-2 h-2 rounded-full ${strength >= 5 ? "bg-green-500" : "bg-gray-300"}`}></div>
-            <span className="text-xs text-white">{["Weak", "Medium", "Strong"][Math.min(strength - 1, 2)]}</span>
+          <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className={`h-full ${getStrengthColor()} transition-all duration-300 ease-in-out`} 
+              style={{ width: getStrengthWidth() }}
+            ></div>
           </div>
+          <p className="text-xs text-white mt-1 text-right">{getStrengthLabel()}</p>
         </div>
       )}
 
