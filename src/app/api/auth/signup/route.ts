@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { UserSchema } from "@/schemas/users";
+import { SignupSchema } from "@/schemas/auth";
+import { hashData } from "@/lib/auth"
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     console.log("Request body:", safeBody);
 
     // Validate the request body using Zod
-    const validation = UserSchema.safeParse(body);
+    const validation = SignupSchema.safeParse(body);
     if (!validation.success) {
       console.log("Validation errors:", validation.error.errors);
 
@@ -63,8 +63,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash the password, securityAnswer
+    const hashedPassword = await hashData(password);
+    const hashedSecurityAnswer = await hashData(securityAnswer);
 
     // Create the user in the database
     const newUser = await prisma.user.create({
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
         password: hashedPassword,
         phone,
         securityQuestion,
-        securityAnswer,
+        securityAnswer: hashedSecurityAnswer,
       },
     });
 

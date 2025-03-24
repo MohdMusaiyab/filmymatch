@@ -4,12 +4,18 @@ import PasswordInput from "@/app/components/inputFields/PasswordInput";
 import EmailInput from "@/app/components/inputFields/EmailInput";
 import PhoneNumberInput from "@/app/components/inputFields/PhoneNumberInput";
 import TextInput from "@/app/components/inputFields/TextInput";
+import Dropdown from "@/app/components/inputFields/Dropdown";
+import api from "@/lib/api";
+
+import { useRouter } from 'next/navigation'; 
+
 
 const SignupPage: React.FC = () => {
+  const router = useRouter(); // Initialize router
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [name, setName] = useState("");
+  const [username, setUserName] = useState("");
   const [securityQuestion, setSecurityQuestion] = useState("MOTHERS_MAIDEN_NAME");
   const [securityAnswer, setSecurityAnswer] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -32,8 +38,8 @@ const SignupPage: React.FC = () => {
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
-    setErrors((prev) => ({ ...prev, name: "" }));
+    setUserName(e.target.value);
+    setErrors((prev) => ({ ...prev, username: "" }));
   };
 
   const handleSecurityQuestionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -50,7 +56,7 @@ const SignupPage: React.FC = () => {
     email.trim() !== "" &&
     password.trim() !== "" &&
     phoneNumber.trim() !== "" &&
-    name.trim() !== "" &&
+    username.trim() !== "" &&
     securityQuestion.trim() !== "" &&
     securityAnswer.trim() !== "";
 
@@ -68,39 +74,36 @@ const SignupPage: React.FC = () => {
       const payload = {
         email,
         password,
-        username: name,
+        username: username,
         phone: phoneNumber,
         securityQuestion,
         securityAnswer,
       };
 
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      // Axios implementation
+      const { data } = await api.post('/auth/signup', payload);
 
-      const data = await response.json();
+      console.log("Signup successful:", data);
+      router.push("/");
+    } catch (error: any) {
+      console.error("Error during signup:", error);
 
-      if (response.ok) {
-        console.log("Signup successful:", data);
-        window.location.href = "/";
-      } else {
-        if (data.errors) {
+      // Axios error handling
+      if (error.response) {
+        // Server responded with error status (4xx/5xx)
+        if (error.response.data.errors) {
           const fieldErrors: { [key: string]: string } = {};
-          data.errors.forEach((err: { field: string; message: string }) => {
+          error.response.data.errors.forEach((err: { field: string; message: string }) => {
             fieldErrors[err.field] = err.message;
           });
           setErrors(fieldErrors);
         } else {
-          setErrors({ form: data.message });
+          setErrors({ form: error.response.data.message });
         }
+      } else {
+        // Network or other errors
+        setErrors({ form: "An error occurred during signup. Please try again." });
       }
-    } catch (error) {
-      console.error("Error during signup:", error);
-      setErrors({ form: "An error occurred during signup. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -114,7 +117,7 @@ const SignupPage: React.FC = () => {
           <TextInput
             label="Full Name"
             placeholder="Enter your full name"
-            value={name}
+            value={username}
             onChange={handleNameChange}
             id="name"
             name="name"
@@ -146,18 +149,21 @@ const SignupPage: React.FC = () => {
             name="phone"
             error={errors.phone}
           />
-          <select
+          <Dropdown
+            label="Security Question"
+            options={[
+              { value: "MOTHERS_MAIDEN_NAME", label: "What is your mother's maiden name?" },
+              { value: "FIRST_PET_NAME", label: "What is the name of your first pet?" },
+              { value: "BIRTH_CITY", label: "What city were you born in?" },
+              { value: "FAVORITE_TEACHER", label: "Who was your favorite teacher?" },
+              { value: "CHILDHOOD_NICKNAME", label: "What was your childhood nickname?" },
+              { value: "FIRST_CAR_MODEL", label: "What was your first car model?" },
+              { value: "HIGH_SCHOOL_MASCOT", label: "What was your high school mascot?" },
+            ]}
             value={securityQuestion}
             onChange={handleSecurityQuestionChange}
-            className="w-full px-3 py-2 border rounded-md text-white"
-          >
-            <option value="MOTHERS_MAIDEN_NAME">What is your mother's maiden name?</option>
-            <option value="FIRST_PET_NAME">What is the name of your first pet?</option>
-            <option value="BIRTH_CITY">What city were you born in?</option>
-          </select>
-          {errors.securityQuestion && (
-            <p className="text-red-500 text-sm mt-1">{errors.securityQuestion}</p>
-          )}
+            error={errors.securityQuestion}
+          />
           <TextInput
             label="Security Answer"
             placeholder="Enter your answer"
@@ -172,9 +178,8 @@ const SignupPage: React.FC = () => {
           <button
             type="submit"
             disabled={!isFormValid || loading}
-            className={`w-full mt-4 px-4 py-2 bg-[#94BBFF] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#94BBFF] focus:ring-opacity-50 ${
-              !isFormValid || loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
-            }`}
+            className={`w-full mt-4 px-4 py-2 bg-[#94BBFF] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#94BBFF] focus:ring-opacity-50 ${!isFormValid || loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
+              }`}
           >
             {loading ? "Signing up..." : "Submit"}
           </button>
