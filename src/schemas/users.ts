@@ -10,9 +10,12 @@ export const UserSchema = z.object({
   securityAnswer: z.string().min(1, "Security answer is required"),
   bio: z.string().optional(),
   phone: z
-    .string()
-    .regex(/^\d{10}$/, "Invalid phone number")
-    .optional(),
+  .string()
+  .refine(
+    (value) => /^\+?\d{6,20}$/.test(value), // Allows optional '+' and 6-20 digits
+    "Invalid phone number"
+  )
+  .optional(),
   avatar: z.string().url("Invalid URL").optional(),
   emailVerified: z.boolean().default(false),
   isActive: z.boolean().default(true),
