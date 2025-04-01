@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { SignupSchema } from "@/schemas/auth";
-import { hashData } from "@/lib/auth"
+import { hashData } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
     // Redact sensitive fields for logging
-    const safeBody = { ...body, password: "[REDACTED]", securityAnswer: "[REDACTED]" };
+    const safeBody = {
+      ...body,
+      password: "[REDACTED]",
+      securityAnswer: "[REDACTED]",
+    };
     console.log("Request body:", safeBody);
 
     // Validate the request body using Zod
@@ -33,12 +37,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, username, password, phone, securityQuestion, securityAnswer } = validation.data;
+    const {
+      email,
+      username,
+      password,
+      phone,
+      securityQuestion,
+      securityAnswer,
+    } = validation.data;
 
     // Check if the user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { username }],
+        OR: [{ email }, { username }, { phone }],
       },
     });
 
@@ -46,7 +57,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "A user with this email already exists. Please use a different email.",
+          message:
+            "A user with this email already exists. Please use a different email.",
           code: "EMAIL_CONFLICT",
         },
         { status: 409 }
@@ -56,8 +68,20 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "This username is already taken. Please choose a different one.",
+          message:
+            "This username is already taken. Please choose a different one.",
           code: "USERNAME_CONFLICT",
+        },
+        { status: 409 }
+      );
+    }
+    if (existingUser?.phone === phone) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "This Phone Number is already there. Please choose a different one.",
+          code: "PHONENUMBER_CONFLICT",
         },
         { status: 409 }
       );

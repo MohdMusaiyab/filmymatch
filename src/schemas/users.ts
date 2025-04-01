@@ -9,18 +9,15 @@ export const UserSchema = z.object({
   securityQuestion: SecurityQuestionSchema,
   securityAnswer: z.string().min(1, "Security answer is required"),
   bio: z.string().optional(),
-  phone: z
-  .string()
-  .refine(
+  phone: z.string().refine(
     (value) => /^\+?\d{6,20}$/.test(value), // Allows optional '+' and 6-20 digits
     "Invalid phone number"
-  )
-  .optional(),
+  ),//Removed the Optional thing
   avatar: z.string().url("Invalid URL").optional(),
   emailVerified: z.boolean().default(false),
   isActive: z.boolean().default(true),
-  createdAt: z.date().default(() => new Date()), 
-  updatedAt: z.date().default(() => new Date()), 
+  createdAt: z.date().default(() => new Date()),
+  updatedAt: z.date().default(() => new Date()),
 });
 
 export type User = z.infer<typeof UserSchema>;

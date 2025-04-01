@@ -71,7 +71,10 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   return (
     <div className={`mb-4 ${className}`}>
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-white mb-1">
+        <label
+          htmlFor={id}
+          className="block text-sm font-medium text-white mb-1"
+        >
           {label}
         </label>
       )}
@@ -84,14 +87,12 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           id={id}
           name={name}
           autoComplete="new-password"
-          required
-          minLength={8}
-          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
           aria-describedby={showStrength ? "password-strength" : undefined}
           className={`w-full px-3 py-2 border border-[#94BBFF] rounded-3xl bg-[#E1E9F2] focus:outline-none focus:ring-1 focus:ring-[#94BBFF] text-black ${
             error ? "border-red-500" : ""
           }`}
         />
+
         <button
           type="button"
           onClick={togglePasswordVisibility}
@@ -106,12 +107,14 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
       {showStrength && value.length > 0 && (
         <div id="password-strength" className="mt-2">
           <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className={`h-full ${getStrengthColor()} transition-all duration-300 ease-in-out`} 
+            <div
+              className={`h-full ${getStrengthColor()} transition-all duration-300 ease-in-out`}
               style={{ width: getStrengthWidth() }}
             ></div>
           </div>
-          <p className="text-xs text-white mt-1 text-right">{getStrengthLabel()}</p>
+          <p className="text-xs text-white mt-1 text-right">
+            {getStrengthLabel()}
+          </p>
         </div>
       )}
 

@@ -7,7 +7,7 @@ import TextInput from "@/app/components/inputFields/TextInput";
 import Dropdown from "@/app/components/inputFields/Dropdown";
 import api from "@/lib/api";
 
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from "next/navigation";
 
 
 const SignupPage: React.FC = () => {
@@ -16,7 +16,9 @@ const SignupPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [username, setUserName] = useState("");
-  const [securityQuestion, setSecurityQuestion] = useState("MOTHERS_MAIDEN_NAME");
+  const [securityQuestion, setSecurityQuestion] = useState(
+    "MOTHERS_MAIDEN_NAME"
+  );
   const [securityAnswer, setSecurityAnswer] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
@@ -32,22 +34,26 @@ const SignupPage: React.FC = () => {
   };
 
   const handlePhoneNumberChange = (value: string) => {
-    const formattedPhoneNumber = value.startsWith('+') ? value : `+${value}`;
+    const formattedPhoneNumber = value.startsWith("+") ? value : `+${value}`;
     setPhoneNumber(formattedPhoneNumber);
     setErrors((prev) => ({ ...prev, phone: "" }));
   };
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUserNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserName(e.target.value);
     setErrors((prev) => ({ ...prev, username: "" }));
   };
 
-  const handleSecurityQuestionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSecurityQuestionChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setSecurityQuestion(e.target.value);
     setErrors((prev) => ({ ...prev, securityQuestion: "" }));
   };
 
-  const handleSecurityAnswerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSecurityAnswerChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setSecurityAnswer(e.target.value);
     setErrors((prev) => ({ ...prev, securityAnswer: "" }));
   };
@@ -81,7 +87,7 @@ const SignupPage: React.FC = () => {
       };
 
       // Axios implementation
-      const { data } = await api.post('/auth/signup', payload);
+      const { data } = await api.post("/auth/sign-up", payload);
 
       console.log("Signup successful:", data);
       router.push("/");
@@ -89,20 +95,25 @@ const SignupPage: React.FC = () => {
       console.error("Error during signup:", error);
 
       // Axios error handling
+
       if (error.response) {
         // Server responded with error status (4xx/5xx)
         if (error.response.data.errors) {
           const fieldErrors: { [key: string]: string } = {};
-          error.response.data.errors.forEach((err: { field: string; message: string }) => {
-            fieldErrors[err.field] = err.message;
-          });
+          error.response.data.errors.forEach(
+            (err: { field: string; message: string }) => {
+              fieldErrors[err.field] = err.message;
+            }
+          );
           setErrors(fieldErrors);
         } else {
           setErrors({ form: error.response.data.message });
         }
       } else {
         // Network or other errors
-        setErrors({ form: "An error occurred during signup. Please try again." });
+        setErrors({
+          form: "An error occurred during signup. Please try again.",
+        });
       }
     } finally {
       setLoading(false);
@@ -112,13 +123,15 @@ const SignupPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center text-white">Sign Up</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center text-white">
+          Sign Up
+        </h1>
         <form onSubmit={handleSubmit}>
           <TextInput
-            label="Full Name"
-            placeholder="Enter your full name"
+            label="Userame"
+            placeholder="Enter your Username"
             value={username}
-            onChange={handleNameChange}
+            onChange={handleUserNameChange}
             id="name"
             name="name"
           />
@@ -152,13 +165,31 @@ const SignupPage: React.FC = () => {
           <Dropdown
             label="Security Question"
             options={[
-              { value: "MOTHERS_MAIDEN_NAME", label: "What is your mother's maiden name?" },
-              { value: "FIRST_PET_NAME", label: "What is the name of your first pet?" },
+              {
+                value: "MOTHERS_MAIDEN_NAME",
+                label: "What is your mother's maiden name?",
+              },
+              {
+                value: "FIRST_PET_NAME",
+                label: "What is the name of your first pet?",
+              },
               { value: "BIRTH_CITY", label: "What city were you born in?" },
-              { value: "FAVORITE_TEACHER", label: "Who was your favorite teacher?" },
-              { value: "CHILDHOOD_NICKNAME", label: "What was your childhood nickname?" },
-              { value: "FIRST_CAR_MODEL", label: "What was your first car model?" },
-              { value: "HIGH_SCHOOL_MASCOT", label: "What was your high school mascot?" },
+              {
+                value: "FAVORITE_TEACHER",
+                label: "Who was your favorite teacher?",
+              },
+              {
+                value: "CHILDHOOD_NICKNAME",
+                label: "What was your childhood nickname?",
+              },
+              {
+                value: "FIRST_CAR_MODEL",
+                label: "What was your first car model?",
+              },
+              {
+                value: "HIGH_SCHOOL_MASCOT",
+                label: "What was your high school mascot?",
+              },
             ]}
             value={securityQuestion}
             onChange={handleSecurityQuestionChange}
@@ -173,13 +204,18 @@ const SignupPage: React.FC = () => {
             name="securityAnswer"
           />
           {errors.form && (
-            <p className="text-red-500 text-sm mt-4 text-center">{errors.form}</p>
+            <p className="text-red-500 text-sm mt-4 text-center">
+              {errors.form}
+            </p>
           )}
           <button
             type="submit"
             disabled={!isFormValid || loading}
-            className={`w-full mt-4 px-4 py-2 bg-[#94BBFF] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#94BBFF] focus:ring-opacity-50 ${!isFormValid || loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
-              }`}
+            className={`w-full mt-4 px-4 py-2 bg-[#94BBFF] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#94BBFF] focus:ring-opacity-50 ${
+              !isFormValid || loading
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-blue-600"
+            }`}
           >
             {loading ? "Signing up..." : "Submit"}
           </button>

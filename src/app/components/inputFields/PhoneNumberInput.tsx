@@ -1,13 +1,13 @@
-import React from 'react';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
-import { CSSProperties } from 'react';
+import React from "react";
+import PhoneInput, { CountryData } from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { CSSProperties } from "react";
 
 interface PhoneNumberInputProps {
   label?: string;
   placeholder?: string;
   value: string;
-  onChange: (value: string, country: any) => void;
+  onChange: (value: string, country: CountryData) => void;
   className?: string;
   error?: string;
   id?: string;
@@ -33,49 +33,50 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
     searchStyle: CSSProperties;
   } = {
     containerStyle: {
-      width: '100%'
+      width: "100%",
     },
     inputStyle: {
-      width: '100%',
-      minHeight: '2.5rem',
-      padding: '0.5rem 0.75rem', 
-      paddingLeft: '3rem',
-      backgroundColor: '#E1E9F2',
-      borderColor: '#94BBFF',
-      borderRadius: '1.5rem', 
-      color: 'black',
-      fontSize: '1rem', 
-      lineHeight: '1.5', 
-      boxSizing: 'border-box'
+      width: "100%",
+      minHeight: "2.5rem",
+      padding: "0.5rem 0.75rem",
+      paddingLeft: "3rem",
+      backgroundColor: "#E1E9F2",
+      borderColor: "#94BBFF",
+      borderRadius: "1.5rem",
+      color: "black",
+      fontSize: "1rem",
+      lineHeight: "1.5",
+      boxSizing: "border-box",
     },
     buttonStyle: {
-      position: 'absolute' as 'absolute',
+      //Changing Here to Avoid Error
+      // position: 'absolute' as 'absolute',
+      position: "absolute",
       left: 0,
-      height: '100%',
-      padding: '0 0.5rem',
-      backgroundColor: 'transparent',
-      borderRight: 'none',
-      borderRadius: '1.5rem 0 0 1.5rem',
-      zIndex: 1
+      height: "100%",
+      padding: "0 0.5rem",
+      backgroundColor: "transparent",
+      borderRight: "none",
+      borderRadius: "1.5rem 0 0 1.5rem",
+      zIndex: 1,
     },
     dropdownStyle: {
-      marginTop: '4px',
-      backgroundColor: '#E1E9F2',
-      color: 'black',
-      borderRadius: '0.5rem',
-      borderColor: '#94BBFF'
+      marginTop: "4px",
+      backgroundColor: "#E1E9F2",
+      color: "black",
+      borderRadius: "0.5rem",
+      borderColor: "#94BBFF",
     },
     searchStyle: {
-      backgroundColor: '#E1E9F2',
-      color: 'black',
-      borderColor: '#94BBFF',
-      borderRadius: '0.25rem'
-    }
+      backgroundColor: "#E1E9F2",
+      color: "black",
+      borderColor: "#94BBFF",
+      borderRadius: "0.25rem",
+    },
   };
 
- 
   React.useEffect(() => {
-    const styleTag = document.createElement('style');
+    const styleTag = document.createElement("style");
     styleTag.innerHTML = `
       /* Remove white background from flags */
       .react-tel-input .flag-dropdown {
@@ -111,7 +112,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
       )}
       <div className="relative">
         <PhoneInput
-          country={'in'}
+          country={"in"}
           value={value}
           onChange={onChange}
           inputProps={{
@@ -121,13 +122,11 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
           }}
           countryCodeEditable={false}
           enableSearch={true}
-          
           containerStyle={customStyles.containerStyle}
           inputStyle={customStyles.inputStyle}
           buttonStyle={customStyles.buttonStyle}
           dropdownStyle={customStyles.dropdownStyle}
           searchStyle={customStyles.searchStyle}
-          
           containerClass="!block"
           inputClass={`!focus:outline-none !focus:ring-1 !focus:ring-[#94BBFF] ${
             error ? "!border-red-500 !focus:ring-red-500" : ""
