@@ -1,26 +1,106 @@
-import Credentials from "next-auth/providers/credentials";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
+import { LoginSchema } from "@/schemas/auth";
+import { verifyData } from "./auth";
+import { AuthError } from "@/types/AuthError";
+import prisma from "./prisma";
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    Credentials({
-      name: "Credentials",
+    CredentialsProvider({
+      id: "credentials",
+      name: "Email",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "Enter your email" },
+        email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // Add your authentication logic here
-        // Example: Check credentials against a database
-        const user = { id: "1", username: "user", email: "user@example.com" };
+        try {
+          // Validate input with the Zod schema pattern
+          const validatedFields = LoginSchema.safeParse(credentials);
+          if (!validatedFields.success) {
+            throw new AuthError(
+              "VALIDATION_ERROR",
+              "Invalid credentials format",
+              400,
+              validatedFields.error.errors.map((err) => ({
+                field: err.path.join("."),
+                message: err.message,
+              }))
+            );
+          }
 
-        if (
-          credentials?.email === user.email &&
-          credentials?.password === "password"
-        ) {
-          return user; // Return the user object
-        } else {
-          return null; // Return null if authentication fails
+          // Consistent database query style
+          const user = await prisma.user.findUnique({
+            where: { email: validatedFields.data.email },
+            select: {
+              id: true,
+              email: true,
+              password: true,
+              emailVerified: true,
+              username: true,
+              isActive: true,
+            },
+          });
+
+          if (!user) {
+            throw new AuthError(
+              "USER_NOT_FOUND",
+              "No account found with this email",
+              404
+            );
+          }
+
+          if (!user.isActive) {
+            throw new AuthError(
+              "ACCOUNT_INACTIVE",
+              "Your account has been deactivated",
+              403
+            );
+          }
+
+          // Consistent hashing verification
+          const passwordValid = await verifyData(
+            validatedFields.data.password,
+            user.password
+          );
+
+          if (!passwordValid) {
+            throw new AuthError(
+              "INVALID_CREDENTIALS",
+              "Incorrect password",
+              401
+            );
+          }
+
+          // Return minimal user data matching your API style
+          return {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            emailVerified: user.emailVerified,
+          };
+        } catch (error) {
+          console.error("Authentication error:", error);
+
+          // Convert to NextAuth expected error format
+          if (error instanceof AuthError) {
+            throw new Error(
+              JSON.stringify({
+                code: error.code,
+                message: error.message,
+                status: error.status,
+              })
+            );
+          }
+
+          throw new Error(
+            JSON.stringify({
+              code: "AUTHENTICATION_FAILED",
+              message: "Authentication failed",
+              status: 500,
+            })
+          );
         }
       },
     }),
@@ -43,8 +123,14 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  // pages: {
-  //   signIn: "/auth/signin", // Custom sign-in page
-  // },
+  pages: {
+    signIn: "/auth/sign-in",
+    error: "/auth/error",
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+
+  debug: process.env.NODE_ENV === "development",
 };
