@@ -5,8 +5,11 @@ import EmailInput from "@/app/components/inputFields/EmailInput";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LoginSchema } from "@/schemas/auth";
+import { useSession } from "next-auth/react";
 
 const LoginPage: React.FC = () => {
+  //For Test
+  const { data: session } = useSession();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,12 +59,19 @@ const LoginPage: React.FC = () => {
       if (result?.error) {
         // Parse the error message from NextAuth
         const errorData = JSON.parse(result.error);
+
         setErrors({
           form: errorData.message || "Invalid credentials. Please try again.",
         });
       } else {
         // Successful login
-        router.push("/");
+        console.log(session?.user);
+        if (session?.user?.emailVerified===true) {
+          router.push("/dashboard");
+        }
+        else{
+          router.push("/auth/verify-email");
+        }
       }
     } catch (error) {
       console.error("Login error:", error);

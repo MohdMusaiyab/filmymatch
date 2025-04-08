@@ -86,7 +86,7 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
-
+    
     // Hash the password, securityAnswer
     const hashedPassword = await hashData(password);
     const hashedSecurityAnswer = await hashData(securityAnswer);

@@ -11,3 +11,8 @@ export async function hashData(password: string): Promise<string> {
 export async function verifyData(password: string, hash: string): Promise<boolean> {
   return await bcrypt.compare(password, hash);
 }
+
+// src/lib/utils.ts
+export function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}

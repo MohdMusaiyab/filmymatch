@@ -8,12 +8,14 @@ declare module "next-auth" {
       id: string;
       username: string;
       email: string;
+      emailVerified?: boolean | Date | null; // Match Prisma
     };
   }
   interface User {
     id: string;
     username: string;
     email: string;
+    emailVerified?: boolean | Date | null; // Match Prisma
   }
 }
 
@@ -23,5 +25,6 @@ declare module "next-auth/jwt" {
     id: string;
     username: string;
     email: string;
+    emailVerified?: boolean | Date | null; // Match Prisma type
   }
 }

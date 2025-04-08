@@ -50,16 +50,6 @@ export const authOptions: NextAuthOptions = {
               404
             );
           }
-
-          if (!user.isActive) {
-            throw new AuthError(
-              "ACCOUNT_INACTIVE",
-              "Your account has been deactivated",
-              403
-            );
-          }
-
-          // Consistent hashing verification
           const passwordValid = await verifyData(
             validatedFields.data.password,
             user.password
@@ -73,7 +63,15 @@ export const authOptions: NextAuthOptions = {
             );
           }
 
+          if (!user.isActive) {
+            throw new AuthError(
+              "ACCOUNT_INACTIVE",
+              "Your account has been deactivated",
+              403
+            );
+          }
           // Return minimal user data matching your API style
+          console.log(user);
           return {
             id: user.id,
             email: user.email,
@@ -111,6 +109,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.username = user.username;
         token.email = user.email;
+        token.emailVerified = user.emailVerified;
       }
       return token;
     },
@@ -119,6 +118,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id;
         session.user.username = token.username;
         session.user.email = token.email;
+        session.user.emailVerified = token.emailVerified;
       }
       return session;
     },

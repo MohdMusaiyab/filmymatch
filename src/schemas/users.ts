@@ -18,6 +18,7 @@ export const UserSchema = z.object({
   isActive: z.boolean().default(true),
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date()),
+  verificationToken: z.string().optional() // Added for verification
 });
 
 export type User = z.infer<typeof UserSchema>;

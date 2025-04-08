@@ -5,6 +5,7 @@ import EmailInput from "@/app/components/inputFields/EmailInput";
 import PhoneNumberInput from "@/app/components/inputFields/PhoneNumberInput";
 import TextInput from "@/app/components/inputFields/TextInput";
 import Dropdown from "@/app/components/inputFields/Dropdown";
+import Button from "@/app/components/Button";
 import api from "@/lib/api";
 
 import { useRouter } from "next/navigation";
@@ -90,7 +91,7 @@ const SignupPage: React.FC = () => {
       const { data } = await api.post("/auth/sign-up", payload);
 
       console.log("Signup successful:", data);
-      router.push("/");
+      router.push("/auth/sign-in");
     } catch (error: any) {
       console.error("Error during signup:", error);
 

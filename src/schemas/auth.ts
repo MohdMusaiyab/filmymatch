@@ -10,14 +10,19 @@ export const SignupSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
   username: z.string().min(3, "Username must be at least 3 characters long"),
   phone: z
-  .string()
-  .refine(
-    (value) => /^\+?\d{6,20}$/.test(value),
-    "Invalid phone number"
-  ),
+    .string()
+    .refine((value) => /^\+?\d{6,20}$/.test(value), "Invalid phone number"),
   securityQuestion: SecurityQuestionSchema,
   securityAnswer: z.string().min(1, "Security answer is required"),
 });
 
+export const VerificationTokenSchema = z.object({
+  id: z.string().cuid(),
+  token: z.string(),
+  expiresAt: z.date(),
+  userId: z.string(),
+});
+
 export type Login = z.infer<typeof LoginSchema>;
 export type Signup = z.infer<typeof SignupSchema>;
+export type VerificationToken = z.infer<typeof VerificationTokenSchema>;
