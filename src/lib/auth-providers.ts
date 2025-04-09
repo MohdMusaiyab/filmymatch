@@ -71,7 +71,7 @@ export const authOptions: NextAuthOptions = {
             );
           }
           // Return minimal user data matching your API style
-          
+
           return {
             id: user.id,
             email: user.email,
@@ -104,13 +104,30 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user ,trigger}) {
       if (user) {
         token.id = user.id;
         token.username = user.username;
         token.email = user.email;
         token.emailVerified = user.emailVerified;
       }
+      // If it's a session update, refresh user data from database
+      if (trigger === "update") {
+        const refreshedUser = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            emailVerified: true,
+          },
+        });
+
+        if (refreshedUser) {
+          token.emailVerified = refreshedUser.emailVerified;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

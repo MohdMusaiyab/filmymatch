@@ -10,7 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 
 const EmailVerificationPage = () => {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -132,6 +132,11 @@ const EmailVerificationPage = () => {
       if (result.success) {
         setSuccess(true);
         setMessage(result.message);
+
+        // Force session update and wait for it to complete
+        await update();
+
+        // Redirect to dashboard
         setTimeout(() => {
           router.push("/dashboard");
         }, 2000);
