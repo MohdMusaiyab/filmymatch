@@ -71,7 +71,7 @@ export const authOptions: NextAuthOptions = {
             );
           }
           // Return minimal user data matching your API style
-          console.log(user);
+          
           return {
             id: user.id,
             email: user.email,

@@ -2,14 +2,13 @@
 import React, { useState } from "react";
 import PasswordInput from "@/app/components/inputFields/PasswordInput";
 import EmailInput from "@/app/components/inputFields/EmailInput";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LoginSchema } from "@/schemas/auth";
-import { useSession } from "next-auth/react";
 
 const LoginPage: React.FC = () => {
   //For Test
-  const { data: session } = useSession();
+
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,11 +64,10 @@ const LoginPage: React.FC = () => {
         });
       } else {
         // Successful login
-        console.log(session?.user);
-        if (session?.user?.emailVerified===true) {
+        const session = await getSession();
+        if (session?.user?.emailVerified === true) {
           router.push("/dashboard");
-        }
-        else{
+        } else {
           router.push("/auth/verify-email");
         }
       }
