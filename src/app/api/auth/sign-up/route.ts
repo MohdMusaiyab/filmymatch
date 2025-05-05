@@ -11,7 +11,6 @@ export async function POST(request: Request) {
     const safeBody = {
       ...body,
       password: "[REDACTED]",
-      securityAnswer: "[REDACTED]",
     };
     console.log("Request body:", safeBody);
 
@@ -37,19 +36,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const {
-      email,
-      username,
-      password,
-      phone,
-      securityQuestion,
-      securityAnswer,
-    } = validation.data;
+    const { email, username, password, phone } = validation.data;
 
     // Check if the user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { username }, { phone }],
+        OR: [
+          { email },
+          { username },
+          ...(phone ? [{ phone }] : []), // Only include phone check if provided
+        ],
       },
     });
 
@@ -75,7 +71,8 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
-    if (existingUser?.phone === phone) {
+    //Might Need to Delete if Null Values Start Equalling With Each Other
+    if (phone && existingUser?.phone === phone) {
       return NextResponse.json(
         {
           success: false,
@@ -86,10 +83,9 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
-    
+
     // Hash the password, securityAnswer
     const hashedPassword = await hashData(password);
-    const hashedSecurityAnswer = await hashData(securityAnswer);
 
     // Create the user in the database
     const newUser = await prisma.user.create({
@@ -97,9 +93,7 @@ export async function POST(request: Request) {
         email,
         username,
         password: hashedPassword,
-        phone,
-        securityQuestion,
-        securityAnswer: hashedSecurityAnswer,
+        phone: phone 
       },
     });
 

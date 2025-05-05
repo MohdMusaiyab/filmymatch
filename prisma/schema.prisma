@@ -14,25 +14,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum SecurityQuestion {
-  MOTHERS_MAIDEN_NAME
-  FIRST_PET_NAME
-  BIRTH_CITY
-  FAVORITE_TEACHER
-  CHILDHOOD_NICKNAME
-  FIRST_CAR_MODEL
-  HIGH_SCHOOL_MASCOT
-}
 
 model User {
   id                 String              @id @default(cuid())
   email              String              @unique
   password           String
   username           String              @unique
-  securityQuestion   SecurityQuestion
-  securityAnswer     String
   bio                String?
-  phone              String
+  phone              String?
   avatar             String?
   emailVerified      Boolean             @default(false)
   isActive           Boolean             @default(true)

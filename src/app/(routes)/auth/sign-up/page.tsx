@@ -4,12 +4,9 @@ import PasswordInput from "@/app/components/inputFields/PasswordInput";
 import EmailInput from "@/app/components/inputFields/EmailInput";
 import PhoneNumberInput from "@/app/components/inputFields/PhoneNumberInput";
 import TextInput from "@/app/components/inputFields/TextInput";
-import Dropdown from "@/app/components/inputFields/Dropdown";
-import Button from "@/app/components/Button";
 import api from "@/lib/api";
 
 import { useRouter } from "next/navigation";
-
 
 const SignupPage: React.FC = () => {
   const router = useRouter(); // Initialize router
@@ -17,10 +14,6 @@ const SignupPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [username, setUserName] = useState("");
-  const [securityQuestion, setSecurityQuestion] = useState(
-    "MOTHERS_MAIDEN_NAME"
-  );
-  const [securityAnswer, setSecurityAnswer] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
 
@@ -45,28 +38,10 @@ const SignupPage: React.FC = () => {
     setErrors((prev) => ({ ...prev, username: "" }));
   };
 
-  const handleSecurityQuestionChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    setSecurityQuestion(e.target.value);
-    setErrors((prev) => ({ ...prev, securityQuestion: "" }));
-  };
-
-  const handleSecurityAnswerChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setSecurityAnswer(e.target.value);
-    setErrors((prev) => ({ ...prev, securityAnswer: "" }));
-  };
-
   const isFormValid =
     email.trim() !== "" &&
     password.trim() !== "" &&
-    phoneNumber.trim() !== "" &&
-    username.trim() !== "" &&
-    securityQuestion.trim() !== "" &&
-    securityAnswer.trim() !== "";
-
+    username.trim() !== "";
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) {
@@ -82,9 +57,7 @@ const SignupPage: React.FC = () => {
         email,
         password,
         username: username,
-        phone: phoneNumber,
-        securityQuestion,
-        securityAnswer,
+        phone: phoneNumber.trim() === "" ? undefined : phoneNumber,
       };
 
       // Axios implementation
@@ -163,47 +136,7 @@ const SignupPage: React.FC = () => {
             name="phone"
             error={errors.phone}
           />
-          <Dropdown
-            label="Security Question"
-            options={[
-              {
-                value: "MOTHERS_MAIDEN_NAME",
-                label: "What is your mother's maiden name?",
-              },
-              {
-                value: "FIRST_PET_NAME",
-                label: "What is the name of your first pet?",
-              },
-              { value: "BIRTH_CITY", label: "What city were you born in?" },
-              {
-                value: "FAVORITE_TEACHER",
-                label: "Who was your favorite teacher?",
-              },
-              {
-                value: "CHILDHOOD_NICKNAME",
-                label: "What was your childhood nickname?",
-              },
-              {
-                value: "FIRST_CAR_MODEL",
-                label: "What was your first car model?",
-              },
-              {
-                value: "HIGH_SCHOOL_MASCOT",
-                label: "What was your high school mascot?",
-              },
-            ]}
-            value={securityQuestion}
-            onChange={handleSecurityQuestionChange}
-            error={errors.securityQuestion}
-          />
-          <TextInput
-            label="Security Answer"
-            placeholder="Enter your answer"
-            value={securityAnswer}
-            onChange={handleSecurityAnswerChange}
-            id="securityAnswer"
-            name="securityAnswer"
-          />
+
           {errors.form && (
             <p className="text-red-500 text-sm mt-4 text-center">
               {errors.form}
