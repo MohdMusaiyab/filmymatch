@@ -6,7 +6,7 @@ import {
   sendVerificationToken,
   verifyToken,
   checkVerificationToken,
-} from "@/actions/authActions";
+} from "@/actions/auth/authActions";
 import { useRouter } from "next/navigation";
 
 const EmailVerificationPage = () => {

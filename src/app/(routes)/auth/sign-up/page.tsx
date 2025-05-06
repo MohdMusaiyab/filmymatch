@@ -7,6 +7,8 @@ import TextInput from "@/app/components/inputFields/TextInput";
 import api from "@/lib/api";
 
 import { useRouter } from "next/navigation";
+import Button from "@/app/components/Button";
+import { signIn } from "next-auth/react";
 
 const SignupPage: React.FC = () => {
   const router = useRouter(); // Initialize router
@@ -39,9 +41,7 @@ const SignupPage: React.FC = () => {
   };
 
   const isFormValid =
-    email.trim() !== "" &&
-    password.trim() !== "" &&
-    username.trim() !== "";
+    email.trim() !== "" && password.trim() !== "" && username.trim() !== "";
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) {
@@ -94,6 +94,20 @@ const SignupPage: React.FC = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn("google", {
+        redirect: true,
+        callbackUrl: "/dashboard",
+      });
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      setErrors({
+        form: "An unexpected error occurred. Please try again.",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="p-8 rounded-lg shadow-md w-96">
@@ -142,17 +156,50 @@ const SignupPage: React.FC = () => {
               {errors.form}
             </p>
           )}
-          <button
+          <Button
             type="submit"
             disabled={!isFormValid || loading}
-            className={`w-full mt-4 px-4 py-2 bg-[#94BBFF] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#94BBFF] focus:ring-opacity-50 ${
-              !isFormValid || loading
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-blue-600"
-            }`}
+            className="w-full mt-4 px-4 py-2"
+            variant="gradient-blue" // or your preferred variant
+            size="md"
           >
             {loading ? "Signing up..." : "Submit"}
-          </button>
+          </Button>
+          <Button
+            type="button"
+            onClick={handleGoogleSignIn}
+            className="w-full mt-4 px-4 py-2"
+            variant="google-oauth" // Google OAuth style variant
+            size="md"
+          >
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Signing in...
+              </>
+            ) : (
+              <>Continue with Google</>
+            )}
+          </Button>
         </form>
       </div>
     </div>

@@ -5,6 +5,7 @@ import EmailInput from "@/app/components/inputFields/EmailInput";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { LoginSchema } from "@/schemas/auth";
+import Button from "@/app/components/Button";
 
 const LoginPage: React.FC = () => {
   //For Test
@@ -80,7 +81,19 @@ const LoginPage: React.FC = () => {
       setLoading(false);
     }
   };
-
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn("google", {
+        redirect: true,
+        callbackUrl: "/dashboard",
+      });
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      setErrors({
+        form: "An unexpected error occurred. Please try again.",
+      });
+    }
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="p-8 rounded-lg shadow-md w-96">
@@ -113,17 +126,15 @@ const LoginPage: React.FC = () => {
             </p>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={!isFormValid || loading}
-            className={`w-full mt-4 px-4 py-2 bg-[#94BBFF] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-[#94BBFF] focus:ring-opacity-50 ${
-              !isFormValid || loading
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-blue-600"
-            }`}
+            className="w-full mt-4"
+            variant="custom-blue"
+            size="md"
           >
             {loading ? "Logging in..." : "Login"}
-          </button>
+          </Button>
         </form>
 
         {/* Additional login options */}
@@ -137,7 +148,7 @@ const LoginPage: React.FC = () => {
           <div className="mt-4">
             <button
               //Will Implement in Later Stages
-              // onClick={() => signIn("google")}
+              onClick={handleGoogleSignIn}
               className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
             >
               Continue with Google

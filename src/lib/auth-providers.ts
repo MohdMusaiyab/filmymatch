@@ -1,8 +1,10 @@
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { NextAuthOptions } from "next-auth";
 import { LoginSchema } from "@/schemas/auth";
 import { verifyData } from "./auth";
 import { AuthError } from "@/types/AuthError";
+import { generateUsername } from "./auth";
 import prisma from "./prisma";
 
 export const authOptions: NextAuthOptions = {
@@ -102,9 +104,69 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          email: profile.email,
+          name: profile.name,
+          username: generateUsername(
+            profile.name || profile.email.split("@")[0]
+          ),
+          image: profile.picture,
+          emailVerified: true, // Google emails are automatically verified
+        };
+      },
+    }),
   ],
   callbacks: {
-    async jwt({ token, user ,trigger}) {
+    async signIn({ user, account }) {
+      // Handle Google OAuth sign-in
+      if (account?.provider === "google") {
+        // Check if user exists
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email as string },
+        });
+    
+        if (existingUser) {
+          // For existing users, preserve all existing data
+          user.username = existingUser.username;
+          if (!existingUser.emailVerified) {
+            await prisma.user.update({
+              where: { id: existingUser.id },
+              data: { emailVerified: true },
+            });
+          }
+          // Return true to continue the sign-in process with existing user
+          return true;
+        }
+    
+        // For new users, create account with generated username
+        try {
+          await prisma.user.create({
+            data: {
+              email: user.email as string,
+              username: generateUsername(
+                user.name || user.email?.split("@")[0] || "user"
+              ),
+              password: Math.random().toString(36).slice(-8), // Random password
+              emailVerified: true,
+              avatar: user.image,
+              isActive: true,
+              phone: null,
+              bio: null,
+            },
+          });
+        } catch (error) {
+          console.error("Google OAuth user creation failed:", error);
+          return false;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.username = user.username;
