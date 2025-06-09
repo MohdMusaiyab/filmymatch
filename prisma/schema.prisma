@@ -1,19 +1,14 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
-//Here use the .env.local file instead of .env
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 
 model User {
   id                 String              @id @default(cuid())
@@ -27,7 +22,38 @@ model User {
   isActive           Boolean             @default(true)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
-  verificationTokens VerificationToken[] // Relation to tokens
+  verificationTokens VerificationToken[]
+  collections        Collection[]
+  comments           Comment[]
+  likes              Like[]
+  followers          Follow[]            @relation("Follower")
+  followings         Follow[]            @relation("Following")
+  posts              Post[] // Added relation to posts
+  savedPosts         SavedPost[]         @relation("SavedPosts")
+  highlightedPosts   HighlightedPost[]   @relation("HighlightedPosts")
+}
+
+model SavedPost {
+  id        String   @id @default(cuid())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, name: "SavedPosts")
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId]) // Prevent duplicates
+}
+
+model HighlightedPost {
+  id        String   @id @default(cuid())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, name: "HighlightedPosts")
+  userId    String
+  notes     String? // Optional user notes
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId]) // Prevent duplicates
 }
 
 model VerificationToken {
@@ -41,9 +67,146 @@ model VerificationToken {
   @@index([userId])
 }
 
+enum Category {
+  FILMREFLECTION
+  ARTICLE
+  BOOKS
+  MUSIC
+  YOUTUBE
+  DOCUMENTARY
+  PODCAST
+  OTHER
+}
+
+enum TAGS {
+  INSPIRATIONAL
+  MOTIVATIONAL
+  FUNNY
+  LOVE
+  SEX
+  ROMANCE
+  RELATIONSHIP
+  FRIENDSHIP
+  COLLEGE
+  WORK
+  FAMILY
+  LIFE
+  SELFIMPROVEMENT
+  SELFHELP
+  SELFLOVE
+  SELFCARE
+  PHILOSOPHY
+  PSYCHOLOGY
+  SPIRITUALITY
+  MENTALHEALTH
+  PERSONALDEVELOPMENT
+  PERSONALGROWTH
+  PERSONALBRAND
+  FILMOGRAPHY
+  FILMMAKING
+  CINEMATOGRAPHY
+  SCREENWRITING
+  DIRECTING
+  ACTING
+  PRODUCING
+  EDITING
+  MUSICPRODUCTION
+  OTHER
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  FOLLOWERS
+}
+
 model Post {
+  id            String            @id @default(cuid())
+  title         String
+  description   String
+  category      Category
+  coverImage    String?
+  visibility    Visibility        @default(PRIVATE)
+  images        Image[]
+  tags          TAGS[]
+  isDraft       Boolean           @default(false)
+  userId        String // Added author reference
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collections   Collection[]      @relation("PostsInCollections") // Changed to many-to-many
+  comments      Comment[]
+  likes         Like[]
+  highlightedBy HighlightedPost[] // Added opposite relation field
+  savedBy       SavedPost[] // Added opposite relation field
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([userId])
+}
+
+model Collection {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  coverImage  String?
+  visibility  Visibility @default(PRIVATE)
+  isDraft     Boolean    @default(false)
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts       Post[]     @relation("PostsInCollections") // Changed to many-to-many
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+model Image {
+  id          String   @id @default(cuid())
+  url         String
+  description String?
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([postId])
+}
+
+model Comment {
   id        String   @id @default(cuid())
-  title     String
+  content   String
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([postId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, postId]) // Prevent duplicate likes
+  @@index([postId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([followerId, followingId]) // Prevent duplicate follows
+  @@index([followerId])
+  @@index([followingId])
 }

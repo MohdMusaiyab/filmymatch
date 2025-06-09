@@ -152,13 +152,6 @@ export async function verifyToken(
       };
     }
 
-    // Check if already verified
-    if (user.emailVerified) {
-      return {
-        success: true,
-        message: "Email is already verified",
-      };
-    }
 
     // Find and validate token
     const verificationToken = await prisma.verificationToken.findFirst({

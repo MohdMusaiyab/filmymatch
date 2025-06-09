@@ -5,6 +5,8 @@ import EmailInput from "@/app/components/inputFields/EmailInput";
 import {
   sendPasswordResetToken,
   verifyToken,
+checkVerificationToken
+
 } from "@/actions/auth/passwordActions";
 import { changePassword } from "@/actions/user/changePassword";
 import PasswordInput from "@/app/components/inputFields/PasswordInput";
