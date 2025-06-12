@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import UploadSnippet, { UploadedFile } from "@/app/components/FileUploader";
 import { CategoryEnum, VisibilityEnum, TagsEnum } from "@/schemas/common";
+import TextInput from "@/app/components/inputFields/TextInput";
 import { z } from "zod";
+import Button from "@/app/components/Button";
+import Dropdown from "@/app/components/inputFields/Dropdown";
 
 interface PostFormData {
   title: string;
@@ -136,7 +139,7 @@ const CreatePostPage: React.FC = () => {
       toast.success(
         isDraft ? "Post saved as draft!" : "Post created successfully!"
       );
-      router.push(`/posts/${post.id}`);
+      router.push(`/dashboard/my-posts/${post.id}`);
     } catch (error) {
       console.error("Submit error:", error);
       toast.error(
@@ -161,7 +164,7 @@ const CreatePostPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div className="bg-black shadow-lg rounded-lg overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
             <h1 className="text-2xl font-bold text-white">Create New Post</h1>
@@ -175,45 +178,33 @@ const CreatePostPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <label
-                    htmlFor="title"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Title *
-                  </label>
-                  <input
-                    type="text"
+                  <TextInput
+                    label="Title *"
                     id="title"
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter post title"
-                    required
+                    validate={(value) =>
+                      !value.trim() ? "Title is required" : null
+                    }
+                    className="text-gray-700"
                   />
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="category"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Category *
-                  </label>
-                  <select
+                  <Dropdown
+                    label="Category *"
                     id="category"
                     name="category"
                     value={formData.category}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    {CategoryEnum.options.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat.charAt(0) + cat.slice(1).toLowerCase()}
-                      </option>
-                    ))}
-                  </select>
+                    options={CategoryEnum.options.map((cat) => ({
+                      value: cat,
+                      label: cat.charAt(0) + cat.slice(1).toLowerCase(),
+                    }))}
+                    className="text-gray-700" // For label color
+                  />
                 </div>
               </div>
 
@@ -241,21 +232,17 @@ const CreatePostPage: React.FC = () => {
 
             {/* Description */}
             <div>
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Description *
-              </label>
-              <textarea
+              <TextInput
+                label="Description *"
                 id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Describe your post..."
-                required
+                validate={(value) =>
+                  !value.trim() ? "Description is required" : null
+                }
+                className="text-gray-700"
               />
             </div>
 
@@ -321,39 +308,47 @@ const CreatePostPage: React.FC = () => {
             {/* Action Buttons */}
             <div className="border-t pt-6">
               <div className="flex flex-col sm:flex-row gap-3">
-                <button
+                <Button
                   onClick={() => submitPost(VisibilityEnum.enum.PRIVATE, true)}
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                  variant="gradient-blue"
+                  size="md"
+                  className="flex-1"
                 >
                   {isSubmitting ? "Saving..." : "Save as Draft"}
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={() => submitPost(VisibilityEnum.enum.PRIVATE, false)}
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                  variant="yellow"
+                  size="md"
+                  className="flex-1"
                 >
                   {isSubmitting ? "Saving..." : "Save as Draft"}
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={() =>
                     submitPost(VisibilityEnum.enum.FOLLOWERS, false)
                   }
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                  variant="gradient-blue"
+                  size="md"
+                  className="flex-1"
                 >
                   {isSubmitting ? "Saving..." : "Save for Followers"}
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={() => submitPost(VisibilityEnum.enum.PUBLIC, false)}
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                  variant="gradient-blue" // Using gradient-blue since green isn't in your variants
+                  size="md"
+                  className="flex-1"
                 >
                   {isSubmitting ? "Publishing..." : "Publish Public"}
-                </button>
+                </Button>
               </div>
 
               <p className="text-sm text-gray-500 mt-3 text-center">
