@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import UploadSnippet, { UploadedFile } from "@/app/components/FileUploader";
@@ -39,7 +39,7 @@ interface CombinedImage {
 const UpdatePostPage = () => {
   const params = useParams();
   const id = params?.id as string;
-  const { data: session, status } = useSession();
+  // const { data: session, status } = useSession();
   const router = useRouter();
 
   const [formData, setFormData] = useState<PostFormData>({
@@ -60,7 +60,7 @@ const UpdatePostPage = () => {
 
   // Fetch post data
   useEffect(() => {
-    if (!id || status !== "authenticated") return;
+    if (!id) return;
 
     const fetchPost = async () => {
       try {
@@ -109,7 +109,7 @@ const UpdatePostPage = () => {
     };
 
     fetchPost();
-  }, [id, status, router]);
+  }, [id, router]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -211,21 +211,21 @@ const UpdatePostPage = () => {
     }
   };
 
-  if (status === "loading" || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (status === "loading" || isLoading) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+  //         <p className="mt-4 text-gray-600">Loading...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
-  if (status === "unauthenticated") {
-    router.push("/auth/signin");
-    return null;
-  }
+  // if (status === "unauthenticated") {
+  //   router.push("/auth/signin");
+  //   return null;
+  // }
 
   if (error) {
     return (

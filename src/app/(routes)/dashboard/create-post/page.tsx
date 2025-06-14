@@ -7,6 +7,9 @@ import { toast } from "sonner";
 import UploadSnippet, { UploadedFile } from "@/app/components/FileUploader";
 import { CategoryEnum, VisibilityEnum, TagsEnum } from "@/schemas/common";
 import TextInput from "@/app/components/inputFields/TextInput";
+import { Sidebar } from '@/app/components/ui/Sidebar';
+import { ActiveTab } from '@/types';
+
 import { z } from "zod";
 import Button from "@/app/components/Button";
 import Dropdown from "@/app/components/inputFields/Dropdown";
@@ -30,6 +33,18 @@ const CreatePostPage: React.FC = () => {
     tags: [],
     coverImage: "",
   });
+
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
+  
+
+  const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
+
+  const toggleMenu = (postId: string) => {
+    setMenuOpen(menuOpen === postId ? null : postId);
+  };
+
 
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,7 +97,6 @@ const CreatePostPage: React.FC = () => {
       toast.error("Description is required");
       return false;
     }
-    //No Need , Can be Removed as only title, description, and category  are required
     if (uploadedFiles.length === 0) {
       toast.error("At least one image or video is required");
       return false;
@@ -152,208 +166,215 @@ const CreatePostPage: React.FC = () => {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-black shadow-lg rounded-lg overflow-hidden">
+    <div className="min-h-screen bg-gray-950">
+      <div className="p-6 md:p-10">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
-            <h1 className="text-2xl font-bold text-white">Create New Post</h1>
-            <p className="text-blue-100 mt-1">
-              Share your content with the world
-            </p>
+          <div className="mb-8">
+            <h1 className="text-3xl font-semibold text-white mb-2">Create New Post</h1>
+            <p className="text-gray-400">Share your content with the world</p>
           </div>
+          {/* Sidebar */}
+          <Sidebar
+                  sidebarCollapsed={sidebarCollapsed}
+                  toggleSidebar={toggleSidebar}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                />
 
-          <div className="p-6 space-y-6">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <TextInput
-                    label="Title *"
-                    id="title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    placeholder="Enter post title"
-                    validate={(value) =>
-                      !value.trim() ? "Title is required" : null
-                    }
-                    className="text-gray-700"
-                  />
-                </div>
-
-                <div>
-                  <Dropdown
-                    label="Category *"
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    options={CategoryEnum.options.map((cat) => ({
-                      value: cat,
-                      label: cat.charAt(0) + cat.slice(1).toLowerCase(),
-                    }))}
-                    className="text-gray-700" // For label color
-                  />
-                </div>
-              </div>
-
+          <div className="bg-gray-900 rounded-2xl shadow-lg border border-gray-800">
+            <div className="p-8 space-y-8">
+              {/* Basic Information Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tags
-                </label>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {TagsEnum.options.map((tag) => (
-                    <label key={tag} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.tags.includes(tag)}
-                        onChange={() => handleTagChange(tag)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        {tag.charAt(0) + tag.slice(1).toLowerCase()}
-                      </span>
+                <h2 className="text-xl font-semibold text-white mb-6">Basic Information</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <TextInput
+                      label="Title *"
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      placeholder="Enter post title"
+                      validate={(value) =>
+                        !value.trim() ? "Title is required" : null
+                      }
+                    />
+
+                    <Dropdown
+                      label="Category *"
+                      id="category"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      options={CategoryEnum.options.map((cat) => ({
+                        value: cat,
+                        label: cat.charAt(0) + cat.slice(1).toLowerCase(),
+                      }))}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                      Tags
                     </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div>
-              <TextInput
-                label="Description *"
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Describe your post..."
-                validate={(value) =>
-                  !value.trim() ? "Description is required" : null
-                }
-                className="text-gray-700"
-              />
-            </div>
-
-            {/* File Upload */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Media Files
-              </h3>
-              <UploadSnippet
-                onFilesChange={setUploadedFiles}
-                maxFiles={10}
-                maxFileSize={10}
-              />
-            </div>
-
-            {/* Cover Image Selection */}
-            {uploadedFiles.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Select Cover Image
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {uploadedFiles
-                    .filter((f) => f.file.type.startsWith("image/"))
-                    .map((file) => (
-                      <div
-                        key={file.id}
-                        className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                          formData.coverImage === file.finalUrl
-                            ? "border-blue-500 ring-2 ring-blue-200"
-                            : "border-gray-200 hover:border-gray-300"
-                        }`}
-                        onClick={() => setCoverImage(file.id)}
-                      >
-                        <img
-                          src={file.preview}
-                          alt="Cover option"
-                          className="w-full h-24 object-cover"
-                        />
-                        {formData.coverImage === file.finalUrl && (
-                          <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
-                            <div className="bg-blue-500 text-white rounded-full p-1">
-                              <svg
-                                className="w-4 h-4"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
+                    <div className="bg-gray-800 rounded-xl p-4 max-h-64 overflow-y-auto border border-gray-700">
+                      <div className="space-y-3">
+                        {TagsEnum.options.map((tag) => (
+                          <label 
+                            key={tag} 
+                            className="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-md cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.tags.includes(tag)}
+                              onChange={() => handleTagChange(tag)}
+                              className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span className="text-sm text-gray-300 select-none">
+                              {tag.charAt(0) + tag.slice(1).toLowerCase()}
+                            </span>
+                          </label>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="mt-6">
+                  <TextInput
+                    label="Description *"
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Describe your post..."
+                    validate={(value) =>
+                      !value.trim() ? "Description is required" : null
+                    }
+                    textarea
+                    rows={4}
+                  />
                 </div>
               </div>
-            )}
 
-            {/* Action Buttons */}
-            <div className="border-t pt-6">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={() => submitPost(VisibilityEnum.enum.PRIVATE, true)}
-                  disabled={isSubmitting}
-                  variant="gradient-blue"
-                  size="md"
-                  className="flex-1"
-                >
-                  {isSubmitting ? "Saving..." : "Save as Draft"}
-                </Button>
-
-                <Button
-                  onClick={() => submitPost(VisibilityEnum.enum.PRIVATE, false)}
-                  disabled={isSubmitting}
-                  variant="yellow"
-                  size="md"
-                  className="flex-1"
-                >
-                  {isSubmitting ? "Saving..." : "Save as Draft"}
-                </Button>
-
-                <Button
-                  onClick={() =>
-                    submitPost(VisibilityEnum.enum.FOLLOWERS, false)
-                  }
-                  disabled={isSubmitting}
-                  variant="gradient-blue"
-                  size="md"
-                  className="flex-1"
-                >
-                  {isSubmitting ? "Saving..." : "Save for Followers"}
-                </Button>
-
-                <Button
-                  onClick={() => submitPost(VisibilityEnum.enum.PUBLIC, false)}
-                  disabled={isSubmitting}
-                  variant="gradient-blue" // Using gradient-blue since green isn't in your variants
-                  size="md"
-                  className="flex-1"
-                >
-                  {isSubmitting ? "Publishing..." : "Publish Public"}
-                </Button>
+              {/* Media Upload Section */}
+              <div className="border-t border-gray-800 pt-8">
+                <h2 className="text-xl font-semibold text-white mb-6">Media Files</h2>
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <UploadSnippet
+                    onFilesChange={setUploadedFiles}
+                    maxFiles={10}
+                    maxFileSize={10}
+                  />
+                </div>
               </div>
 
-              <p className="text-sm text-gray-500 mt-3 text-center">
-                Make sure to upload all media files before saving your post
-              </p>
+              {/* Cover Image Selection */}
+              {uploadedFiles.length > 0 && (
+                <div className="border-t border-gray-800 pt-8">
+                  <h2 className="text-xl font-semibold text-white mb-6">Select Cover Image</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {uploadedFiles
+                      .filter((f) => f.file.type.startsWith("image/"))
+                      .map((file) => (
+                        <div
+                          key={file.id}
+                          className={`relative cursor-pointer rounded-xl overflow-hidden transition-all duration-200 ${
+                            formData.coverImage === file.finalUrl
+                              ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900"
+                              : "hover:ring-2 hover:ring-gray-600"
+                          }`}
+                          onClick={() => setCoverImage(file.id)}
+                        >
+                          <img
+                            src={file.preview}
+                            alt="Cover option"
+                            className="w-full h-20 object-cover"
+                          />
+                          {formData.coverImage === file.finalUrl && (
+                            <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center">
+                              <div className="bg-blue-500 text-white rounded-full p-1.5 shadow-lg">
+                                <svg
+                                  className="w-3 h-3"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="border-t border-gray-800 pt-8">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <Button
+                      onClick={() => submitPost(VisibilityEnum.enum.PRIVATE, true)}
+                      disabled={isSubmitting}
+                      variant="black-white"
+                      size="md"
+                      className="w-full"
+                    >
+                      {isSubmitting ? "Saving..." : "💾 Save as Draft"}
+                    </Button>
+
+                    <Button
+                      onClick={() => submitPost(VisibilityEnum.enum.PRIVATE, false)}
+                      disabled={isSubmitting}
+                      variant="custom-blue"
+                      size="md"
+                      className="w-full"
+                    >
+                      {isSubmitting ? "Saving..." : "🔒 Save Private"}
+                    </Button>
+
+                    <Button
+                      onClick={() => submitPost(VisibilityEnum.enum.FOLLOWERS, false)}
+                      disabled={isSubmitting}
+                      variant="gradient-blue"
+                      size="md"
+                      className="w-full"
+                    >
+                      {isSubmitting ? "Saving..." : "👥 Followers Only"}
+                    </Button>
+
+                    <Button
+                      onClick={() => submitPost(VisibilityEnum.enum.PUBLIC, false)}
+                      disabled={isSubmitting}
+                      variant="black-gradient"
+                      size="md"
+                      className="w-full"
+                    >
+                      {isSubmitting ? "Publishing..." : "🌍 Publish Public"}
+                    </Button>
+                  </div>
+
+                  <div className="text-center">
+                    <p className="text-sm text-gray-400">
+                      💡 Make sure to upload all media files before saving your post
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

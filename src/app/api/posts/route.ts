@@ -1,4 +1,3 @@
-// app/api/posts/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { PrismaClient, Visibility, Category, TAGS } from '@prisma/client';
@@ -19,10 +18,17 @@ export async function POST(request: NextRequest) {
     
     if (!session?.user?.email) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        {
+          success: false,
+          message: 'Authentication required to create a post',
+          code: 'UNAUTHORIZED'
+        },
         { status: 401 }
       );
     }
+
+    const requestBody = await request.json();
+    console.log("Request body:", requestBody);
 
     const {
       title,
@@ -33,12 +39,49 @@ export async function POST(request: NextRequest) {
       isDraft,
       coverImage,
       files
-    } = await request.json();
+    } = requestBody;
 
     // Validate required fields
-    if (!title || !description || !category || !files || files.length === 0) {
+    if (!title) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        {
+          success: false,
+          message: 'Post title is required',
+          code: 'MISSING_TITLE'
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!description) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Post description is required',
+          code: 'MISSING_DESCRIPTION'
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!category) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Post category is required',
+          code: 'MISSING_CATEGORY'
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!files || files.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'At least one file is required',
+          code: 'MISSING_FILES'
+        },
         { status: 400 }
       );
     }
@@ -50,7 +93,11 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'User not found' },
+        {
+          success: false,
+          message: 'User account not found',
+          code: 'USER_NOT_FOUND'
+        },
         { status: 404 }
       );
     }
@@ -102,6 +149,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      if (movedFiles.length === 0) {
+        throw new Error('No files were successfully processed');
+      }
+
       // Update post with cover image if provided
       let finalCoverImage = '';
       if (coverImage) {
@@ -145,10 +196,14 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      return NextResponse.json({
-        message: 'Post created successfully',
-        post: updatedPost
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Post created successfully',
+          post: updatedPost
+        },
+        { status: 201 }
+      );
 
     } catch (fileProcessingError) {
       console.error('File processing error:', fileProcessingError);
@@ -159,7 +214,11 @@ export async function POST(request: NextRequest) {
       });
 
       return NextResponse.json(
-        { error: 'Failed to process uploaded files' },
+        {
+          success: false,
+          message: 'Failed to process uploaded files',
+          code: 'FILE_PROCESSING_ERROR'
+        },
         { status: 500 }
       );
     }
@@ -167,7 +226,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Post creation error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        success: false,
+        message: 'An unexpected error occurred while creating the post',
+        code: 'INTERNAL_SERVER_ERROR'
+      },
       { status: 500 }
     );
   }
@@ -266,19 +329,26 @@ export async function GET(request: NextRequest) {
     const total = await prisma.post.count({ where });
 
     return NextResponse.json({
-      posts,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
+      success: true,
+      data: {
+        posts,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
       }
     });
 
   } catch (error) {
     console.error('Posts fetch error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        success: false,
+        message: 'An unexpected error occurred while fetching posts',
+        code: 'INTERNAL_SERVER_ERROR'
+      },
       { status: 500 }
     );
   }

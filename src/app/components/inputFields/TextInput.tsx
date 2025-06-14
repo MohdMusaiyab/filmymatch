@@ -4,11 +4,13 @@ interface TextInputProps {
   label?: string;
   placeholder?: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   className?: string;
   id?: string;
   name?: string;
   validate?: (value: string) => string | null;
+  textarea?: boolean; // New prop
+  rows?: number; // For textarea only
 }
 
 const TextInput: React.FC<TextInputProps> = ({
@@ -20,6 +22,8 @@ const TextInput: React.FC<TextInputProps> = ({
   id,
   name,
   validate = (value) => (!value.trim() ? "This field cannot be empty." : null),
+  textarea = false, // Default to false
+  rows = 3, // Default rows for textarea
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
@@ -29,6 +33,11 @@ const TextInput: React.FC<TextInputProps> = ({
     setError(validate(value));
   };
 
+  // Keep all original styling classes exactly as they were
+  const inputClasses = `w-full px-3 py-2 border rounded-3xl bg-[#E1E9F2] focus:outline-none focus:ring-1 focus:ring-[#94BBFF] focus:border-[#94BBFF] text-black transition-all ${
+    error ? "border-red-500 focus:ring-red-500" : "border-[#94BBFF]"
+  }`;
+
   return (
     <div className={`mb-4 ${className}`}>
       {label && (
@@ -37,21 +46,29 @@ const TextInput: React.FC<TextInputProps> = ({
         </label>
       )}
       <div className="relative">
-        <input
-          type="text"
-          id={id}
-          name={name}
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => {
-            if (touched) setError(validate(e.target.value));
-            onChange(e);
-          }}
-          onBlur={handleBlur}
-          className={`w-full px-3 py-2 border rounded-3xl bg-[#E1E9F2] focus:outline-none focus:ring-1 focus:ring-[#94BBFF] focus:border-[#94BBFF] text-black transition-all ${
-            error ? "border-red-500 focus:ring-red-500" : "border-[#94BBFF]"
-          }`}
-        />
+        {textarea ? (
+          <textarea
+            id={id}
+            name={name}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            onBlur={handleBlur}
+            rows={rows}
+            className={inputClasses} // Using the same classes
+          />
+        ) : (
+          <input
+            type="text"
+            id={id}
+            name={name}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            onBlur={handleBlur}
+            className={inputClasses} // Original styling preserved
+          />
+        )}
       </div>
 
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
