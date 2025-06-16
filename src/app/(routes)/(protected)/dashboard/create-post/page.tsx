@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import UploadSnippet, { UploadedFile } from "@/app/components/FileUploader";
 import { CategoryEnum, VisibilityEnum, TagsEnum } from "@/schemas/common";
 import TextInput from "@/app/components/inputFields/TextInput";
-import { Sidebar } from '@/app/components/ui/Sidebar';
+import { Sidebar } from "@/app/components/ui/Sidebar";
 import { ActiveTab } from '@/types';
 
 import { z } from "zod";

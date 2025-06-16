@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-// import { useSession } from "next-auth/react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import UploadSnippet, { UploadedFile } from "@/app/components/FileUploader";
@@ -24,14 +23,14 @@ interface ExistingImage {
   url: string;
   id: string;
   description?: string;
-  originalUrl?: string; // Add this to store original URL for comparison
+  originalUrl?: string;
 }
 
 interface CombinedImage {
   id: string;
   preview: string;
   finalUrl: string;
-  originalUrl?: string; // Add this for proper comparison
+  originalUrl?: string;
   description?: string;
   isExisting: boolean;
 }
@@ -39,7 +38,6 @@ interface CombinedImage {
 const UpdatePostPage = () => {
   const params = useParams();
   const id = params?.id as string;
-  // const { data: session, status } = useSession();
   const router = useRouter();
 
   const [formData, setFormData] = useState<PostFormData>({
@@ -57,6 +55,19 @@ const UpdatePostPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showComments, setShowComments] = useState(false);
+  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
+
+  // Cleanup blob URLs when component unmounts or files change
+  useEffect(() => {
+    return () => {
+      uploadedFiles.forEach(file => {
+        if (file.preview && file.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(file.preview);
+        }
+      });
+    };
+  }, [uploadedFiles]);
 
   // Fetch post data
   useEffect(() => {
@@ -86,16 +97,16 @@ const UpdatePostPage = () => {
           isDraft: Boolean(post.isDraft),
         });
 
-        setExistingImages(
-          Array.isArray(post.images)
-            ? post.images.map((img: any) => ({
-                url: img.url || "",
-                id: img.id || Math.random().toString(),
-                description: img.description || "",
-                originalUrl: img.originalUrl || img.url || "", // Store original URL
-              }))
-            : []
-        );
+        const processedImages = Array.isArray(post.images)
+          ? post.images.map((img: any) => ({
+              url: img.url || "",
+              id: img.id || `img-${Date.now()}-${Math.random()}`,
+              description: img.description || "",
+              originalUrl: img.originalUrl || img.url || "",
+            }))
+          : [];
+
+        setExistingImages(processedImages);
       } catch (error) {
         console.error("Fetch error:", error);
         const errorMessage =
@@ -132,16 +143,36 @@ const UpdatePostPage = () => {
     }));
   };
 
-  const setCoverImage = (url: string, originalUrl?: string) => {
-    // Store the original URL for comparison, but display the signed URL
+  const setCoverImage = useCallback((url: string, originalUrl?: string) => {
+    const imageUrl = originalUrl || url;
     setFormData((prev) => ({
       ...prev,
-      coverImage: originalUrl || url,
+      coverImage: imageUrl,
     }));
     toast.success("Cover image set successfully");
+  }, []);
+
+  const updateVisibility = (newVisibility: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      visibility: newVisibility,
+      isDraft: newVisibility === "DRAFT",
+    }));
+    toast.success(`Visibility set to ${newVisibility.toLowerCase()}`);
   };
 
-  const handleUpdate = async (isDraft: boolean) => {
+  const handleFilesChange = useCallback((files: UploadedFile[]) => {
+    // Clean up previous blob URLs
+    uploadedFiles.forEach(file => {
+      if (file.preview && file.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(file.preview);
+      }
+    });
+    
+    setUploadedFiles(files);
+  }, [uploadedFiles]);
+
+  const handleFinalUpdate = async () => {
     if (!formData.title.trim()) {
       toast.error("Title is required");
       return;
@@ -151,20 +182,26 @@ const UpdatePostPage = () => {
       return;
     }
 
+    // Check if at least one image exists
+    const hasImages = 
+      (existingImages.length > 0 && removedImageIds.length < existingImages.length) ||
+      uploadedFiles.length > 0;
+
+    if (!hasImages) {
+      toast.error("At least one image is required");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const updateData = {
         ...formData,
-        isDraft,
-        existingImages,
-        newFiles: uploadedFiles,
+        files: uploadedFiles,
+        removedImageIds: removedImageIds,
       };
 
-      console.log("Updating post with:", updateData);
-
-      // Replace this with actual API call
-      const response = await fetch(`/api/posts/my-posts/${id}`, {
+      const response = await fetch(`/api/posts/my-posts/${id}/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -176,6 +213,13 @@ const UpdatePostPage = () => {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to update post");
       }
+
+      // Clean up blob URLs after successful update
+      uploadedFiles.forEach(file => {
+        if (file.preview && file.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(file.preview);
+        }
+      });
 
       toast.success("Post updated successfully!");
       router.push(`/dashboard/my-posts/${id}`);
@@ -190,19 +234,26 @@ const UpdatePostPage = () => {
   };
 
   const handleDeleteImage = (imageId: string) => {
-    setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
-
-    // If the deleted image was the cover image, clear the cover image
     const imageToDelete = existingImages.find((img) => img.id === imageId);
-    if (
-      imageToDelete &&
-      (formData.coverImage === imageToDelete.url ||
-        formData.coverImage === imageToDelete.id)
-    ) {
-      setFormData((prev) => ({ ...prev, coverImage: "" }));
-    }
+    
+    if (imageToDelete) {
+      // Add to removed images list
+      setRemovedImageIds(prev => [...prev, imageId]);
+      
+      // Remove from existing images display
+      setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
 
-    toast.success("Image removed");
+      // Clear cover image if it was the deleted image
+      if (
+        formData.coverImage === imageToDelete.url ||
+        formData.coverImage === imageToDelete.originalUrl ||
+        formData.coverImage === imageToDelete.id
+      ) {
+        setFormData((prev) => ({ ...prev, coverImage: "" }));
+      }
+
+      toast.success("Image marked for removal");
+    }
   };
 
   const handleImageClick = (finalUrl: string, originalUrl?: string) => {
@@ -211,21 +262,21 @@ const UpdatePostPage = () => {
     }
   };
 
-  // if (status === "loading" || isLoading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center">
-  //       <div className="text-center">
-  //         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-  //         <p className="mt-4 text-gray-600">Loading...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.error("Image failed to load:", e.currentTarget.src);
+    e.currentTarget.src = "https://images.pexels.com/photos/33109/fall-autumn-red-season.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
+  };
 
-  // if (status === "unauthenticated") {
-  //   router.push("/auth/signin");
-  //   return null;
-  // }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -240,18 +291,20 @@ const UpdatePostPage = () => {
     );
   }
 
-  // Create combined images array with unique keys
+  // Combine existing and uploaded images
   const allImages: CombinedImage[] = [
-    ...existingImages.map((img) => ({
-      id: `existing-${img.id}`, // Prefix to ensure uniqueness
-      preview: img.url,
-      finalUrl: img.url,
-      originalUrl: img.originalUrl || img.url,
-      description: img.description,
-      isExisting: true,
-    })),
+    ...existingImages
+      .filter(img => !removedImageIds.includes(img.id))
+      .map((img) => ({
+        id: `existing-${img.id}`,
+        preview: img.url,
+        finalUrl: img.url,
+        originalUrl: img.originalUrl || img.url,
+        description: img.description,
+        isExisting: true,
+      })),
     ...uploadedFiles.map((file) => ({
-      id: `uploaded-${file.id}`, // Prefix to ensure uniqueness
+      id: `uploaded-${file.id}`,
       preview: file.preview,
       finalUrl: file.finalUrl || file.preview,
       originalUrl: file.finalUrl || file.preview,
@@ -260,11 +313,11 @@ const UpdatePostPage = () => {
     })),
   ];
 
-  // Helper function to check if an image is the cover image
   const isCoverImage = (img: CombinedImage): boolean => {
     return (
       formData.coverImage === img.originalUrl ||
       formData.coverImage === img.finalUrl ||
+      formData.coverImage === img.preview ||
       formData.coverImage === img.id.replace("existing-", "")
     );
   };
@@ -312,21 +365,6 @@ const UpdatePostPage = () => {
                     className="text-gray-700"
                   />
                 </div>
-
-                <div>
-                  <Dropdown
-                    label="Visibility"
-                    id="visibility"
-                    name="visibility"
-                    value={formData.visibility}
-                    onChange={handleInputChange}
-                    options={VisibilityEnum.options.map((vis) => ({
-                      value: vis,
-                      label: vis.charAt(0) + vis.slice(1).toLowerCase(),
-                    }))}
-                    className="text-gray-700"
-                  />
-                </div>
               </div>
 
               <div>
@@ -367,13 +405,67 @@ const UpdatePostPage = () => {
               />
             </div>
 
+            {/* Visibility Controls */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Post Visibility
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() => updateVisibility("DRAFT")}
+                  variant={formData.isDraft ? "gradient-blue" : "outline"}
+                  size="sm"
+                >
+                  Draft
+                </Button>
+                <Button
+                  onClick={() => updateVisibility("PRIVATE")}
+                  variant={
+                    formData.visibility === "PRIVATE" && !formData.isDraft
+                      ? "gradient-blue"
+                      : "outline"
+                  }
+                  size="sm"
+                >
+                  Private
+                </Button>
+                <Button
+                  onClick={() => updateVisibility("FOLLOWERS_ONLY")}
+                  variant={
+                    formData.visibility === "FOLLOWERS_ONLY" &&
+                    !formData.isDraft
+                      ? "gradient-blue"
+                      : "outline"
+                  }
+                  size="sm"
+                >
+                  Followers Only
+                </Button>
+                <Button
+                  onClick={() => updateVisibility("PUBLIC")}
+                  variant={
+                    formData.visibility === "PUBLIC" && !formData.isDraft
+                      ? "gradient-blue"
+                      : "outline"
+                  }
+                  size="sm"
+                >
+                  Public
+                </Button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                Current:{" "}
+                {formData.isDraft ? "Draft" : formData.visibility.toLowerCase()}
+              </p>
+            </div>
+
             {/* File Upload */}
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Media Files
               </h3>
               <UploadSnippet
-                onFilesChange={setUploadedFiles}
+                onFilesChange={handleFilesChange}
                 maxFiles={10}
                 maxFileSize={10}
               />
@@ -404,32 +496,10 @@ const UpdatePostPage = () => {
                         src={file.originalUrl || file.preview}
                         alt="Media preview"
                         className="w-full h-24 object-cover"
-                        onError={(e) => {
-                          console.error("Image failed to load:", file.preview);
-                          e.currentTarget.src = "/placeholder-image.jpg"; // Fallback image
-                        }}
+                        onError={handleImageError}
+                        loading="lazy"
                       />
 
-                      {/* Cover image indicator */}
-                      {/* {isCoverImage(file) && (
-                        <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
-                          <div className="bg-blue-500 text-white rounded-full p-1">
-                            <svg
-                              className="w-4 h-4"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      )} */}
-
-                      {/* Delete button for existing images */}
                       {file.isExisting && (
                         <button
                           onClick={(e) => {
@@ -455,13 +525,24 @@ const UpdatePostPage = () => {
                         </button>
                       )}
 
-                      {/* Image type indicator */}
                       <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded">
                         {file.isExisting ? "Existing" : "New"}
                       </div>
+
+                      {isCoverImage(file) && (
+                        <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded">
+                          Cover
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
+
+                {!formData.coverImage && allImages.length > 0 && (
+                  <p className="text-sm text-amber-600 mt-2">
+                    ⚠️ Please select a cover image by clicking on any image
+                  </p>
+                )}
 
                 {formData.coverImage && (
                   <p className="text-sm text-gray-600 mt-2">
@@ -471,42 +552,39 @@ const UpdatePostPage = () => {
               </div>
             )}
 
-            {/* Action Buttons */}
+            {/* Final Update Button */}
             <div className="border-t pt-6">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={() => handleUpdate(true)}
-                  disabled={isSubmitting}
-                  variant="gradient-blue"
-                  size="md"
-                  className="flex-1"
-                >
-                  {isSubmitting ? "Saving..." : "Save as Draft"}
-                </Button>
+              <Button
+                onClick={handleFinalUpdate}
+                disabled={isSubmitting || !formData.title.trim() || !formData.description.trim()}
+                variant="gradient-blue"
+                size="lg"
+                className="w-full"
+              >
+                {isSubmitting ? "Updating..." : "Final Update"}
+              </Button>
+            </div>
 
-                <Button
-                  onClick={() => handleUpdate(false)}
-                  disabled={isSubmitting}
-                  variant="yellow"
-                  size="md"
-                  className="flex-1"
-                >
-                  {isSubmitting ? "Updating..." : "Update Post"}
-                </Button>
+            {/* Comments Section */}
+            <div className="border-t pt-6">
+              <Button
+                onClick={() => setShowComments(!showComments)}
+                variant="outline"
+                size="sm"
+                className="mb-4"
+              >
+                {showComments ? "Hide Comments" : "Show Comments"}
+              </Button>
 
-                <Button
-                  onClick={() => {
-                    console.log("Post preview requested");
-                    toast.info("Post preview would show here");
-                  }}
-                  variant="black-white"
-                  size="md"
-                  className="flex-1"
-                  disabled={isSubmitting}
-                >
-                  Preview Post
-                </Button>
-              </div>
+              {showComments && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-gray-500 italic">
+                      Comments will appear here after the post is published.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

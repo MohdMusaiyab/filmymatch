@@ -18,7 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Snippit",
-  description: "Your personal space for collecting and sharing highlights from your favorite content.",
+  description:
+    "Your personal space for collecting and sharing highlights from your favorite content.",
 };
 
 export default function RootLayout({
@@ -28,18 +29,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
       >
         <SessionProviderWrapper>
           <div className="flex flex-col h-screen overflow-hidden">
-            <Header />
-            <main className="flex-1 overflow-y-auto hide-scrollbar">{children}</main>
+            <main className="flex-1 overflow-y-auto hide-scrollbar">
+              {children}
+            </main>
             <Footer />
           </div>
           <Toaster position="top-center" richColors />
         </SessionProviderWrapper>
       </body>
-
     </html>
   );
 }

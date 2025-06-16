@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Sidebar } from '../../components/ui/Sidebar';
-import { Collections } from '../../components/ui/Collections';
-import { Drafts } from '../../components/ui/Drafts';
-import { ActiveTab, Collection, Draft } from '@/types';
-import { Snippet } from '../../components/ui/Snippet';
-import api from '@/lib/api';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { Sidebar } from "@/app/components/ui/Sidebar";
+import { Collections } from "@/app/components/ui/Collections";
+import { Drafts } from "@/app/components/ui/Drafts";
+import { ActiveTab, Collection, Draft } from "@/types";
+import { Snippet } from "@/app/components/ui/Snippet";
+import api from "@/lib/api";
+import Link from "next/link";
 
 const Dashboard = () => {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
+  const [activeTab, setActiveTab] = useState<ActiveTab>("home");
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,10 +26,10 @@ const Dashboard = () => {
     // Fetch recent posts
     const fetchRecentPosts = async () => {
       try {
-        const response = await api.get('/posts/my-posts?page=1&limit=3');
+        const response = await api.get("/posts/my-posts/recent");
         setRecentPosts(response.data.posts);
       } catch (error) {
-        console.error('Failed to fetch recent posts:', error);
+        console.error("Failed to fetch recent posts:", error);
       } finally {
         setLoading(false);
       }
@@ -39,34 +39,38 @@ const Dashboard = () => {
   }, []);
 
   const collections: Collection[] = [
-    { id: 1, tag: 'Films', count: 24, icon: '🎬' },
-    { id: 2, tag: 'Podcasts', count: 16, icon: '🎙️' },
-    { id: 3, tag: 'Books', count: 32, icon: '📚' },
-    { id: 4, tag: 'Articles', count: 18, icon: '📄' },
+    { id: 1, tag: "Films", count: 24, icon: "🎬" },
+    { id: 2, tag: "Podcasts", count: 16, icon: "🎙️" },
+    { id: 3, tag: "Books", count: 32, icon: "📚" },
+    { id: 4, tag: "Articles", count: 18, icon: "📄" },
   ];
 
   const drafts: Draft[] = [
     {
       id: 1,
-      title: 'YouTube: The Future of AI in Design',
-      type: 'YouTube',
-      status: 'Draft',
-      timeAgo: 'Started yesterday',
-      icon: '📺',
+      title: "YouTube: The Future of AI in Design",
+      type: "YouTube",
+      status: "Draft",
+      timeAgo: "Started yesterday",
+      icon: "📺",
     },
     {
       id: 2,
-      title: 'The Matrix: Resurrections',
-      type: 'Film',
-      status: 'Draft',
-      timeAgo: 'Started 3 days ago',
-      icon: '🎬',
+      title: "The Matrix: Resurrections",
+      type: "Film",
+      status: "Draft",
+      timeAgo: "Started 3 days ago",
+      icon: "🎬",
     },
   ];
 
   if (loading) {
     return (
-      <div className={`flex-1 overflow-auto ${sidebarCollapsed ? 'pl-16' : 'pl-64'} transition-all duration-300`}>
+      <div
+        className={`flex-1 overflow-auto ${
+          sidebarCollapsed ? "pl-16" : "pl-64"
+        } transition-all duration-300`}
+      >
         <Sidebar
           sidebarCollapsed={sidebarCollapsed}
           toggleSidebar={toggleSidebar}
@@ -81,7 +85,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className={`flex-1 overflow-auto ${sidebarCollapsed ? 'pl-16' : 'pl-64'} transition-all duration-300`}>
+    <div
+      className={`flex-1 overflow-auto ${
+        sidebarCollapsed ? "pl-16" : "pl-64"
+      } transition-all duration-300`}
+    >
       <Sidebar
         sidebarCollapsed={sidebarCollapsed}
         toggleSidebar={toggleSidebar}
@@ -119,7 +127,9 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">You haven't created any posts yet</p>
+                  <p className="text-gray-500">
+                    You haven't created any posts yet
+                  </p>
                   <Link
                     href="/dashboard/create-post"
                     className="mt-2 inline-block text-blue-500 hover:text-blue-600 font-medium"

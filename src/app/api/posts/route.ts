@@ -1,7 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { PrismaClient, Visibility, Category, TAGS } from '@prisma/client';
-import { moveFileFromTemp, generateFinalKey, extractKeyFromUrl } from '@/lib/aws-s3';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { PrismaClient, Visibility, Category, TAGS } from "@prisma/client";
+import {
+  moveFileFromTemp,
+  generateFinalKey,
+  extractKeyFromUrl,
+  generatePresignedViewUrl,
+} from "@/lib/aws-s3";
 
 const prisma = new PrismaClient();
 
@@ -15,20 +20,19 @@ interface FileData {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession();
-    
+
     if (!session?.user?.email) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Authentication required to create a post',
-          code: 'UNAUTHORIZED'
+          message: "Authentication required to create a post",
+          code: "UNAUTHORIZED",
         },
         { status: 401 }
       );
     }
 
     const requestBody = await request.json();
-    console.log("Request body:", requestBody);
 
     const {
       title,
@@ -38,7 +42,7 @@ export async function POST(request: NextRequest) {
       visibility,
       isDraft,
       coverImage,
-      files
+      files,
     } = requestBody;
 
     // Validate required fields
@@ -46,8 +50,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Post title is required',
-          code: 'MISSING_TITLE'
+          message: "Post title is required",
+          code: "MISSING_TITLE",
         },
         { status: 400 }
       );
@@ -57,8 +61,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Post description is required',
-          code: 'MISSING_DESCRIPTION'
+          message: "Post description is required",
+          code: "MISSING_DESCRIPTION",
         },
         { status: 400 }
       );
@@ -68,8 +72,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Post category is required',
-          code: 'MISSING_CATEGORY'
+          message: "Post category is required",
+          code: "MISSING_CATEGORY",
         },
         { status: 400 }
       );
@@ -79,8 +83,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'At least one file is required',
-          code: 'MISSING_FILES'
+          message: "At least one file is required",
+          code: "MISSING_FILES",
         },
         { status: 400 }
       );
@@ -88,15 +92,15 @@ export async function POST(request: NextRequest) {
 
     // Get user from database
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
+      where: { email: session.user.email },
     });
 
     if (!user) {
       return NextResponse.json(
         {
           success: false,
-          message: 'User account not found',
-          code: 'USER_NOT_FOUND'
+          message: "User account not found",
+          code: "USER_NOT_FOUND",
         },
         { status: 404 }
       );
@@ -112,14 +116,14 @@ export async function POST(request: NextRequest) {
         visibility: visibility as Visibility,
         isDraft,
         userId: user.id,
-        coverImage: '', // We'll update this after moving files
-      }
+        coverImage: "", // Will be updated later if coverImage is provided
+      },
     });
 
     try {
       // Move files from temp to final location and create Image records
       const movedFiles: string[] = [];
-      
+
       for (const file of files as FileData[]) {
         try {
           // Generate final key based on visibility
@@ -139,10 +143,9 @@ export async function POST(request: NextRequest) {
             data: {
               url: finalUrl,
               description: file.description || null,
-              postId: post.id
-            }
+              postId: post.id,
+            },
           });
-
         } catch (fileError) {
           console.error(`Error processing file ${file.fileName}:`, fileError);
           // Continue with other files, but log the error
@@ -150,17 +153,17 @@ export async function POST(request: NextRequest) {
       }
 
       if (movedFiles.length === 0) {
-        throw new Error('No files were successfully processed');
+        throw new Error("No files were successfully processed");
       }
 
       // Update post with cover image if provided
-      let finalCoverImage = '';
+      let finalCoverImage = "";
       if (coverImage) {
         // Find the corresponding moved file
-        const coverFile = files.find((f: FileData) => 
-          coverImage.includes(f.s3Key.split('/').pop() || '')
+        const coverFile = files.find((f: FileData) =>
+          coverImage.includes(f.s3Key.split("/").pop() || "")
         );
-        
+
         if (coverFile) {
           const coverFinalKey = generateFinalKey(
             user.id,
@@ -176,60 +179,58 @@ export async function POST(request: NextRequest) {
       const updatedPost = await prisma.post.update({
         where: { id: post.id },
         data: {
-          coverImage: finalCoverImage || movedFiles[0] || null // Use first image as cover if none specified
+          coverImage: finalCoverImage || movedFiles[0] || null, // Use first image as cover if none specified
         },
         include: {
           user: {
             select: {
               id: true,
               username: true,
-              avatar: true
-            }
+              avatar: true,
+            },
           },
           images: true,
           _count: {
             select: {
               likes: true,
-              comments: true
-            }
-          }
-        }
+              comments: true,
+            },
+          },
+        },
       });
 
       return NextResponse.json(
         {
           success: true,
-          message: 'Post created successfully',
-          post: updatedPost
+          message: "Post created successfully",
+          post: updatedPost,
         },
         { status: 201 }
       );
-
     } catch (fileProcessingError) {
-      console.error('File processing error:', fileProcessingError);
-      
+      console.error("File processing error:", fileProcessingError);
+
       // If file processing fails, we should clean up the post
       await prisma.post.delete({
-        where: { id: post.id }
+        where: { id: post.id },
       });
 
       return NextResponse.json(
         {
           success: false,
-          message: 'Failed to process uploaded files',
-          code: 'FILE_PROCESSING_ERROR'
+          message: "Failed to process uploaded files",
+          code: "FILE_PROCESSING_ERROR",
         },
         { status: 500 }
       );
     }
-
   } catch (error) {
-    console.error('Post creation error:', error);
+    console.error("Post creation error:", error);
     return NextResponse.json(
       {
         success: false,
-        message: 'An unexpected error occurred while creating the post',
-        code: 'INTERNAL_SERVER_ERROR'
+        message: "An unexpected error occurred while creating the post",
+        code: "INTERNAL_SERVER_ERROR",
       },
       { status: 500 }
     );
@@ -239,115 +240,148 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
-    const visibility = searchParams.get('visibility') as Visibility;
-    const category = searchParams.get('category') as Category;
-    const userId = searchParams.get('userId');
 
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = 10;
     const skip = (page - 1) * limit;
 
-    // Build where clause
-    const where: any = {
-      isDraft: false // Only show published posts by default
-    };
+    const visibility = searchParams.get("visibility") as Visibility;
+    const category = searchParams.get("category") as Category;
+    const tags = searchParams.getAll("tags") as TAGS[];
+    const search = searchParams.get("search") || "";
+    const sort = searchParams.get("sort") || "recent"; // 'recent' or 'likes'
 
-    if (visibility) {
-      where.visibility = visibility;
+    const session = await getServerSession();
+
+    let currentUserId: string | null = null;
+    if (session?.user?.email) {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
+      currentUserId = user?.id ?? null;
+    }
+
+    // 🔎 Filters
+    const where: any = { isDraft: false };
+
+    // 👀 Visibility Logic
+    if (!currentUserId) {
+      where.visibility = Visibility.PUBLIC;
+    } else {
+      if (visibility === Visibility.FOLLOWERS) {
+        const followings = await prisma.follow.findMany({
+          where: { followerId: currentUserId },
+          select: { followingId: true },
+        });
+        const followingIds = followings.map((f) => f.followingId);
+
+        where.AND = [
+          { visibility: Visibility.FOLLOWERS },
+          { userId: { in: followingIds } },
+        ];
+      } else {
+        where.visibility = Visibility.PUBLIC;
+      }
     }
 
     if (category) {
       where.category = category;
     }
 
-    if (userId) {
-      where.userId = userId;
+    if (tags && tags.length > 0) {
+      where.tags = { hasSome: tags };
     }
 
-    // Get session to check if user can see private/followers posts
-    const session = await getServerSession();
-    
-    if (!session?.user?.email) {
-      // Not authenticated, only show public posts
-      where.visibility = Visibility.PUBLIC;
-    } else {
-      // Authenticated, but still filter based on visibility rules
-      if (!userId) { // If not looking at specific user's posts
-        const user = await prisma.user.findUnique({
-          where: { email: session.user.email }
-        });
-
-        if (user) {
-          // Show public posts + user's own posts + followers posts from people they follow
-          where.OR = [
-            { visibility: Visibility.PUBLIC },
-            { userId: user.id }, // User's own posts
-            {
-              AND: [
-                { visibility: Visibility.FOLLOWERS },
-                {
-                  user: {
-                    followers: {
-                      some: {
-                        followerId: user.id
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ];
-        }
-      }
+    if (search.trim() !== "") {
+      const lowerSearch = search.toLowerCase();
+      where.OR = [
+        { title: { contains: lowerSearch, mode: "insensitive" } },
+        { description: { contains: lowerSearch, mode: "insensitive" } },
+      ];
     }
 
+    // 🧠 Determine sorting
+    const orderBy =
+      sort === "likes"
+        ? { likes: { _count: "desc" as const } }
+        : { createdAt: "desc" as const };
+    // 🗂 Fetch posts
     const posts = await prisma.post.findMany({
       where,
+      orderBy,
+      skip,
+      take: limit,
       include: {
         user: {
           select: {
             id: true,
             username: true,
-            avatar: true
-          }
+            avatar: true,
+          },
         },
-        images: true,
+        images: {
+          select: { url: true },
+        },
         _count: {
           select: {
             likes: true,
-            comments: true
-          }
-        }
+            comments: true,
+          },
+        },
       },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      skip,
-      take: limit
     });
+
+    // 📸 Format response
+    const formattedPosts = await Promise.all(
+      posts.map(async (post) => {
+        let coverImage = post.coverImage;
+
+        if (!coverImage && post.images.length > 0) {
+          coverImage = post.images[0].url;
+        }
+
+        const signedCoverImage = coverImage
+          ? await generatePresignedViewUrl(extractKeyFromUrl(coverImage))
+          : null;
+
+        return {
+          id: post.id,
+          title: post.title,
+          description: post.description,
+          createdAt: post.createdAt,
+          updatedAt: post.updatedAt,
+          visibility: post.visibility,
+          category: post.category,
+          tags: post.tags,
+          user: post.user,
+          coverImage: signedCoverImage,
+          _count: post._count,
+        };
+      })
+    );
 
     const total = await prisma.post.count({ where });
 
     return NextResponse.json({
       success: true,
       data: {
-        posts,
+        posts: formattedPosts,
         pagination: {
           page,
           limit,
           total,
-          pages: Math.ceil(total / limit)
-        }
-      }
+          pages: Math.ceil(total / limit),
+        },
+      },
     });
-
   } catch (error) {
-    console.error('Posts fetch error:', error);
+    console.error("Posts fetch error:", error);
     return NextResponse.json(
       {
         success: false,
-        message: 'An unexpected error occurred while fetching posts',
-        code: 'INTERNAL_SERVER_ERROR'
+        message: "An unexpected error occurred while fetching posts",
+        code: "INTERNAL_SERVER_ERROR",
       },
       { status: 500 }
     );

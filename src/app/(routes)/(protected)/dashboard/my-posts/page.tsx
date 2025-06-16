@@ -167,7 +167,7 @@ const PostsPage = () => {
           {posts.map((post) => (
             <div key={post.id} className="h-full">
               <Snippet
-                post={post}
+                post={{ ...post, linkTo: `/dashboard/my-posts/${post.id}` }} // ✅ inject linkTo
                 menuOpen={menuOpen}
                 toggleMenu={toggleMenu}
                 showActions={true}

@@ -1,6 +1,6 @@
 // components/Snippet.tsx
-import { MoreVertical, Edit, Trash, Share } from 'lucide-react';
-import Link from 'next/link';
+import { MoreVertical, Edit, Trash, Share } from "lucide-react";
+import Link from "next/link";
 
 interface SnippetProps {
   post: {
@@ -25,6 +25,7 @@ interface SnippetProps {
       comments: number;
     };
     createdAt: string;
+    linkTo?: string; // ✅ new prop to allow dynamic link
   };
   menuOpen: string | null;
   toggleMenu: (id: string) => void;
@@ -35,7 +36,7 @@ export const Snippet = ({
   post,
   menuOpen,
   toggleMenu,
-  showActions = true
+  showActions = true,
 }: SnippetProps) => {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
@@ -68,7 +69,10 @@ export const Snippet = ({
           {/* Main Content */}
           <div className="flex-1">
             <div className="flex justify-between items-start">
-              <Link href={`/dashboard/my-posts/${post.id}`} className="min-w-0">
+              <Link
+                href={post.linkTo ?? `/dashboard/my-posts/${post.id}`}
+                className="min-w-0"
+              >
                 <h3 className="text-white text-lg font-semibold leading-tight hover:underline">
                   {post.title}
                 </h3>
@@ -115,30 +119,28 @@ export const Snippet = ({
                 {post.category}
               </span>
               <div className="flex gap-2">
-                <span className="truncate">
-                  @{post.user.username}
-                </span>
-                <span>
-                  {new Date(post.createdAt).toLocaleDateString()}
-                </span>
+                <span className="truncate">@{post.user.username}</span>
+                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
 
             {/* Description */}
             <div className="mt-5">
-              <p className="text-gray-300 italic leading-relaxed">"{post.description}"</p>
+              <p className="text-gray-300 italic leading-relaxed">
+                "{post.description}"
+              </p>
             </div>
 
             {/* Stats */}
             <div className="mt-4 flex items-center gap-6 text-xs text-gray-500">
               <span>{post._count.likes} Likes</span>
               <span>{post._count.comments} Comments</span>
-              <span className="capitalize">{post.visibility.toLowerCase()}</span>
+              <span className="capitalize">
+                {post.visibility.toLowerCase()}
+              </span>
             </div>
           </div>
         </div>
-
-
       </div>
     </div>
   );

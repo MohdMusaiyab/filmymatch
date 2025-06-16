@@ -219,6 +219,7 @@ export async function checkVerificationToken(email: string) {
       exists: !!token,
     };
   } catch (error) {
+    console.error("Error checking verification token:", error);
     return { success: false, message: "Error checking token" };
   }
 }

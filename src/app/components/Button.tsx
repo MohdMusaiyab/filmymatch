@@ -14,7 +14,9 @@ interface ButtonProps {
     | "danger"
     | "yellow"
     | "custom-blue"
-    | "google-oauth";
+    | "google-oauth"
+    | "outline";
+    
   icon?: React.ReactNode;
 }
 
@@ -51,6 +53,7 @@ const Button: React.FC<ButtonProps> = ({
     "custom-blue": "bg-[#a5c8ff] text-black hover:bg-[#7da7f0] focus:ring-[#a5c8ff]",
     "google-oauth": 
       "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-[#7da7f0] shadow-sm flex items-center justify-center gap-2",
+    outline: "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-[#7da7f0] shadow-sm",
   };
 
   // Combine all styles
