@@ -2,22 +2,34 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { enhancePostsWithSignedUrls } from "@/lib/aws-s3";
+import { authOptions } from "@/lib/auth-providers";
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ) {
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Authentication required",
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 }
+      );
     }
 
     const { id } = await params;
     if (!id) {
       return NextResponse.json(
-        { error: "Post ID is required" },
+        {
+          success: false,
+          message: "Post ID is required",
+          code: "MISSING_POST_ID",
+        },
         { status: 400 }
       );
     }
@@ -27,17 +39,22 @@ export async function GET(
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: "User account not found",
+          code: "USER_NOT_FOUND",
+        },
+        { status: 404 }
+      );
     }
 
     const post = await prisma.post.findUnique({
       where: {
         id,
-        userId: user.id, // Ensure user can only access their own posts
+        userId: user.id,
       },
-      select: {
-        title: true,
-        description: true,
+      include: {
         user: {
           select: {
             id: true,
@@ -45,11 +62,6 @@ export async function GET(
             avatar: true,
           },
         },
-        category: true,
-        visibility: true,
-        tags: true,
-        isDraft: true,
-        coverImage: true,
         images: true,
         comments: {
           select: {
@@ -62,8 +74,10 @@ export async function GET(
               },
             },
           },
+          orderBy: {
+            createdAt: "desc",
+          },
         },
-
         _count: {
           select: {
             likes: true,
@@ -75,31 +89,31 @@ export async function GET(
 
     if (!post) {
       return NextResponse.json(
-        { error: "Post not found or access denied" },
+        {
+          success: false,
+          message: "Post not found or access denied",
+          code: "POST_NOT_FOUND",
+        },
         { status: 404 }
       );
     }
 
-    // Prepare post data for URL enhancement
-    const postForEnhancement = {
-        ...post,
-        coverImage: post.coverImage,
-        images: post.images.map((image) => ({
-          id: image.id,
-          url: image.url,
-          description: image.description,
-        })),
-      };
-      const [enhancedPost] = await enhancePostsWithSignedUrls([
-        postForEnhancement,
-      ]);
+    const [enhancedPost] = await enhancePostsWithSignedUrls([post]);
 
-    
-    return NextResponse.json(enhancedPost);
+    return NextResponse.json({
+      success: true,
+      data: enhancedPost,
+      message: "Post retrieved successfully",
+      code: "POST_RETRIEVED",
+    });
   } catch (error) {
     console.error("Post Fetch Error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        success: false,
+        message: "An unexpected error occurred while fetching the post",
+        code: "INTERNAL_SERVER_ERROR",
+      },
       { status: 500 }
     );
   }

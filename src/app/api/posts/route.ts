@@ -1,25 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { PrismaClient, Visibility, Category, TAGS } from "@prisma/client";
+import { authOptions } from "@/lib/auth-providers";
 import {
-  moveFileFromTemp,
-  generateFinalKey,
   extractKeyFromUrl,
   generatePresignedViewUrl,
 } from "@/lib/aws-s3";
 
 const prisma = new PrismaClient();
 
-interface FileData {
-  s3Key: string;
-  description: string;
-  fileName: string;
-  fileType: string;
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -39,10 +31,6 @@ export async function POST(request: NextRequest) {
       description,
       category,
       tags,
-      visibility,
-      isDraft,
-      coverImage,
-      files,
     } = requestBody;
 
     // Validate required fields
@@ -79,20 +67,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!files || files.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "At least one file is required",
-          code: "MISSING_FILES",
-        },
-        { status: 400 }
-      );
-    }
-
     // Get user from database
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
     });
 
     if (!user) {
@@ -113,117 +90,23 @@ export async function POST(request: NextRequest) {
         description,
         category: category as Category,
         tags: tags as TAGS[],
-        visibility: visibility as Visibility,
-        isDraft,
+        visibility: Visibility.PRIVATE,
+        isDraft: true,
         userId: user.id,
-        coverImage: "", // Will be updated later if coverImage is provided
       },
     });
-
-    try {
-      // Move files from temp to final location and create Image records
-      const movedFiles: string[] = [];
-
-      for (const file of files as FileData[]) {
-        try {
-          // Generate final key based on visibility
-          const finalKey = generateFinalKey(
-            user.id,
-            post.id,
-            file.fileName,
-            visibility
-          );
-
-          // Move file from temp to final location
-          const finalUrl = await moveFileFromTemp(file.s3Key, finalKey);
-          movedFiles.push(finalUrl);
-
-          // Create Image record
-          await prisma.image.create({
-            data: {
-              url: finalUrl,
-              description: file.description || null,
-              postId: post.id,
-            },
-          });
-        } catch (fileError) {
-          console.error(`Error processing file ${file.fileName}:`, fileError);
-          // Continue with other files, but log the error
-        }
+    return NextResponse.json(
+      {
+        success: true,
+        data: { postId: post.id },
+        message:
+          "Post created successfully and Saved as Draft, now move forward to upload files",
+        code: "POST_CREATED",
+      },
+      {
+        status: 201,
       }
-
-      if (movedFiles.length === 0) {
-        throw new Error("No files were successfully processed");
-      }
-
-      // Update post with cover image if provided
-      let finalCoverImage = "";
-      if (coverImage) {
-        // Find the corresponding moved file
-        const coverFile = files.find((f: FileData) =>
-          coverImage.includes(f.s3Key.split("/").pop() || "")
-        );
-
-        if (coverFile) {
-          const coverFinalKey = generateFinalKey(
-            user.id,
-            post.id,
-            coverFile.fileName,
-            visibility
-          );
-          finalCoverImage = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${coverFinalKey}`;
-        }
-      }
-
-      // Update post with final cover image
-      const updatedPost = await prisma.post.update({
-        where: { id: post.id },
-        data: {
-          coverImage: finalCoverImage || movedFiles[0] || null, // Use first image as cover if none specified
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              avatar: true,
-            },
-          },
-          images: true,
-          _count: {
-            select: {
-              likes: true,
-              comments: true,
-            },
-          },
-        },
-      });
-
-      return NextResponse.json(
-        {
-          success: true,
-          message: "Post created successfully",
-          post: updatedPost,
-        },
-        { status: 201 }
-      );
-    } catch (fileProcessingError) {
-      console.error("File processing error:", fileProcessingError);
-
-      // If file processing fails, we should clean up the post
-      await prisma.post.delete({
-        where: { id: post.id },
-      });
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Failed to process uploaded files",
-          code: "FILE_PROCESSING_ERROR",
-        },
-        { status: 500 }
-      );
-    }
+    );
   } catch (error) {
     console.error("Post creation error:", error);
     return NextResponse.json(
