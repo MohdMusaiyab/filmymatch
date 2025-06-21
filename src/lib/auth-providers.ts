@@ -133,12 +133,15 @@ export const authOptions: NextAuthOptions = {
         if (existingUser) {
           // For existing users, preserve all existing data
           user.username = existingUser.username;
+          
           if (!existingUser.emailVerified) {
             await prisma.user.update({
               where: { id: existingUser.id },
               data: { emailVerified: true },
             });
           }
+          user.id = existingUser.id;
+          user.emailVerified = existingUser.emailVerified;
           // Return true to continue the sign-in process with existing user
           return true;
         }
@@ -159,6 +162,10 @@ export const authOptions: NextAuthOptions = {
               bio: null,
             },
           });
+
+          // Set the user ID and emailVerified in the user object
+          user.id = user.id; // Use email as ID for Google users
+          user.emailVerified = true; // Google emails are automatically verified
         } catch (error) {
           console.error("Google OAuth user creation failed:", error);
           return false;

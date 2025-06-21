@@ -5,14 +5,12 @@ import EmailInput from "@/app/components/inputFields/EmailInput";
 import {
   sendPasswordResetToken,
   verifyToken,
-checkVerificationToken
-
 } from "@/actions/auth/passwordActions";
 import { changePassword } from "@/actions/user/changePassword";
 import PasswordInput from "@/app/components/inputFields/PasswordInput";
 import Button from "@/app/components/Button";
 
-const page = () => {
+const Page = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -537,4 +535,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;
