@@ -49,28 +49,26 @@ export async function generatePresignedUrl(
   };
 }
 
-export async function moveFileFromTemp(
-  tempKey: string,
-  finalKey: string
+export async function changeFileVisibility(
+  oldKey: string, 
+  _newVisibility?: string // Optional (unused in new structure)
 ): Promise<string> {
-  // Copy from temp to final location
-  const copyCommand = new CopyObjectCommand({
-    Bucket: BUCKET_NAME,
-    CopySource: `${BUCKET_NAME}/${tempKey}`,
-    Key: finalKey,
-  });
+  const fileName = oldKey.split('/').pop()!; // Extract filename from temp path
+  const newKey = generateFinalKey('', '', fileName); // Ignore userId/postId
 
-  await s3Client.send(copyCommand);
+  // Copy to permanent location
+  await s3Client.send(
+    new CopyObjectCommand({
+      Bucket: BUCKET_NAME,
+      CopySource: `${BUCKET_NAME}/${oldKey}`,
+      Key: newKey,
+    })
+  );
 
   // Delete temp file
-  const deleteCommand = new DeleteObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: tempKey,
-  });
+  await deleteFile(oldKey); 
 
-  await s3Client.send(deleteCommand);
-
-  return `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${finalKey}`;
+  return `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${newKey}`;
 }
 
 export async function deleteFile(key: string): Promise<void> {
@@ -83,15 +81,15 @@ export async function deleteFile(key: string): Promise<void> {
 }
 
 export function generateFinalKey(
-  userId: string,
-  postId: string,
-  fileName: string,
-  visibility: string
+  _userId: string,      // Not needed anymore (kept for backward compatibility)
+  _postId: string,      // Not needed anymore
+  fileName: string,     // Original filename
+  _visibility?: string  // Optional (unused in new structure)
 ): string {
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
-  return `${visibility.toLowerCase()}/${userId}/${postId}/${sanitizedFileName}`;
+  const randomSuffix = Math.random().toString(36).slice(2, 8); // Avoid collisions
+  return `uploads/${randomSuffix}-${sanitizedFileName}`;
 }
-
 export function extractKeyFromUrl(url: string): string {
   try {
     const urlObj = new URL(url);
