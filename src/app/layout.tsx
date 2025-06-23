@@ -37,7 +37,6 @@ export default function RootLayout({
             <main className="flex-1 overflow-y-auto hide-scrollbar">
               {children}
             </main>
-            <Footer />
           </div>
           <Toaster position="top-center" richColors />
         </SessionProviderWrapper>

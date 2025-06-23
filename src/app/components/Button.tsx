@@ -32,12 +32,12 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   // Base styles - added letter spacing for better readability
   const baseStyles =
-    "font-semibold rounded-3xl focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 tracking-wide";
+    "font-semibold rounded-3xl focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 tracking-wide";
 
   // Size styles - slightly increased padding for better spacing
   const sizeStyles = {
     sm: "px-3.5 py-1.5 text-sm",
-    md: "px-5 py-2.5 text-base",
+    md: "px-5 py-2.5 text-sm",
     lg: "px-7 py-3.5 text-lg",
   };
 

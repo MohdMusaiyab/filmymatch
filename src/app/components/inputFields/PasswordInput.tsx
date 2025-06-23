@@ -69,11 +69,11 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   };
 
   return (
-    <div className={`mb-4 ${className}`}>
+    <div className={`mb-3 ${className}`}>
       {label && (
         <label
           htmlFor={id}
-          className="block text-sm font-medium text-white mb-1"
+          className="block text-sm font-small text-gray-300 mb-1"
         >
           {label}
         </label>
@@ -88,7 +88,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           name={name}
           autoComplete="new-password"
           aria-describedby={showStrength ? "password-strength" : undefined}
-          className={`w-full px-3 py-2 border border-[#94BBFF] rounded-3xl bg-[#E1E9F2] focus:outline-none focus:ring-1 focus:ring-[#94BBFF] text-black ${
+          className={`w-full px-3 py-2.5 border border-[#94BBFF] rounded-3xl bg-[#E1E9F2] focus:outline-none focus:ring-1 focus:ring-[#94BBFF] text-black text-sm${
             error ? "border-red-500" : ""
           }`}
         />
@@ -106,7 +106,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
       {/* Password Strength Indicator as a horizontal bar */}
       {showStrength && value.length > 0 && (
         <div id="password-strength" className="mt-2">
-          <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
               className={`h-full ${getStrengthColor()} transition-all duration-300 ease-in-out`}
               style={{ width: getStrengthWidth() }}
@@ -118,7 +118,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
         </div>
       )}
 
-      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+      {error && <p className="mt-1 px-2 text-xs text-red-500">{error}</p>}
     </div>
   );
 };

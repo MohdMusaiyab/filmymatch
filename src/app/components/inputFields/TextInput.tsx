@@ -34,14 +34,14 @@ const TextInput: React.FC<TextInputProps> = ({
   };
 
   // Keep all original styling classes exactly as they were
-  const inputClasses = `w-full px-3 py-2 border rounded-3xl bg-[#E1E9F2] focus:outline-none focus:ring-1 focus:ring-[#94BBFF] focus:border-[#94BBFF] text-black transition-all ${
+  const inputClasses = `w-full px-3 py-2.5 border rounded-3xl bg-[#E1E9F2] focus:outline-none focus:ring-1 focus:ring-[#94BBFF] focus:border-[#94BBFF] text-black text-sm transition-all ${
     error ? "border-red-500 focus:ring-red-500" : "border-[#94BBFF]"
   }`;
 
   return (
-    <div className={`mb-4 ${className}`}>
+    <div className={`mb-3 ${className}`}>
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-white mb-1">
+        <label htmlFor={id} className="block text-sm font-small text-gray-300 mb-1">
           {label}
         </label>
       )}
@@ -71,7 +71,7 @@ const TextInput: React.FC<TextInputProps> = ({
         )}
       </div>
 
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+      {error && <p className="mt-1 px-2 text-xs text-red-500">{error}</p>}
     </div>
   );
 };
