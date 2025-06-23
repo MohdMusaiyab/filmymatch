@@ -1,4 +1,6 @@
 import bcrypt from "bcrypt";
+import { authOptions } from "./auth-providers";
+import { getServerSession } from "next-auth";
 
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS || "10", 10);
 
@@ -28,4 +30,9 @@ export function generateUsername(base: string): string {
     .substring(0, 15);
   const randomSuffix = Math.floor(Math.random() * 1000);
   return `${sanitized}${randomSuffix}`;
+}
+
+export async function getSession() {
+  const session = await getServerSession(authOptions);
+  return session?.user;
 }
