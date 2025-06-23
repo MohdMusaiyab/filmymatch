@@ -10,6 +10,8 @@ import {
   type Tags,
   type Visibility,
 } from "@/schemas/common";
+import PostComment from "@/app/components/Comment";
+import LikeButton from "@/app/components/LikeButton";
 import { toast } from "sonner";
 
 type FileWithPreview = {
@@ -417,6 +419,7 @@ const EditPostPage = () => {
                 </button>
               ))}
             </div>
+            <LikeButton postId={postId}  />
           </div>
 
           <div>
@@ -597,6 +600,7 @@ const EditPostPage = () => {
           )}
         </div>
       </div>
+      <PostComment postId={postId} /> 
     </div>
   );
 };
