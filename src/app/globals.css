@@ -2,6 +2,8 @@
 
 @theme{
   --shadow-boxShadow: 0 0 12px rgba(146, 186, 255, 0.6); 
+  --color-pastel-blue: #94BBFF;
+  --color-accent-blue: #71A0FF;
 }
 
 /* Hide scrollbar but allow scrolling */
@@ -13,4 +15,3 @@
 .hide-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
-

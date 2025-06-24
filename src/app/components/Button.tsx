@@ -32,13 +32,13 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   // Base styles - added letter spacing for better readability
   const baseStyles =
-    "font-semibold rounded-3xl focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 tracking-wide";
+    "font-semibold rounded-full focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 tracking-wide";
 
   // Size styles - slightly increased padding for better spacing
   const sizeStyles = {
     sm: "px-3.5 py-1.5 text-sm",
     md: "px-5 py-2.5 text-sm",
-    lg: "px-7 py-3.5 text-lg",
+    lg: "px-9 py-3.5 text-md",
   };
 
   // Updated variant styles with the gradient colors from the image
@@ -47,7 +47,7 @@ const Button: React.FC<ButtonProps> = ({
     "black-gradient":
       "bg-black text-[#a5c8ff] hover:bg-gray-900 focus:ring-[#a5c8ff]",
     "gradient-blue":
-      "bg-gradient-to-r from-[#a5c8ff] to-[#7da7f0] text-black hover:from-[#7da7f0] hover:to-[#a5c8ff] focus:ring-[#7da7f0]",
+      "bg-gradient-to-bl from-blue-100 via-pastel-blue to-accent-blue text-black hover:from-[#a5c8ff] hover:to-[#7da7f0] focus:ring-[#7da7f0]",
     danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
     yellow: "bg-yellow-400 text-black hover:bg-yellow-500 focus:ring-yellow-500",
     "custom-blue": "bg-[#a5c8ff] text-black hover:bg-[#7da7f0] focus:ring-[#a5c8ff]",

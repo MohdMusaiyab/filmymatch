@@ -191,7 +191,7 @@ const SignupPage: React.FC = () => {
             type="submit"
             disabled={!isFormValid || loading}
             className="w-full mt-2 px-4 py-2"
-            variant="gradient-blue" // or your preferred variant
+            variant="custom-blue" // or your preferred variant
             size="md"
           >
             {loading ? "Signing up..." : "Submit"}
