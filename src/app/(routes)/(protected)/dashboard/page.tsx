@@ -6,17 +6,16 @@ import { Collections } from "@/app/components/ui/Collections";
 import { Drafts } from "@/app/components/ui/Drafts";
 import { ActiveTab, Collection, Draft } from "@/types";
 import { Snippet } from "@/app/components/ui/Snippet";
+import { useSidebar } from "@/app/context/SidebarContext";
 import api from "@/lib/api";
 import Link from "next/link";
 
 const Dashboard = () => {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const { sidebarCollapsed, toggleSidebar } = useSidebar();
   const [activeTab, setActiveTab] = useState<ActiveTab>("home");
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
 
   const toggleMenu = (postId: string) => {
     setMenuOpen(menuOpen === postId ? null : postId);
@@ -72,8 +71,6 @@ const Dashboard = () => {
         } transition-all duration-300`}
       >
         <Sidebar
-          sidebarCollapsed={sidebarCollapsed}
-          toggleSidebar={toggleSidebar}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
         />
@@ -87,12 +84,10 @@ const Dashboard = () => {
   return (
     <div
       className={`flex-1 overflow-auto ${
-        sidebarCollapsed ? "pl-16" : "pl-64"
+        sidebarCollapsed ? "pl-14" : "pl-40"
       } transition-all duration-300`}
     >
       <Sidebar
-        sidebarCollapsed={sidebarCollapsed}
-        toggleSidebar={toggleSidebar}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />

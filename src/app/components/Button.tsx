@@ -34,14 +34,12 @@ const Button: React.FC<ButtonProps> = ({
   const baseStyles =
     "font-semibold rounded-full focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 tracking-wide";
 
-  // Size styles - slightly increased padding for better spacing
   const sizeStyles = {
-    sm: "px-3.5 py-1.5 text-sm",
-    md: "px-5 py-2.5 text-sm",
-    lg: "px-9 py-3.5 text-md",
+    sm: "px-3 py-1 text-xs sm:px-3.5 sm:py-1.5 sm:text-sm",
+    md: "px-3.5 py-2 text-sm sm:px-5 sm:py-2.5 sm:text-base",
+    lg: "px-5 py-2.5 text-base sm:px-9 sm:py-3.5 sm:text-lg",
   };
 
-  // Updated variant styles with the gradient colors from the image
   const variantStyles = {
     "black-white": "bg-black text-white hover:bg-gray-900 focus:ring-gray-500",
     "black-gradient":
