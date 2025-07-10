@@ -1,6 +1,7 @@
 // components/Snippet.tsx
 import { MoreVertical, Edit, Trash, Share } from "lucide-react";
 import Link from "next/link";
+import AddCollectionButton from "../AddCollectionButton";
 
 interface SnippetProps {
   post: {
@@ -77,6 +78,7 @@ export const Snippet = ({
                   {post.title}
                 </h3>
               </Link>
+              <AddCollectionButton postId={post.id} userId={post.user.id} />
 
               {/* Dropdown Trigger - Exactly like your previous example */}
               <div className="relative">
