@@ -14,4 +14,12 @@ export const UserSchema = z.object({
   updatedAt: z.date(),
 });
 
+export const updateUserSchema = z.object({
+  username: z.string().min(2).max(32).optional(),
+  email: z.string().email().optional(),
+  bio: z.string().max(300).optional().nullable(),
+  phone: z.string().max(20).optional().nullable(),
+  deactivateAccount: z.boolean().optional(),
+});
+
 export type User = z.infer<typeof UserSchema>;

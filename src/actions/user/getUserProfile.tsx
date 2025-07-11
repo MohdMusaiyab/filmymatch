@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { enhancePostsWithSignedUrls, generatePresignedViewUrl } from "@/lib/aws-s3";
+import { enhancePostsWithSignedUrls, extractKeyFromUrl, generatePresignedViewUrl } from "@/lib/aws-s3";
 
 type Visibility = 'PUBLIC' | 'PRIVATE' | 'FOLLOWERS';
 
@@ -224,6 +224,18 @@ export async function getUserProfile({
                 },
             };
         }
+        if (user.avatar) {
+            try {
+              const avatarKey = extractKeyFromUrl(user.avatar);
+              user.avatar = await generatePresignedViewUrl(avatarKey);
+            } catch (err) {
+              console.warn("Avatar signing failed", err);
+              user.avatar = null;
+            }
+          } else {
+            user.avatar = null;
+          }
+          
         //Signing them
         const signedPosts = await enhancePostsWithSignedUrls(
             posts.map((post) => ({
