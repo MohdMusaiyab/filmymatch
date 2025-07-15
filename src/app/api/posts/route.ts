@@ -136,6 +136,16 @@ export async function GET(request: NextRequest) {
       });
       currentUserId = user?.id ?? null;
     }
+    let savedPostIds: Set<string> = new Set();
+
+    if (currentUserId) {
+      const savedPosts = await prisma.savedPost.findMany({
+        where: { userId: currentUserId },
+        select: { postId: true },
+      });
+
+      savedPostIds = new Set(savedPosts.map((sp) => sp.postId));
+    }
 
     // 🔎 Filters
     const where: any = { isDraft: false };
@@ -239,6 +249,7 @@ export async function GET(request: NextRequest) {
           user: post.user,
           coverImage: signedCoverImage,
           _count: post._count,
+          isSaved: currentUserId ? savedPostIds.has(post.id) : false,
         };
       })
     );

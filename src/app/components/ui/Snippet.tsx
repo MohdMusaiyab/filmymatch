@@ -2,6 +2,7 @@
 import { MoreVertical, Edit, Trash, Share } from "lucide-react";
 import Link from "next/link";
 import AddCollectionButton from "../AddCollectionButton";
+import { ToggleSaveButton } from "../ToggleSaveButton";
 
 interface SnippetProps {
   post: {
@@ -27,6 +28,7 @@ interface SnippetProps {
     };
     createdAt: string;
     linkTo?: string; // ✅ new prop to allow dynamic link
+    isSaved: boolean; // ✅ Add this
   };
   menuOpen: string | null;
   toggleMenu: (id: string) => void;
@@ -78,6 +80,7 @@ export const Snippet = ({
                   {post.title}
                 </h3>
               </Link>
+              <ToggleSaveButton postId={post.id} initialIsSaved={post.isSaved} />
               <AddCollectionButton postId={post.id} userId={post.user.id} />
 
               {/* Dropdown Trigger - Exactly like your previous example */}
