@@ -537,32 +537,70 @@ export async function getCollectionById(collectionId: string) {
     const filteredPosts = await Promise.all(
       collection.posts.map(async (post) => {
         const isPostOwner = post.userId === session.id;
-
+    
         if (post.visibility === "PRIVATE" && !isPostOwner) return null;
         if (
           post.visibility === "FOLLOWERS" &&
           !isPostOwner &&
           !followingIds.has(post.userId)
-        )
+        ) {
           return null;
-
+        }
+    
         const signedCoverImage = post.coverImage
           ? await generatePresignedViewUrl(extractKeyFromUrl(post.coverImage))
           : null;
-
+    
+        const signedAvatar = post.user.avatar
+          ? await generatePresignedViewUrl(extractKeyFromUrl(post.user.avatar))
+          : null;
+    
+        const isSaved = await prisma.savedPost.findFirst({
+          where: {
+            postId: post.id,
+            userId: session.id,
+          },
+        });
+    
         return {
           ...post,
           coverImage: signedCoverImage,
+          isSaved: !!isSaved,
+          user: {
+            ...post.user,
+            avatar: signedAvatar,
+          },
         };
       })
     );
-
-    const finalPosts = filteredPosts.filter(Boolean);
-
+    
+    const filteredNonNullPosts = filteredPosts.filter(Boolean);
+    
+    // 🔹 Fetch saved posts for current user
+    const savedPosts = await prisma.savedPost.findMany({
+      where: {
+        userId: session.id,
+        postId: {
+          in: filteredNonNullPosts.map((post) => post!.id),
+        },
+      },
+      select: {
+        postId: true,
+      },
+    });
+    
+    const savedPostIds = new Set(savedPosts.map((p) => p.postId));
+    
+    // 🔹 Add `isSaved` to each post
+    const finalPosts = filteredNonNullPosts.map((post) => ({
+      ...post!,
+      isSaved: savedPostIds.has(post!.id),
+    }));
+    
     const signedCollectionCover = collection.coverImage
       ? await generatePresignedViewUrl(extractKeyFromUrl(collection.coverImage))
       : null;
-
+    
     return {
       success: true,
       data: {
@@ -573,6 +611,7 @@ export async function getCollectionById(collectionId: string) {
       message: "Collection fetched successfully",
       code: "SUCCESS",
     };
+    
   } catch (error) {
     console.error("getCollectionById error:", error);
     return {

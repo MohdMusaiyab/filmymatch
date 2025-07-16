@@ -30,7 +30,9 @@ interface Post {
   createdAt: string;
   tags?: string[];
   isDraft?: boolean;
+  isSaved: boolean; // ✅ ADD THIS LINE
 }
+
 
 interface ApiResponse {
   posts: Post[];

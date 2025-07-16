@@ -19,6 +19,7 @@ interface Post {
   }
   createdAt: string
   updatedAt: string
+  isSaved: boolean; // ✅ Add this line
 }
 
 interface Collection {
@@ -144,31 +145,32 @@ const CollectionPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {collection.posts.map((post) => (
               <Snippet
-                key={post.id}
-                post={{
-                  id: post.id,
-                  title: post.title,
-                  description: post.title, // Fallback to title
-                  category: 'Post',
-                  visibility: post.visibility,
-                  coverImage: post.coverImage || undefined,
-                  user: {
-                    id: post.user.id,
-                    username: post.user.username,
-                    avatar: post.user.avatar || undefined
-                  },
-                  images: [],
-                  _count: {
-                    likes: 0,
-                    comments: 0
-                  },
-                  createdAt: post.createdAt,
-                  linkTo: `/explore/post/${post.id}`
-                }}
-                menuOpen={null}
-                toggleMenu={() => { }}
-                showActions={false}
-              />
+              key={post.id}
+              post={{
+                id: post.id,
+                title: post.title,
+                description: post.title, // fallback
+                category: 'Post',
+                visibility: post.visibility,
+                coverImage: post.coverImage || undefined,
+                user: {
+                  id: post.user.id,
+                  username: post.user.username,
+                  avatar: post.user.avatar || undefined,
+                },
+                images: [],
+                _count: {
+                  likes: 0,
+                  comments: 0,
+                },
+                createdAt: post.createdAt,
+                linkTo: `/explore/post/${post.id}`,
+                isSaved: post.isSaved, // ✅ Add this line
+              }}
+              menuOpen={null}
+              toggleMenu={() => {}}
+              showActions={false}
+            />
             ))}
           </div>
         ) : (

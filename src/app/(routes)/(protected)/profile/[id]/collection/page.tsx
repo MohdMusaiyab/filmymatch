@@ -23,6 +23,7 @@ interface Collection {
     userId: string;
     createdAt: string;
     updatedAt: string;
+    isSaved: boolean;
     user: {
       id: string;
       username: string;
@@ -138,7 +139,7 @@ const UserCollectionsPage = () => {
                 comments: 0,
               },
               createdAt: collection.createdAt,
-              linkTo: `/collections/${collection.id}`,
+              linkTo: `/explore/collection/${collection.id}`,
             }}
             menuOpen={null}
             toggleMenu={() => {}}

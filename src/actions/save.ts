@@ -1,6 +1,6 @@
 "use server";
 import { getSession } from "@/lib/auth";
-import { enhancePostsWithSignedUrls, extractKeyFromUrl, generatePresignedViewUrl } from "@/lib/aws-s3";
+import {  extractKeyFromUrl, generatePresignedViewUrl } from "@/lib/aws-s3";
 import prisma from "@/lib/prisma";
 import type { Visibility } from "@prisma/client";
 //Can modify it to accept userId also so that it works faster
