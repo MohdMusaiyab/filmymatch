@@ -1,19 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sidebar } from "@/app/components/ui/Sidebar";
 import { Collections } from "@/app/components/ui/Collections";
 import { Drafts } from "@/app/components/ui/Drafts";
-import { ActiveTab, Collection, Draft } from "@/types";
+import { Collection, Draft } from "@/types";
 import { Snippet } from "@/app/components/ui/Snippet";
-import { useSidebar } from "@/app/context/SidebarContext";
 import api from "@/lib/api";
 import Link from "next/link";
 
 const Dashboard = () => {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const { sidebarCollapsed, toggleSidebar } = useSidebar();
-  const [activeTab, setActiveTab] = useState<ActiveTab>("home");
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,33 +61,14 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div
-        className={`flex-1 overflow-auto ${
-          sidebarCollapsed ? "pl-16" : "pl-64"
-        } transition-all duration-300`}
-      >
-        <Sidebar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
         <div className="flex items-center justify-center h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
-      </div>
     );
   }
 
   return (
-    <div
-      className={`flex-1 overflow-auto ${
-        sidebarCollapsed ? "pl-14" : "pl-40"
-      } transition-all duration-300`}
-    >
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
-
+    <div>
       <div className="flex-1 overflow-auto">
         <div className="p-6 md:p-10 space-y-12">
           <section>
