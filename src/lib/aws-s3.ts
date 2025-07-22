@@ -113,8 +113,10 @@ export async function generatePresignedViewUrl(key: string): Promise<string> {
   return signedUrl;
 }
 type PostWithImages = {
+  id: string;
   coverImage: string | null;
   images: { url: string }[];
+
 };
 export async function enhancePostsWithSignedUrls(posts: PostWithImages[]) {
   

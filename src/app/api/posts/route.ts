@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { PrismaClient, Visibility, Category, TAGS } from "@prisma/client";
 import { authOptions } from "@/lib/auth-providers";
-import {
-  extractKeyFromUrl,
-  generatePresignedViewUrl,
-} from "@/lib/aws-s3";
+import { extractKeyFromUrl, generatePresignedViewUrl } from "@/lib/aws-s3";
 
 const prisma = new PrismaClient();
 
@@ -26,12 +23,7 @@ export async function POST(request: NextRequest) {
 
     const requestBody = await request.json();
 
-    const {
-      title,
-      description,
-      category,
-      tags,
-    } = requestBody;
+    const { title, description, category, tags } = requestBody;
 
     // Validate required fields
     if (!title) {
@@ -144,6 +136,16 @@ export async function GET(request: NextRequest) {
       });
       currentUserId = user?.id ?? null;
     }
+    let savedPostIds: Set<string> = new Set();
+
+    if (currentUserId) {
+      const savedPosts = await prisma.savedPost.findMany({
+        where: { userId: currentUserId },
+        select: { postId: true },
+      });
+
+      savedPostIds = new Set(savedPosts.map((sp) => sp.postId));
+    }
 
     // 🔎 Filters
     const where: any = { isDraft: false };
@@ -219,11 +221,18 @@ export async function GET(request: NextRequest) {
     const formattedPosts = await Promise.all(
       posts.map(async (post) => {
         let coverImage = post.coverImage;
+        let user = post.user;
 
         if (!coverImage && post.images.length > 0) {
           coverImage = post.images[0].url;
         }
 
+        if (user?.avatar) {
+          const avatarKey = extractKeyFromUrl(user.avatar);
+          user.avatar = await generatePresignedViewUrl(avatarKey);
+        } else {
+          user.avatar = null;
+        }
         const signedCoverImage = coverImage
           ? await generatePresignedViewUrl(extractKeyFromUrl(coverImage))
           : null;
@@ -240,6 +249,7 @@ export async function GET(request: NextRequest) {
           user: post.user,
           coverImage: signedCoverImage,
           _count: post._count,
+          isSaved: currentUserId ? savedPostIds.has(post.id) : false,
         };
       })
     );

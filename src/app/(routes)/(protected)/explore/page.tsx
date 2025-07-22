@@ -28,6 +28,7 @@ interface Post {
     comments: number
   }
   createdAt: string
+  isSaved: boolean;
 }
 
 interface ApiResponse {

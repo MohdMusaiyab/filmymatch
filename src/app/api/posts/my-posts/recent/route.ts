@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const postsWithSignedCover = await Promise.all(
       posts.map(async (post) => {
         let imageToUse = post.coverImage;
-
+    
         // Fallback: fetch one image only if no coverImage
         if (!imageToUse) {
           const fallbackImage = await prisma.image.findFirst({
@@ -56,17 +56,28 @@ export async function GET(request: NextRequest) {
           });
           imageToUse = fallbackImage?.url || null;
         }
-
+    
         const signedCoverImage = imageToUse
           ? await generatePresignedViewUrl(extractKeyFromUrl(imageToUse))
           : null;
-
+    
+        // ✅ Dynamically check if this post is saved by the user
+        const isSaved = await prisma.savedPost.findFirst({
+          where: {
+            userId: user.id,
+            postId: post.id,
+          },
+          select: { id: true },
+        });
+    
         return {
           ...post,
           coverImage: signedCoverImage,
+          isSaved: !!isSaved, // true if exists, false if not
         };
       })
     );
+    
 
     return NextResponse.json({
       posts: postsWithSignedCover,
