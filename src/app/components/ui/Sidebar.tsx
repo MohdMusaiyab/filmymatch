@@ -18,9 +18,8 @@ const navItems: { icon: string; label: string; tab: ActiveTab }[] = [
 ];
 
 export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
-  const { sidebarCollapsed, toggleSidebar } = useSidebar();
+  const { userId, sidebarCollapsed, toggleSidebar } = useSidebar();
   const router = useRouter();
-
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect screen size
@@ -53,7 +52,9 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
         <div className="py-4 px-2 flex items-center justify-end">
           <button
             onClick={toggleSidebar}
-            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={
+              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
             className="py-2 px-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {sidebarCollapsed ? <ChevronRight size={20} /> : <X size={20} />}
@@ -76,7 +77,9 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                     onClick={() => {
                       setActiveTab(tab);
                       if (tab === "home") router.push("/dashboard");
-                      if (isMobile) toggleSidebar(); 
+                      if (tab === "explore") router.push("/explore");
+                      if (tab === "library") router.push(`/dashboard/my-collection`);
+                      if (isMobile) toggleSidebar();
                     }}
                     className={`group flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium transition-colors duration-200
                       ${sidebarCollapsed ? "justify-center" : "w-full"}
@@ -108,6 +111,7 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
             className="flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Go to Profile"
             title={sidebarCollapsed ? "Profile" : undefined}
+            onClick={()=>router.push(`/profile/${userId}`)}
           >
             <span className="text-lg">👤</span>
             {!sidebarCollapsed && <span>Profile</span>}

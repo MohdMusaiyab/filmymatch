@@ -70,6 +70,7 @@ const UserCollectionsPage = () => {
               visibility: post.visibility,
               userId: post.userId,
               createdAt: post.createdAt,
+              isSaved: post.isSaved,
               updatedAt: post.updatedAt,
               user: {
                 id: post.user.id,
@@ -139,6 +140,8 @@ const UserCollectionsPage = () => {
                 comments: 0,
               },
               createdAt: collection.createdAt,
+              // remove isSaved as it is not required for a collection
+              isSaved: false,
               linkTo: `/explore/collection/${collection.id}`,
             }}
             menuOpen={null}

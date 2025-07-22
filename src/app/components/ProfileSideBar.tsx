@@ -32,7 +32,7 @@ const ProfileSideBar: React.FC<ProfileSideBarProps> = ({ userId }) => {
         </li>
         <li>
           <Link
-            href="/dashboard/collections"
+            href="/dashboard/profile/collection"
             className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-zinc-800 transition"
           >
             <Bookmark size={18} />
