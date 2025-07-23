@@ -12,6 +12,7 @@ interface SidebarProps {
 }
 
 const navItems: { icon: string; label: string; tab: ActiveTab }[] = [
+  //use lucide-react icons here
   { icon: "🏠", label: "Home", tab: "home" },
   { icon: "🔍", label: "Explore", tab: "explore" },
   { icon: "📚", label: "My Library", tab: "library" },

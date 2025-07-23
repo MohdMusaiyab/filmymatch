@@ -626,9 +626,9 @@ export async function getCollectionById(collectionId: string) {
 }
 //Fetch You Collection Names, i.e. including Drafts Collection so that User Can select them and then add to that particular collection
 
-export async function getUserCollectionNames(userId: string, postId: string) {
+export async function getUserCollectionNames(postId: string) {
   const session = await getSession();
-  if (!session || session.id !== userId) {
+  if (!session) {
     return {
       success: false,
       error: {
@@ -640,8 +640,6 @@ export async function getUserCollectionNames(userId: string, postId: string) {
 
   try {
     if (
-      !userId ||
-      typeof userId !== "string" ||
       !postId ||
       typeof postId !== "string"
     ) {
@@ -657,7 +655,7 @@ export async function getUserCollectionNames(userId: string, postId: string) {
     // Fetch all collections
     const collections = await prisma.collection.findMany({
       where: {
-        userId,
+        userId: session.id,
       },
       select: {
         id: true,

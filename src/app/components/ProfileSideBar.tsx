@@ -23,7 +23,7 @@ const ProfileSideBar: React.FC<ProfileSideBarProps> = ({ userId }) => {
       <ul className="space-y-3">
         <li>
           <Link
-            href="/dashboard/profile/edit"
+            href="/profile/edit"
             className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-zinc-800 transition"
           >
             <Settings size={18} />
@@ -32,7 +32,7 @@ const ProfileSideBar: React.FC<ProfileSideBarProps> = ({ userId }) => {
         </li>
         <li>
           <Link
-            href="/dashboard/profile/collection"
+            href={`/profile/${userId}/collection`}
             className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-zinc-800 transition"
           >
             <Bookmark size={18} />

@@ -25,7 +25,7 @@ const AddCollectionButton = ({ postId, userId }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const fetchCollections = async () => {
-    const res = await getUserCollectionNames(userId, postId);
+    const res = await getUserCollectionNames(postId);
     if (res.success) {
       setCollections(res.data || []);
     }
