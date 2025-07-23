@@ -3,6 +3,7 @@ import { MoreVertical, Edit, Trash, Share } from "lucide-react";
 import Link from "next/link";
 import AddCollectionButton from "../AddCollectionButton";
 import { ToggleSaveButton } from "../ToggleSaveButton";
+import { useSession } from "next-auth/react";
 
 interface SnippetProps {
   post: {
@@ -41,6 +42,8 @@ export const Snippet = ({
   toggleMenu,
   showActions = true,
 }: SnippetProps) => {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
       {/* Cover Image */}
@@ -55,6 +58,9 @@ export const Snippet = ({
       <div className="p-6">
         <div className="flex items-start gap-4">
           {/* User Avatar */}
+          <Link
+          href={`/profile/${post.user.id}`}
+          >
           <div className="w-8 h-8 bg-blue-500/10 rounded-xl flex items-center justify-center overflow-hidden">
             {post.user.avatar ? (
               <img
@@ -68,6 +74,7 @@ export const Snippet = ({
               </span>
             )}
           </div>
+          </Link>
 
           {/* Main Content */}
           <div className="flex-1">
@@ -80,7 +87,10 @@ export const Snippet = ({
                   {post.title}
                 </h3>
               </Link>
-              <ToggleSaveButton postId={post.id} initialIsSaved={post.isSaved} />
+              <ToggleSaveButton
+                postId={post.id}
+                initialIsSaved={post.isSaved}
+              />
               <AddCollectionButton postId={post.id} userId={post.user.id} />
 
               {/* Dropdown Trigger - Exactly like your previous example */}
@@ -98,20 +108,26 @@ export const Snippet = ({
                 {/* Dropdown Menu - Exactly like your previous example */}
                 {menuOpen === post.id && (
                   <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-xl shadow-lg z-30 py-1 animate-fade-in">
-                    <Link
-                      href={`/dashboard/my-posts/${post.id}/edit`}
-                      className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 transition rounded-md"
-                    >
-                      <Edit size={16} className="mr-2" />
-                      Edit
-                    </Link>
+                    {/* show edit & delete only if it's own post */}
+                    {(userId === post.user.id) && (
+                      <>
+                        <Link
+                          href={`/dashboard/my-posts/${post.id}`}
+                          className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 transition rounded-md"
+                        >
+                          <Edit size={16} className="mr-2" />
+                          Edit
+                        </Link>
+
+                        <button className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition rounded-md">
+                          <Trash size={16} className="mr-2" />
+                          Delete
+                        </button>
+                      </>
+                    )}
                     <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 transition rounded-md">
                       <Share size={16} className="mr-2" />
                       Share
-                    </button>
-                    <button className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition rounded-md">
-                      <Trash size={16} className="mr-2" />
-                      Delete
                     </button>
                   </div>
                 )}
