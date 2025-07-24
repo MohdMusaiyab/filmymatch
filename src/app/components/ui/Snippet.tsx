@@ -80,7 +80,7 @@ export const Snippet = ({
           <div className="flex-1">
             <div className="flex justify-between items-start">
               <Link
-                href={post.linkTo ?? `/dashboard/my-posts/${post.id}`}
+                href={`/explore/post/${post.id}`}
                 className="min-w-0"
               >
                 <h3 className="text-white text-lg font-semibold leading-tight hover:underline">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ActiveTab } from "@/types";
 import { useSidebar } from "@/app/context/SidebarContext";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -74,12 +75,18 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
 
               return (
                 <li key={tab}>
-                  <button
+                  <Link
+                    href={
+                      tab === "home"
+                        ? "/dashboard"
+                        : tab === "explore"
+                        ? "/explore"
+                        : tab === "library"
+                        ? "/dashboard/my-collection"
+                        : "#"
+                    }
                     onClick={() => {
                       setActiveTab(tab);
-                      if (tab === "home") router.push("/dashboard");
-                      if (tab === "explore") router.push("/explore");
-                      if (tab === "library") router.push(`/dashboard/my-collection`);
                       if (isMobile) toggleSidebar();
                     }}
                     className={`group flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium transition-colors duration-200
@@ -99,7 +106,7 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                         {label}
                       </span>
                     )}
-                  </button>
+                  </Link>
                 </li>
               );
             })}
@@ -108,11 +115,12 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
 
         {/* Footer */}
         <div className="p-3 mt-auto border-t border-gray-800">
+          {/* //use Link here too */}
           <button
             className="flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Go to Profile"
             title={sidebarCollapsed ? "Profile" : undefined}
-            onClick={()=>router.push(`/profile/${userId}`)}
+            onClick={() => router.push(`/profile/${userId}`)}
           >
             <span className="text-lg">👤</span>
             {!sidebarCollapsed && <span>Profile</span>}
