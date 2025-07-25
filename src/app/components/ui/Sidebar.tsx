@@ -116,15 +116,15 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
         {/* Footer */}
         <div className="p-3 mt-auto border-t border-gray-800">
           {/* //use Link here too */}
-          <button
+          <Link
+            href={`/profile/${userId}`}
             className="flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Go to Profile"
             title={sidebarCollapsed ? "Profile" : undefined}
-            onClick={() => router.push(`/profile/${userId}`)}
           >
             <span className="text-lg">👤</span>
             {!sidebarCollapsed && <span>Profile</span>}
-          </button>
+          </Link>
         </div>
       </aside>
     </>

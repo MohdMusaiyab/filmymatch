@@ -170,7 +170,7 @@ export default function Page() {
               Sign In
             </Link>
 
-            <Link href="/sign-up">
+            <Link href="/auth/sign-up">
               <Button variant="custom-blue" size="md">
                 Get Started
               </Button>

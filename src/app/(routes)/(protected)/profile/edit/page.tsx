@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   getBasicUserDetails,
@@ -10,6 +11,7 @@ import {
 } from "@/actions/user/editProfile";
 
 interface UserProfile {
+  id: string;
   username: string;
   email: string;
   bio: string | null;
@@ -29,6 +31,7 @@ interface UserForm {
 const fallbackAvatar = "/default-avatar.png"; // You can replace with your default
 
 const EditProfilePage = () => {
+  const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -150,6 +153,7 @@ const EditProfilePage = () => {
         throw new Error(res.error?.message || "Profile update failed");
       }
       toast.success("Profile updated successfully");
+      router.push(`/profile/${user?.id}`);
     } catch (err) {
       toast.error("Failed to update profile");
     }
@@ -243,7 +247,7 @@ const EditProfilePage = () => {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <input
             type="checkbox"
             name="deactivateAccount"
@@ -252,7 +256,7 @@ const EditProfilePage = () => {
             className="w-4 h-4"
           />
           <label className="text-gray-400">Deactivate account</label>
-        </div>
+        </div> */}
 
         <button
           type="submit"
