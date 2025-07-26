@@ -14,12 +14,14 @@ const UserProfilePage = () => {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
+  const [isPanel, setIsPanel] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!id || typeof id !== "string") return;
 
       const res = await getUserProfile({ userId: id });
+
       if (res.success) {
         setProfileData(res.data);
       } else {
@@ -31,31 +33,48 @@ const UserProfilePage = () => {
     fetchProfile();
   }, [id]);
 
-  if (loading)
+  const handleToggleSetting = () => setIsPanel((prev) => !prev);
+
+  if (loading) {
     return (
       <div className="text-center py-20 text-zinc-300">Loading profile...</div>
     );
+  }
 
-  if (!profileData)
+  if (!profileData) {
     return (
       <div className="text-center py-20 text-red-500">Profile not found.</div>
     );
+  }
 
   const { profile, posts, highlights, permissions } = profileData;
 
   return (
-    <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto p-6">
-      {/* Left Sidebar */}
-      <div className="md:w-64">
-        <ProfileSideBar userId={profile.id} />
+  <>
+    {/* overlay */}
+    {isPanel && (
+      <div
+        className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center"
+        onClick={() => setIsPanel(false)}
+      >
+        <div
+          className="relative z-50"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ProfileSideBar userId={profile.id} onClose={() => setIsPanel(false)} />
+        </div>
       </div>
+    )}
 
-      {/* Main Content */}
+    {/* Main Content */}
+    <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto p-6">
       <div className="flex-1 space-y-8">
+        
         {/* Profile Header */}
-        <div className="flex gap-16 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-lg text-white space-y-4">
-          {/* avatar */}
-          <div className="flex intems-center justify-center">
+        <div className="flex gap-16 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-lg text-white">
+          
+          {/* Avatar */}
+          <div className="flex items-center justify-center">
             <div className="w-24 h-24 rounded-full overflow-hidden border border-zinc-700">
               {profile.avatar ? (
                 <img
@@ -71,112 +90,40 @@ const UserProfilePage = () => {
             </div>
           </div>
 
-          {/* username+edit+setting+stats+bio */}
-          <div className="flex flex-col gap-3">
-            {/* header */}
-            <div className="flex items-center justify-start gap-4">
-              <h2 className="text-xl font-semibold">{profile.username}</h2>
+          {/* Username, Stats, Buttons */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-normal">{profile.username}</h2>
+              <FollowButton userId={profile.id} />
               <Link
-                href={`/profile/edit`}
-                className="flex items-center justify-center gap-1 bg-zinc-700 hover:bg-zinc-600 px-2 py-1 rounded-md text-sm"
+                href="/profile/edit"
+                className="flex items-center gap-1 text-white bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 px-2 py-1 rounded-md text-sm"
               >
-                <Edit size={16} /> Edit Profile
+                <Edit size={16} />
+                Edit Profile
               </Link>
-
-              {/* another menu opens */}
-              <Link href={"profile/setting"}>
+              <button onClick={handleToggleSetting}>
                 <Settings size={18} />
-              </Link>
+              </button>
             </div>
 
-            {/* stats */}
-            <div className="flex items-center justify-start gap-4">
-              <div className="flex flex-col items-center justify-center text-white">
-                <p className="text-md font-medium">
-                  {profile.stats.totalPosts}
-                </p>
-                <p className="text-sm font-light">Total Posts</p>
-              </div>
-              <div className="flex flex-col items-center justify-center text-white">
-                <p className="text-md font-medium">
-                  {profile.stats.collections}
-                </p>
-                <p className="text-sm font-light">Collections</p>
-              </div>
-              <div className="flex flex-col items-center justify-center text-white">
-                <p className="text-md font-medium">{profile.stats.followers}</p>
-                <p className="text-sm font-light">Followers</p>
-              </div>
-              <div className="flex flex-col items-center justify-center text-white">
-                <p className="text-md font-medium">{profile.stats.following}</p>
-                <p className="text-sm font-light">Following</p>
-              </div>
-            </div>
-
-            {/* bio */}
-            <div>
-              <p className="text-sm text-zinc-400">
-                {profile.bio || "No bio yet."}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-lg text-white space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full overflow-hidden border border-zinc-700">
-              {profile.avatar ? (
-                <img
-                  src={profile.avatar}
-                  alt={profile.username}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-indigo-600 text-white text-2xl font-bold">
-                  {profile.username.charAt(0).toUpperCase()}
+            <div className="flex gap-4">
+              {[
+                { label: "posts", count: profile.stats.totalPosts },
+                { label: "collections", count: profile.stats.collections },
+                { label: "followers", count: profile.stats.followers },
+                { label: "following", count: profile.stats.following },
+              ].map(({ label, count }) => (
+                <div key={label} className="flex items-center gap-1">
+                  <p className="text-md font-medium">{count}</p>
+                  <p className="text-sm font-light text-zinc-300">{label}</p>
                 </div>
-              )}
+              ))}
             </div>
 
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold">{profile.username}</h2>
-              <p className="text-sm text-zinc-400">
-                {profile.bio || "No bio yet."}
-              </p>
-              <p className="text-xs text-zinc-500 mt-1">
-                Joined {new Date(profile.joinDate).toLocaleDateString()}
-              </p>
-            </div>
-
-            <FollowButton userId={profile.id} />
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 text-sm text-zinc-300">
-            <div>
-              <p className="font-medium text-white">
-                {profile.stats.totalPosts}
-              </p>
-              <p>Total Posts</p>
-            </div>
-            <div>
-              <p className="font-medium text-white">
-                {profile.stats.followers}
-              </p>
-              <p>Followers</p>
-            </div>
-            <div>
-              <p className="font-medium text-white">
-                {profile.stats.following}
-              </p>
-              <p>Following</p>
-            </div>
-            <div>
-              <p className="font-medium text-white">
-                {profile.stats.collections}
-              </p>
-              <p>Collections</p>
-            </div>
+            <p className="text-sm text-zinc-200">
+              {profile.bio || "No bio yet."}
+            </p>
           </div>
         </div>
 
@@ -190,7 +137,7 @@ const UserProfilePage = () => {
                   key={post.id}
                   post={{
                     ...post,
-                    images: [], // optional unless needed
+                    images: [],
                     user: {
                       id: profile.id,
                       username: profile.username,
@@ -204,13 +151,17 @@ const UserProfilePage = () => {
                 />
               ))
             ) : (
-              <p className="text-zinc-500 col-span-full">No posts available.</p>
+              <p className="text-zinc-500 col-span-full">
+                No posts available.
+              </p>
             )}
           </div>
         </div>
       </div>
     </div>
-  );
+  </>
+);
+
 };
 
 export default UserProfilePage;

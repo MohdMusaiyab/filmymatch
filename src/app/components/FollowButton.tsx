@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { toggleFollow, isFollowing } from "@/actions/follow";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader } from "lucide-react";
 
 interface FollowButtonProps {
     userId: string; // the user to follow/unfollow
@@ -53,19 +53,16 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId }) => {
     return (
         <button
             onClick={handleToggleFollow}
-            disabled={loading}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition duration-200 border focus:outline-none
+            className={`w-24 px-4 py-1 flex items-center justify-center rounded-lg text-sm font-medium transition duration-200 border focus:outline-none
         ${isFollowingUser
                     ? "bg-zinc-800 text-white border-zinc-700 hover:bg-zinc-700"
                     : "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"}
       `}
         >
-            {loading ? (
-                <Loader2 className="animate-spin w-4 h-4" />
-            ) : isFollowingUser ? (
-                "Unfollow"
+            {isFollowingUser ? (
+                loading? <Loader size={18}/> : "Unfollow"
             ) : (
-                "Follow"
+                loading? <Loader size={18}/> : "Follow"
             )}
         </button>
     );

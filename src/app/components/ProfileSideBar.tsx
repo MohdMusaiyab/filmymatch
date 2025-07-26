@@ -7,17 +7,26 @@ import Link from "next/link";
 
 interface ProfileSideBarProps {
   userId: string;
+  onClose?: () => void;
 }
 
-const ProfileSideBar: React.FC<ProfileSideBarProps> = ({ userId }) => {
-  const { data: session, status } = useSession();
+const ProfileSideBar: React.FC<ProfileSideBarProps> = ({ userId, onClose }) => {
+  const { data: session } = useSession();
 
   const isOwner = session?.user?.id === userId;
-
   if (!isOwner) return null;
 
   return (
-    <aside className="w-full md:w-64 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-lg text-white space-y-6">
+    <aside className="w-80 max-w-full bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-lg text-white space-y-6 relative">
+      {onClose && (
+        <button
+          className="absolute top-4 right-4 text-zinc-400 hover:text-white"
+          onClick={onClose}
+        >
+          ✕
+        </button>
+      )}
+
       <div className="text-xl font-semibold text-center">My Panel</div>
 
       <ul className="space-y-3">
