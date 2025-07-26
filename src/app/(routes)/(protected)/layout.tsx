@@ -2,7 +2,6 @@
 
 import React , {useState} from "react";
 import { ActiveTab } from "@/types";
-import Footer from "@/app/components/general/Footer";
 import { Header } from "@/app/components/general/Header";
 import { SidebarProvider, useSidebar } from "@/app/context/SidebarContext";
 import {Sidebar} from "@/app/components/ui/Sidebar";
@@ -27,7 +26,6 @@ const InnerLayout = ({ children }: { children: React.ReactNode }) => {
           {children}
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

@@ -8,7 +8,7 @@ import FollowButton from "@/app/components/FollowButton";
 import ProfileSideBar from "@/app/components/ProfileSideBar";
 import { Snippet } from "@/app/components/ui/Snippet";
 import { toast } from "sonner";
-import { Edit, Settings } from "lucide-react";
+import { Edit, Settings, Library, Bookmark, Grid3X3, LibrarySquare, LucideLibrary } from "lucide-react";
 
 const UserProfilePage = () => {
   const { id } = useParams();
@@ -51,7 +51,7 @@ const UserProfilePage = () => {
 
   return (
   <>
-    {/* overlay */}
+    {/* overlay panel*/}
     {isPanel && (
       <div
         className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center"
@@ -67,15 +67,15 @@ const UserProfilePage = () => {
     )}
 
     {/* Main Content */}
-    <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto p-6">
+    <div className="flex flex-col md:flex-row gap-8 p-6 md:p-10 mx-auto">
       <div className="flex-1 space-y-8">
         
         {/* Profile Header */}
-        <div className="flex gap-16 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-lg text-white">
+        <div className="flex gap-18 bg-zinc-900 border border-zinc-800 p-8 rounded-2xl shadow-lg text-white">
           
           {/* Avatar */}
           <div className="flex items-center justify-center">
-            <div className="w-24 h-24 rounded-full overflow-hidden border border-zinc-700">
+            <div className="w-26 h-26 rounded-full overflow-hidden border border-zinc-700">
               {profile.avatar ? (
                 <img
                   src={profile.avatar}
@@ -127,7 +127,7 @@ const UserProfilePage = () => {
           </div>
         </div>
 
-        {/* Posts */}
+        {/* Posts/Collections/Saved grid*/}
         <div>
           <h3 className="text-white text-lg font-semibold mb-4">Posts</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
