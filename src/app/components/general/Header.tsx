@@ -14,15 +14,15 @@ export const Header = () => {
   return (
     <header
       className={`sticky top-0 py-4 sm:pr-4 md:pr-8 pr-12 flex justify-between items-center transition-all duration-300 bg-black ${
-        sidebarCollapsed ? "pl-24" : "pl-48"
+        sidebarCollapsed ? "pl-24" : "pl-54"
       }`}
     >
       <div>
         <Image
           src={Logo}
           alt="Company Logo"
-          width={100}
-          height={100}
+          width={90}
+          height={90}
           className="m-auto hidden md:block"
         />
       </div>

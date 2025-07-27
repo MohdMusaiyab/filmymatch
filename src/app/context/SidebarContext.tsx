@@ -13,7 +13,7 @@ const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const toggleSidebar = () => setSidebarCollapsed((prev) => !prev);
 
   const userId = session?.user?.id || null; 

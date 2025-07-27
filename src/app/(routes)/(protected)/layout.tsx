@@ -1,10 +1,10 @@
 "use client";
 
-import React , {useState} from "react";
+import React, { useState } from "react";
 import { ActiveTab } from "@/types";
 import { Header } from "@/app/components/general/Header";
 import { SidebarProvider, useSidebar } from "@/app/context/SidebarContext";
-import {Sidebar} from "@/app/components/ui/Sidebar";
+import { Sidebar } from "@/app/components/ui/Sidebar";
 
 const InnerLayout = ({ children }: { children: React.ReactNode }) => {
   const { sidebarCollapsed } = useSidebar();
@@ -14,16 +14,13 @@ const InnerLayout = ({ children }: { children: React.ReactNode }) => {
     <div className="flex flex-col h-screen overflow-hidden">
       <Header />
       <div className="flex flex-row flex-grow overflow-hidden">
-        <Sidebar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <div
-          className={`flex-grow overflow-auto hide-scrollbar transition-all duration-300 ${
-            sidebarCollapsed ? "pl-16" : "pl-40"
-          }`}
+          className={`flex-grow overflow-auto hide-scrollbar transition-all duration-300`}
         >
-          {children}
+          <div className="max-w-[900px] w-full mx-auto px-4 md:px-6 mt-6">
+            {children}
+          </div>
         </div>
       </div>
     </div>

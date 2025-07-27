@@ -67,7 +67,7 @@ const UserProfilePage = () => {
     )}
 
     {/* Main Content */}
-    <div className="flex flex-col md:flex-row gap-8 p-6 md:p-10 mx-auto">
+    <div className="flex flex-col md:flex-row gap-8 mx-auto">
       <div className="flex-1 space-y-8">
         
         {/* Profile Header */}
