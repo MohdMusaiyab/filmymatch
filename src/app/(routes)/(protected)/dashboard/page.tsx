@@ -21,7 +21,9 @@ const Dashboard = () => {
     // Fetch recent posts
     const fetchRecentPosts = async () => {
       try {
-        const response = await api.get("/posts/my-posts/recent");
+        const response = await api.get("/posts/my-posts/recent", {
+          withCredentials: true,
+        });
         setRecentPosts(response.data.posts);
       } catch (error) {
         console.error("Failed to fetch recent posts:", error);
@@ -99,7 +101,7 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-8 col-span-full">
                 <p className="text-gray-500">
-                  You haven't created any posts yet
+                  You haven&#39;t created any posts yet
                 </p>
                 <Link
                   href="/dashboard/create-post"

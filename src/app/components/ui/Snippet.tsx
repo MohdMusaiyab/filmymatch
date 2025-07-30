@@ -1,6 +1,7 @@
 // components/Snippet.tsx
 import { MoreVertical, Edit, Trash, Share } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import AddCollectionButton from "../AddCollectionButton";
 import { ToggleSaveButton } from "../ToggleSaveButton";
 import { useSession } from "next-auth/react";
@@ -40,49 +41,47 @@ export const Snippet = ({
   post,
   menuOpen,
   toggleMenu,
-  showActions = true,
 }: SnippetProps) => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
-      {/* Cover Image */}
       {post.coverImage && (
-        <img
+        <Image
           src={post.coverImage}
           alt="Cover"
+          width={800}
+          height={192}
           className="w-full h-48 object-cover rounded-t-2xl"
+          style={{ width: "100%", height: "12rem" }}
+          priority
         />
       )}
-
       <div className="p-6">
         <div className="flex items-start gap-4">
           {/* User Avatar */}
-          <Link
-          href={`/profile/${post.user.id}`}
-          >
-          <div className="w-8 h-8 bg-blue-500/10 rounded-xl flex items-center justify-center overflow-hidden">
-            {post.user.avatar ? (
-              <img
-                src={post.user.avatar}
-                alt={post.user.username}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-2xl">
-                {post.user.username.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </div>
+          <Link href={`/profile/${post.user.id}`}>
+            <div className="w-8 h-8 bg-blue-500/10 rounded-xl flex items-center justify-center overflow-hidden">
+              {post.user.avatar ? (
+                <Image
+                  src={post.user.avatar}
+                  alt={post.user.username}
+                  className="w-full h-full object-cover"
+                  width={32}
+                  height={32}
+                />
+              ) : (
+                <span className="text-2xl">
+                  {post.user.username.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
           </Link>
 
           {/* Main Content */}
           <div className="flex-1">
             <div className="flex justify-between items-start">
-              <Link
-                href={`/explore/post/${post.id}`}
-                className="min-w-0"
-              >
+              <Link href={`/explore/post/${post.id}`} className="min-w-0">
                 <h3 className="text-white text-lg font-semibold leading-tight hover:underline">
                   {post.title}
                 </h3>
@@ -109,7 +108,7 @@ export const Snippet = ({
                 {menuOpen === post.id && (
                   <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-xl shadow-lg z-30 py-1 animate-fade-in">
                     {/* show edit & delete only if it's own post */}
-                    {(userId === post.user.id) && (
+                    {userId === post.user.id && (
                       <>
                         <Link
                           href={`/dashboard/my-posts/${post.id}`}
@@ -148,7 +147,7 @@ export const Snippet = ({
             {/* Description */}
             <div className="mt-5">
               <p className="text-gray-300 italic leading-relaxed">
-                "{post.description}"
+                {post.description}
               </p>
             </div>
 

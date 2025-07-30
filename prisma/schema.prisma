@@ -140,7 +140,20 @@ model Post {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
+  // Existing index
   @@index([userId])
+  
+  // Performance optimization indexes
+  @@index([visibility]) // For filtering by visibility (PUBLIC, PRIVATE, FOLLOWERS)
+  @@index([category]) // For filtering by category
+  @@index([isDraft]) // For filtering out drafts
+  @@index([createdAt]) // For sorting by creation date (most common sort)
+  @@index([visibility, isDraft]) // Composite index for common filter combination
+  @@index([category, visibility, isDraft]) // Composite index for category + visibility filtering
+  @@index([userId, createdAt]) // For user's posts sorted by date
+  @@index([visibility, createdAt]) // For public posts sorted by date (most common query)
+  
+  // Array index for tags filtering (GIN index for array operations)
 }
 
 model Collection {

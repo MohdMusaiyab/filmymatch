@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TagsEnum } from "@/schemas/common";
 import { CategoryEnum } from "@/schemas/common";
@@ -44,6 +44,24 @@ interface ApiResponse {
   };
 }
 
+// Loading skeleton component
+const PostSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="bg-gray-200 rounded-lg p-6 mb-4">
+      <div className="flex items-center mb-4">
+        <div className="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
+        <div className="flex-1">
+          <div className="h-4 bg-gray-300 rounded w-24 mb-2"></div>
+          <div className="h-3 bg-gray-300 rounded w-16"></div>
+        </div>
+      </div>
+      <div className="h-6 bg-gray-300 rounded w-3/4 mb-3"></div>
+      <div className="h-4 bg-gray-300 rounded w-full mb-2"></div>
+      <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+    </div>
+  </div>
+);
+
 const FeedPage = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,46 +76,65 @@ const FeedPage = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const toggleMenu = (id: string) => {
+  // Memoized filter state to prevent unnecessary re-renders
+  const filterState = useMemo(() => ({
+    searchTerm,
+    selectedTags,
+    selectedCategories,
+    showFollowing,
+  }), [searchTerm, selectedTags, selectedCategories, showFollowing]);
+
+  // Debounced search with proper cleanup
+  const debouncedSearch = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout;
+      return (value: string) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          setSearchTerm(value);
+          setPage(1);
+        }, 500); // Increased debounce time for better performance
+      };
+    })(),
+    []
+  );
+
+  const toggleMenu = useCallback((id: string) => {
     setMenuOpen(menuOpen === id ? null : id);
-  };
+  }, [menuOpen]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setPage(1);
-  };
-
-  const toggleTag = (tag: string) => {
+  const toggleTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
     setPage(1);
-  };
+  }, []);
 
-  const toggleCategory = (category: string) => {
+  const toggleCategory = useCallback((category: string) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
         ? prev.filter((c) => c !== category)
         : [...prev, category]
     );
     setPage(1);
-  };
+  }, []);
 
-  const toggleFollowing = () => {
+  const toggleFollowing = useCallback(() => {
     setShowFollowing(!showFollowing);
     setPage(1);
-  };
+  }, [showFollowing]);
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setSearchTerm("");
     setSelectedTags([]);
     setSelectedCategories([]);
     setShowFollowing(false);
     setPage(1);
-  };
+  }, []);
 
-  const fetchPosts = async (
+  const fetchPosts = useCallback(async (
     pageNum: number = page,
     isLoadMore: boolean = false
   ) => {
@@ -156,30 +193,49 @@ const FeedPage = () => {
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      setIsInitialLoad(false);
     }
-  };
+  }, [searchTerm, selectedTags, selectedCategories, showFollowing, page]);
 
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchPosts(nextPage, true);
-  };
-
+  // Optimized useEffect with proper dependencies
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchPosts(1, false);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, selectedTags, selectedCategories, showFollowing]);
+  }, [filterState, fetchPosts]);
 
   useEffect(() => {
     if (page === 1) return; // Skip initial page load
     fetchPosts(page, true);
-  }, [page]);
+  }, [page, fetchPosts]);
 
-  const activeFiltersCount =
-    selectedTags.length + selectedCategories.length + (showFollowing ? 1 : 0);
+  // Memoized active filters count
+  const activeFiltersCount = useMemo(() =>
+    selectedTags.length + selectedCategories.length + (showFollowing ? 1 : 0),
+    [selectedTags.length, selectedCategories.length, showFollowing]
+  );
+
+  // Memoized posts rendering
+  const renderedPosts = useMemo(() => 
+    posts.map((post, index) => (
+      <motion.div
+        key={post.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+      >
+        <Snippet
+          post={{ ...post, linkTo: `/explore/post/${post.id}` }}
+          menuOpen={menuOpen}
+          toggleMenu={toggleMenu}
+          showActions={false}
+        />
+      </motion.div>
+    )),
+    [posts, menuOpen, toggleMenu]
+  );
 
   return (
     <div className="mx-auto min-h-screen px-4">
@@ -195,8 +251,8 @@ const FeedPage = () => {
           <input
             type="text"
             placeholder="Search posts..."
-            value={searchTerm}
-            onChange={handleSearchChange}
+            defaultValue={searchTerm}
+            onChange={(e) => debouncedSearch(e.target.value)}
             className="w-full p-2 pl-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <span className="absolute left-3 top-2.5 text-gray-400 text-sm">
@@ -276,6 +332,28 @@ const FeedPage = () => {
         )}
       </div>
 
+      {/* Error State */}
+      {error && (
+        <div className="text-center py-8">
+          <div className="text-red-600 mb-4">❌ {error}</div>
+          <button
+            onClick={() => fetchPosts(1, false)}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && isInitialLoad && (
+        <div className="grid grid-cols-1 gap-6 px-24">
+          {[...Array(5)].map((_, index) => (
+            <PostSkeleton key={index} />
+          ))}
+        </div>
+      )}
+
       {/* Posts Grid */}
       <AnimatePresence mode="wait">
         {!loading && posts.length > 0 && (
@@ -286,24 +364,40 @@ const FeedPage = () => {
             exit={{ opacity: 0 }}
             className="grid grid-cols-1 gap-6 px-24"
           >
-            {posts.map((post, index) => (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
+            {renderedPosts}
+            
+            {/* Load More Button */}
+            {hasMore && !loadingMore && (
+              <motion.button
+                onClick={() => {
+                  setPage(prev => prev + 1);
+                }}
+                className="mt-6 px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <Snippet
-                  post={{ ...post, linkTo: `/explore/post/${post.id}` }}
-                  menuOpen={menuOpen}
-                  toggleMenu={toggleMenu}
-                  showActions={false}
-                />
-              </motion.div>
-            ))}
+                Load More
+              </motion.button>
+            )}
+            
+            {/* Loading More Indicator */}
+            {loadingMore && (
+              <div className="mt-6 text-center">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-gray-600">Loading more posts...</span>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Empty State */}
+      {!loading && !error && posts.length === 0 && !isInitialLoad && (
+        <div className="text-center py-12">
+          <div className="text-gray-500 text-lg mb-2">No posts found</div>
+          <div className="text-gray-400 text-sm">Try adjusting your filters</div>
+        </div>
+      )}
     </div>
   );
 };
