@@ -3,20 +3,16 @@
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { getUserProfile } from "@/actions/user/getUserProfile";
 import FollowButton from "@/app/components/FollowButton";
 import ProfileSideBar from "@/app/components/ProfileSideBar";
 import { Snippet } from "@/app/components/ui/Snippet";
 import { toast } from "sonner";
-import {
-  Edit,
-  Settings,
-  Library,
-  Bookmark,
-  Grid3X3,
-} from "lucide-react";
+import { Edit, Settings, Library, Bookmark, Grid3X3 } from "lucide-react";
 
 const UserProfilePage = () => {
+  const { data: session } = useSession();
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
@@ -28,6 +24,7 @@ const UserProfilePage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!id || typeof id !== "string") return;
+      console.log(id);
 
       const res = await getUserProfile({ userId: id });
 
@@ -102,16 +99,20 @@ const UserProfilePage = () => {
               <div className="flex items-center gap-4">
                 <h2 className="text-xl font-normal">{profile.username}</h2>
                 <FollowButton userId={profile.id} />
-                <Link
-                  href="/profile/edit"
-                  className="flex items-center gap-1 text-white bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 px-2 py-1 rounded-md text-sm"
-                >
-                  <Edit size={16} />
-                  Edit Profile
-                </Link>
-                <button onClick={handleToggleSetting}>
-                  <Settings size={18} />
-                </button>
+                {id === session?.user?.id && (
+                  <>
+                    <Link
+                      href="/profile/edit"
+                      className="flex items-center gap-1 text-white bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 px-2 py-1 rounded-md text-sm"
+                    >
+                      <Edit size={16} />
+                      Edit Profile
+                    </Link>
+                    <button onClick={handleToggleSetting}>
+                      <Settings size={18} />
+                    </button>
+                  </>
+                )}
               </div>
 
               <div className="flex gap-4">
