@@ -80,23 +80,23 @@ export const Snippet = ({
 
           {/* Main Content */}
           <div className="flex-1">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-center">
               <Link href={`/explore/post/${post.id}`} className="min-w-0">
-                <h3 className="text-white text-lg font-semibold leading-tight hover:underline">
+                <h3 className="text-white  text-lg font-semibold leading-tight hover:underline">
                   {post.title}
                 </h3>
               </Link>
+              <div className="flex justify-center align center">
               <ToggleSaveButton
                 postId={post.id}
                 initialIsSaved={post.isSaved}
               />
-              <AddCollectionButton postId={post.id} userId={post.user.id} />
 
               {/* Dropdown Trigger - Exactly like your previous example */}
               <div className="relative">
                 <button
                   onClick={() => toggleMenu(post.id)}
-                  className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="py-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   aria-label="More options"
                   aria-haspopup="true"
                   aria-expanded={menuOpen === post.id}
@@ -107,6 +107,8 @@ export const Snippet = ({
                 {/* Dropdown Menu - Exactly like your previous example */}
                 {menuOpen === post.id && (
                   <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-xl shadow-lg z-30 py-1 animate-fade-in">
+                    {/* add to collection */}
+                    <AddCollectionButton postId={post.id} userId={post.user.id} />
                     {/* show edit & delete only if it's own post */}
                     {userId === post.user.id && (
                       <>
@@ -130,6 +132,7 @@ export const Snippet = ({
                     </button>
                   </div>
                 )}
+              </div>
               </div>
             </div>
 

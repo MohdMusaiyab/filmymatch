@@ -79,12 +79,15 @@ const FeedPage = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Memoized filter state to prevent unnecessary re-renders
-  const filterState = useMemo(() => ({
-    searchTerm,
-    selectedTags,
-    selectedCategories,
-    showFollowing,
-  }), [searchTerm, selectedTags, selectedCategories, showFollowing]);
+  const filterState = useMemo(
+    () => ({
+      searchTerm,
+      selectedTags,
+      selectedCategories,
+      showFollowing,
+    }),
+    [searchTerm, selectedTags, selectedCategories, showFollowing]
+  );
 
   // Debounced search with proper cleanup
   const debouncedSearch = useCallback(
@@ -101,9 +104,12 @@ const FeedPage = () => {
     []
   );
 
-  const toggleMenu = useCallback((id: string) => {
-    setMenuOpen(menuOpen === id ? null : id);
-  }, [menuOpen]);
+  const toggleMenu = useCallback(
+    (id: string) => {
+      setMenuOpen(menuOpen === id ? null : id);
+    },
+    [menuOpen]
+  );
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
@@ -134,68 +140,68 @@ const FeedPage = () => {
     setPage(1);
   }, []);
 
-  const fetchPosts = useCallback(async (
-    pageNum: number = page,
-    isLoadMore: boolean = false
-  ) => {
-    try {
-      if (isLoadMore) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-        setError(null);
+  const fetchPosts = useCallback(
+    async (pageNum: number = page, isLoadMore: boolean = false) => {
+      try {
+        if (isLoadMore) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+          setError(null);
+        }
+
+        const params = new URLSearchParams();
+        params.append("page", pageNum.toString());
+        if (searchTerm.trim()) params.append("search", searchTerm.trim());
+        selectedTags.forEach((tag) => params.append("tags", tag));
+        selectedCategories.forEach((cat) => params.append("category", cat));
+        if (showFollowing) params.append("visibility", "FOLLOWERS");
+
+        const response = await fetch(`/api/posts?${params.toString()}`, {
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: ApiResponse = await response.json();
+
+        if (!data.success) {
+          throw new Error("Failed to fetch posts");
+        }
+
+        const newPosts = data.data?.posts || [];
+        const pagination = data.data?.pagination;
+
+        if (pageNum === 1) {
+          setPosts(newPosts);
+        } else {
+          setPosts((prev) => [...prev, ...newPosts]);
+        }
+
+        // Check if there are more pages
+        if (pagination) {
+          setHasMore(pagination.page < pagination.pages);
+        } else {
+          setHasMore(newPosts.length > 0);
+        }
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+        setError(
+          error instanceof Error ? error.message : "Failed to fetch posts"
+        );
+        if (pageNum === 1) {
+          setPosts([]);
+        }
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        setIsInitialLoad(false);
       }
-
-      const params = new URLSearchParams();
-      params.append("page", pageNum.toString());
-      if (searchTerm.trim()) params.append("search", searchTerm.trim());
-      selectedTags.forEach((tag) => params.append("tags", tag));
-      selectedCategories.forEach((cat) => params.append("category", cat));
-      if (showFollowing) params.append("visibility", "FOLLOWERS");
-
-      const response = await fetch(`/api/posts?${params.toString()}`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: ApiResponse = await response.json();
-
-      if (!data.success) {
-        throw new Error("Failed to fetch posts");
-      }
-
-      const newPosts = data.data?.posts || [];
-      const pagination = data.data?.pagination;
-
-      if (pageNum === 1) {
-        setPosts(newPosts);
-      } else {
-        setPosts((prev) => [...prev, ...newPosts]);
-      }
-
-      // Check if there are more pages
-      if (pagination) {
-        setHasMore(pagination.page < pagination.pages);
-      } else {
-        setHasMore(newPosts.length > 0);
-      }
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to fetch posts"
-      );
-      if (pageNum === 1) {
-        setPosts([]);
-      }
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-      setIsInitialLoad(false);
-    }
-  }, [searchTerm, selectedTags, selectedCategories, showFollowing, page]);
+    },
+    [searchTerm, selectedTags, selectedCategories, showFollowing, page]
+  );
 
   // Optimized useEffect with proper dependencies
   useEffect(() => {
@@ -212,28 +218,30 @@ const FeedPage = () => {
   }, [page, fetchPosts]);
 
   // Memoized active filters count
-  const activeFiltersCount = useMemo(() =>
-    selectedTags.length + selectedCategories.length + (showFollowing ? 1 : 0),
+  const activeFiltersCount = useMemo(
+    () =>
+      selectedTags.length + selectedCategories.length + (showFollowing ? 1 : 0),
     [selectedTags.length, selectedCategories.length, showFollowing]
   );
 
   // Memoized posts rendering
-  const renderedPosts = useMemo(() => 
-    posts.map((post, index) => (
-      <motion.div
-        key={post.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: index * 0.05 }}
-      >
-        <Snippet
-          post={{ ...post, linkTo: `/explore/post/${post.id}` }}
-          menuOpen={menuOpen}
-          toggleMenu={toggleMenu}
-          showActions={false}
-        />
-      </motion.div>
-    )),
+  const renderedPosts = useMemo(
+    () =>
+      posts.map((post, index) => (
+        <motion.div
+          key={post.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: index * 0.05 }}
+        >
+          <Snippet
+            post={{ ...post, linkTo: `/explore/post/${post.id}` }}
+            menuOpen={menuOpen}
+            toggleMenu={toggleMenu}
+            showActions={false}
+          />
+        </motion.div>
+      )),
     [posts, menuOpen, toggleMenu]
   );
 
@@ -253,11 +261,15 @@ const FeedPage = () => {
             placeholder="Search posts..."
             defaultValue={searchTerm}
             onChange={(e) => debouncedSearch(e.target.value)}
-            className="w-full p-2 pl-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full py-2 pl-4 bg-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm sm:text-base"
           />
-          <span className="absolute left-3 top-2.5 text-gray-400 text-sm">
-            🔍
-          </span>
+          {/* <input
+            type="text"
+            placeholder="Search posts..."
+            defaultValue={searchTerm}
+            onChange={(e) => debouncedSearch(e.target.value)}
+            className="w-full p-2 pl-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          /> */}
         </div>
 
         {/* categories dropdown */}
@@ -365,12 +377,12 @@ const FeedPage = () => {
             className="grid grid-cols-1 gap-6 px-24"
           >
             {renderedPosts}
-            
+
             {/* Load More Button */}
             {hasMore && !loadingMore && (
               <motion.button
                 onClick={() => {
-                  setPage(prev => prev + 1);
+                  setPage((prev) => prev + 1);
                 }}
                 className="mt-6 px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
                 whileHover={{ scale: 1.02 }}
@@ -379,12 +391,14 @@ const FeedPage = () => {
                 Load More
               </motion.button>
             )}
-            
+
             {/* Loading More Indicator */}
             {loadingMore && (
               <div className="mt-6 text-center">
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                <span className="ml-2 text-gray-600">Loading more posts...</span>
+                <span className="ml-2 text-gray-600">
+                  Loading more posts...
+                </span>
               </div>
             )}
           </motion.div>
@@ -395,7 +409,9 @@ const FeedPage = () => {
       {!loading && !error && posts.length === 0 && !isInitialLoad && (
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg mb-2">No posts found</div>
-          <div className="text-gray-400 text-sm">Try adjusting your filters</div>
+          <div className="text-gray-400 text-sm">
+            Try adjusting your filters
+          </div>
         </div>
       )}
     </div>
