@@ -156,8 +156,8 @@ export const Snippet = ({
 
             {/* Stats */}
             <div className="mt-4 flex items-center gap-6 text-xs text-gray-500">
-              <span>{post._count.likes} Likes</span>
-              <span>{post._count.comments} Comments</span>
+              <span>{post._count?.likes?? 0} Likes</span>
+              <span>{post._count?.comments?? 0} Comments</span>
               <span className="capitalize">
                 {post.visibility.toLowerCase()}
               </span>

@@ -8,6 +8,8 @@ import { getUserProfile } from "@/actions/user/getUserProfile";
 import FollowButton from "@/app/components/FollowButton";
 import ProfileSideBar from "@/app/components/ProfileSideBar";
 import { Snippet } from "@/app/components/ui/Snippet";
+import { getUserCollections } from "@/actions/collection";
+// import { getUserSavedPosts } from "@/actions/post";
 import { toast } from "sonner";
 import { Edit, Settings, Library, Bookmark, Grid3X3 } from "lucide-react";
 
@@ -20,6 +22,7 @@ const UserProfilePage = () => {
   const [activeTab, setActiveTab] = useState<"posts" | "collections" | "saved">(
     "posts"
   );
+  const [collections, setCollections] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -30,6 +33,11 @@ const UserProfilePage = () => {
 
       if (res.success) {
         setProfileData(res.data);
+
+        const collectionsRes = await getUserCollections(id);
+        if (collectionsRes.success) {
+          setCollections(collectionsRes.data ?? []);
+        }
       } else {
         toast.error(res.error?.message || "Failed to load profile");
       }
@@ -52,6 +60,36 @@ const UserProfilePage = () => {
       <div className="text-center py-20 text-red-500">Profile not found.</div>
     );
   }
+
+  // useEffect(() => {
+  //   const fetchProfile = async () => {
+  //     if (!id || typeof id !== "string") return;
+
+  //     const res = await getUserProfile({ userId: id });
+
+  //     if (res.success) {
+  //       setProfileData(res.data);
+
+  //       // Fetch collections
+  //       const collectionsRes = await getUserCollections(id);
+  //       if (collectionsRes.success) {
+  //         setCollections(collectionsRes.data ?? []);
+  //       }
+
+  //       // // Fetch saved posts
+  //       // const savedRes = await getUserSavedPosts(id);
+  //       // if (savedRes.success) {
+  //       //   setSavedPosts(savedRes.data);
+  //       // }
+  //     } else {
+  //       toast.error(res.error?.message || "Failed to load profile");
+  //     }
+
+  //     setLoading(false);
+  //   };
+
+  //   fetchProfile();
+  // }, [id]);
 
   const { profile, posts, highlights, permissions } = profileData;
 
@@ -201,12 +239,77 @@ const UserProfilePage = () => {
                     </p>
                   ))}
 
-                {activeTab === "collections" && (
-                  <p className="text-zinc-500 col-span-full text-center">
-                    Collections coming soon...
-                  </p>
-                )}
+                {activeTab === "collections" &&
+                  (collections.length > 0 ? (
+                    collections.map((collection) => (
+                      <div
+                        key={collection.id}
+                        className="bg-zinc-800 border border-zinc-700 rounded-lg p-4 space-y-2"
+                      >
+                        <h3 className="text-white font-medium">
+                          {collection.name}
+                        </h3>
+                        <p className="text-zinc-400 text-sm">
+                          {collection.description}
+                        </p>
+                        {collection.coverImage && (
+                          <img
+                            src={collection.coverImage}
+                            alt={collection.name}
+                            className="w-full h-48 object-cover rounded-md"
+                          />
+                        )}
+                        <div className="grid grid-cols-1 gap-2 pt-2">
+                          {collection.posts.map((post: any) => (
+                            <Snippet
+                              key={post.id}
+                              post={{
+                                ...post,
+                                user: {
+                                  id: post.user.id,
+                                  username: post.user.username,
+                                  avatar: post.user.avatar,
+                                },
+                                linkTo: `/dashboard/my-posts/${post.id}`,
+                              }}
+                              menuOpen={null}
+                              toggleMenu={() => {}}
+                              showActions={false}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-zinc-500 col-span-full text-center">
+                      No collections to show.
+                    </p>
+                  ))}
 
+                {/* {activeTab === "saved" &&
+                      (savedPosts.length > 0 ? (
+                        savedPosts.map((post: any) => (
+                          <Snippet
+                            key={post.id}
+                            post={{
+                              ...post,
+                              user: {
+                                id: post.user.id,
+                                username: post.user.username,
+                                avatar: post.user.avatar,
+                              },
+                              linkTo: `/dashboard/my-posts/${post.id}`,
+                            }}
+                            menuOpen={null}
+                            toggleMenu={() => {}}
+                            showActions={false}
+                          />
+                        ))
+                      ) : (
+                        <p className="text-zinc-500 col-span-full text-center">
+                          No saved posts.
+                        </p>
+                      ))} */}
                 {activeTab === "saved" && (
                   <p className="text-zinc-500 col-span-full text-center">
                     Saved posts coming soon...
