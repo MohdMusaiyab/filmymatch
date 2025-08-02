@@ -9,6 +9,7 @@ import {
   updateUserAvatar,
   updateBasicUserInfo,
 } from "@/actions/user/editProfile";
+import api from '@/lib/api'
 
 interface UserProfile {
   id: string;
@@ -101,17 +102,13 @@ const EditProfilePage = () => {
     if (!avatarFile) return toast.error("No image selected");
 
     try {
-      const res = await fetch("/api/upload/presigned-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileName: avatarFile.name,
-          fileType: avatarFile.type,
-        }),
+      const response = await api.post("/upload/presigned-url", {
+        fileName: avatarFile.name,
+        fileType: avatarFile.type,
       });
 
-      const data = await res.json();
-      if (!res.ok || !data?.uploadUrl || !data?.fileUrl) {
+      const data = response.data;
+      if (!data?.uploadUrl || !data?.fileUrl) {
         throw new Error(data?.error || "Failed to get upload URL");
       }
 

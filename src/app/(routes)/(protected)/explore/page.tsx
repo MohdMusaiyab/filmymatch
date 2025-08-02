@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TagsEnum } from "@/schemas/common";
 import { CategoryEnum } from "@/schemas/common";
 import { Snippet } from "@/app/components/ui/Snippet";
+import api from '@/lib/api'
 
 interface Post {
   id: string;
@@ -157,15 +158,9 @@ const FeedPage = () => {
         selectedCategories.forEach((cat) => params.append("category", cat));
         if (showFollowing) params.append("visibility", "FOLLOWERS");
 
-        const response = await fetch(`/api/posts?${params.toString()}`, {
-          credentials: "include",
-        });
+        const response = await api.get(`/posts?${params.toString()}`);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: ApiResponse = await response.json();
+        const data: ApiResponse = response.data;
 
         if (!data.success) {
           throw new Error("Failed to fetch posts");

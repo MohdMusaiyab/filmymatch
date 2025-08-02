@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Bookmark, BookmarkCheck, Heart } from "lucide-react";
 import { Dialog, Transition } from "@headlessui/react";
+import api from '@/lib/api'
 
 interface Post {
   id: string;
@@ -41,10 +42,8 @@ export default function PostPage() {
 
     async function fetchPost() {
       try {
-        const res = await fetch(`/api/posts/${postId}`, {
-          credentials: "include",
-        });
-        const data = await res.json();
+        const response = await api.get(`/posts/${postId}`);
+        const data = response.data;
         if (data.success) setPost(data.data);
       } catch (err) {
         console.error("Failed to fetch post", err);

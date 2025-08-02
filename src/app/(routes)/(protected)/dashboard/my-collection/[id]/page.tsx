@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { useDropzone } from 'react-dropzone'
 import { VisibilityEnum } from '@/schemas/common'
+import api from '@/lib/api'
 
 interface Post {
   id: string
@@ -61,21 +62,13 @@ export default function CollectionDetailsPage() {
   const handleImageUpload = async (file: File) => {
     try {
       setIsUploading(true)
-      const response = await fetch('/api/upload/presigned-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileType: file.type,
-          userId: editData?.userId
-        })
+      const response = await api.post('/upload/presigned-url', {
+        fileName: file.name,
+        fileType: file.type,
+        userId: editData?.userId
       })
 
-      if (!response.ok) throw new Error('Failed to get upload URL')
-
-      const presignedData = await response.json()
+      const presignedData = response.data
 
       const uploadResponse = await fetch(presignedData.uploadUrl, {
         method: 'PUT',
