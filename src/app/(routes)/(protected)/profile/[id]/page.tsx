@@ -241,47 +241,38 @@ const UserProfilePage = () => {
 
                 {activeTab === "collections" &&
                   (collections.length > 0 ? (
-                    collections.map((collection) => (
-                      <div
-                        key={collection.id}
-                        className="bg-zinc-800 border border-zinc-700 rounded-lg p-4 space-y-2"
-                      >
-                        <h3 className="text-white font-medium">
-                          {collection.name}
-                        </h3>
-                        <p className="text-zinc-400 text-sm">
-                          {collection.description}
-                        </p>
-                        {collection.coverImage && (
-                          <img
-                            src={collection.coverImage}
-                            alt={collection.name}
-                            className="w-full h-48 object-cover rounded-md"
-                          />
-                        )}
-                        <div className="grid grid-cols-1 gap-2 pt-2">
-                          {collection.posts.map((post: any) => (
-                            <Snippet
-                              key={post.id}
-                              post={{
-                                ...post,
-                                user: {
-                                  id: post.user.id,
-                                  username: post.user.username,
-                                  avatar: post.user.avatar,
-                                },
-                                linkTo: `/dashboard/my-posts/${post.id}`,
-                              }}
-                              menuOpen={null}
-                              toggleMenu={() => {}}
-                              showActions={false}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {collections.map((collection) => (
+                        <Link
+                          key={collection.id}
+                          href={`/explore/collection/${collection.id}`}
+                          className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 shadow hover:shadow-lg transition duration-200"
+                        >
+                          {collection.coverImage && (
+                            <img
+                              src={collection.coverImage}
+                              alt={collection.name}
+                              className="w-full h-40 object-cover rounded-lg mb-4"
                             />
-                          ))}
-                        </div>
-                      </div>
-                    ))
+                          )}
+                          <h3 className="text-white text-lg font-semibold mb-1">
+                            {collection.name}
+                          </h3>
+                          <p className="text-zinc-400 text-sm line-clamp-2 mb-2">
+                            {collection.description}
+                          </p>
+                          <div className="text-zinc-500 text-xs">
+                            {collection.posts.length}{" "}
+                            {collection.posts.length === 1 ? "post" : "posts"} •{" "}
+                            {new Date(
+                              collection.createdAt
+                            ).toLocaleDateString()}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   ) : (
-                    <p className="text-zinc-500 col-span-full text-center">
+                    <p className="text-zinc-500 col-span-full text-center mt-10">
                       No collections to show.
                     </p>
                   ))}
