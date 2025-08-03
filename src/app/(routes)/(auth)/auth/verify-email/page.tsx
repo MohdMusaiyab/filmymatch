@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import {
   sendVerificationToken,
@@ -23,13 +23,35 @@ const EmailVerificationPage = () => {
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
 
+  const checkTokenStatus = useCallback(async () => {
+    try {
+      const result = await checkVerificationToken(session!.user!.email);
+
+      if (result.success && result.exists) {
+        // setExpiresAt(new Date(result.expiresAt));
+        if (result.expiresAt) {
+          setExpiresAt(new Date(result.expiresAt));
+        } else {
+          setExpiresAt(null);
+        }
+
+        setShowVerification(true);
+      }
+
+      setInitialLoading(false);
+    } catch (error) {
+      console.error("Error checking token status:", error);
+      setInitialLoading(false);
+    }
+  }, [session]);
+
   useEffect(() => {
     if (session?.user?.email) {
       checkTokenStatus();
     } else {
       setInitialLoading(false);
     }
-  }, [session?.user?.email]);
+  }, [session?.user?.email, checkTokenStatus]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -55,28 +77,6 @@ const EmailVerificationPage = () => {
       if (interval) clearInterval(interval);
     };
   }, [expiresAt]);
-
-  const checkTokenStatus = async () => {
-    try {
-      const result = await checkVerificationToken(session!.user!.email);
-
-      if (result.success && result.exists) {
-        // setExpiresAt(new Date(result.expiresAt));
-        if (result.expiresAt) {
-          setExpiresAt(new Date(result.expiresAt));
-        } else {
-          setExpiresAt(null);
-        }
-
-        setShowVerification(true);
-      }
-
-      setInitialLoading(false);
-    } catch (error) {
-      console.error("Error checking token status:", error);
-      setInitialLoading(false);
-    }
-  };
 
   const handleSendVerification = async () => {
     try {
@@ -307,7 +307,7 @@ const EmailVerificationPage = () => {
           <div className="space-y-6">
             <div className="text-center">
               <p className="text-gray-600">
-                We've sent a verification code to:
+                We&apos;ve sent a verification code to:
               </p>
               <p className="font-medium text-gray-800 mt-1">
                 {session.user.email}
@@ -350,7 +350,7 @@ const EmailVerificationPage = () => {
                     onChange={(e) =>
                       setOtp(e.target.value.replace(/[^0-9]/g, ""))
                     }
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-center text-lg tracking-widest"
+                    className="text-black appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-center text-lg tracking-widest"
                     placeholder="Enter 6-digit code"
                     maxLength={6}
                   />

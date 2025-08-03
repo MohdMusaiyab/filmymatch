@@ -306,7 +306,7 @@ const Page = () => {
           <div className="space-y-6">
             <div className="text-center">
               <p className="text-gray-600">
-                We've sent a verification code to:
+                We&apos;ve sent a verification code to:
               </p>
               <p className="font-medium text-gray-800 mt-1">{email}</p>
 
