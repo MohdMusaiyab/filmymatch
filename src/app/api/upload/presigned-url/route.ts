@@ -9,14 +9,14 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" ,code: "UNAUTHORIZED",success: false}, { status: 401 });
     }
 
     const { fileName, fileType } = await request.json();
 
     if (!fileName || !fileType) {
       return NextResponse.json(
-        { error: "fileName and fileType are required" },
+        { message: "fileName and fileType are required" ,code: "MISSING_FILE_NAME_OR_FILE_TYPE",success: false},
         { status: 400 }
       );
     }
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (!allowedTypes.includes(fileType)) {
       return NextResponse.json(
-        { error: "File type not supported" },
+        { message: "File type not supported" ,code: "FILE_TYPE_NOT_SUPPORTED",success: false},
         { status: 400 }
       );
     }
@@ -48,11 +48,16 @@ export async function POST(request: NextRequest) {
       session.user.id
     );
 
-    return NextResponse.json(presignedData);
+    return NextResponse.json({
+      success: true,
+      message: "Presigned URL generated successfully",
+      data: presignedData,
+    }, { status: 200 });
+    
   } catch (error) {
     console.error("Presigned URL generation error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { message: "Internal server error" ,code: "INTERNAL_SERVER_ERROR",success: false},
       { status: 500 }
     );
   }

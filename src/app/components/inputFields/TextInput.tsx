@@ -26,10 +26,10 @@ const TextInput: React.FC<TextInputProps> = ({
   rows = 3, // Default rows for textarea
 }) => {
   const [error, setError] = useState<string | null>(null);
-  const [touched, setTouched] = useState(false);
+  // const [touched, setTouched] = useState(false);
 
   const handleBlur = () => {
-    setTouched(true);
+    // setTouched(true);
     setError(validate(value));
   };
 

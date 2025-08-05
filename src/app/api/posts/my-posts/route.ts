@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ message: "User not found" ,code: "USER_NOT_FOUND",success: false}, { status: 404 });
     }
 
     const [posts, total] = await Promise.all([
@@ -92,18 +92,22 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({
-      posts: postsWithSignedUrls,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
+      success: true,
+      message: "Posts retrieved successfully",
+      data: {
+        posts: postsWithSignedUrls,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
       },
-    });
+    }, { status: 200 });
   } catch (error) {
     console.error("My Posts Fetch Error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { message: "Internal server error" ,code: "INTERNAL_SERVER_ERROR",success: false},
       { status: 500 }
     );
   }

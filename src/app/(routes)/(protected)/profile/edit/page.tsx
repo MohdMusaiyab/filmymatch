@@ -107,7 +107,7 @@ const EditProfilePage = () => {
         fileType: avatarFile.type,
       });
 
-      const data = response.data;
+      const data = response.data.data;
       if (!data?.uploadUrl || !data?.fileUrl) {
         throw new Error(data?.error || "Failed to get upload URL");
       }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toggleLike, getLikeCount, hasUserLikedPost } from "@/actions/like";
 import { Heart } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -18,7 +18,7 @@ const LikeButton = ({ postId, className = "" }: LikeButtonProps) => {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchLikeState = async () => {
+  const fetchLikeState = useCallback(async () => {
     setLoading(true);
     const [countRes, likedRes] = await Promise.all([
       getLikeCount(postId),
@@ -27,7 +27,7 @@ const LikeButton = ({ postId, className = "" }: LikeButtonProps) => {
     if (countRes.success) setCount(countRes.count ?? 0);
     if (likedRes.success) setLiked(likedRes.liked);
     setLoading(false);
-  };
+  }, [postId]);
 
   const handleToggleLike = async () => {
     if (!session?.user) return toast.error("Login required to like a post.");
@@ -42,7 +42,7 @@ const LikeButton = ({ postId, className = "" }: LikeButtonProps) => {
 
   useEffect(() => {
     fetchLikeState();
-  }, [postId]);
+  }, [postId,fetchLikeState]);
 
   return (
     <motion.button

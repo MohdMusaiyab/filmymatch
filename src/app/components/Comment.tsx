@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   createComment,
   getCommentsByPostId,
@@ -37,7 +37,7 @@ const PostComment = ({ postId }: PostCommentProps) => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     setLoading(true);
     const res = await getCommentsByPostId(postId);
     if (res.success) {
@@ -51,7 +51,7 @@ const PostComment = ({ postId }: PostCommentProps) => {
       setComments([]);
     }
     setLoading(false);
-  };
+  }, [postId]);
 
   const handleCreateComment = async () => {
     if (!commentText.trim()) return toast.error("Write something first!");
@@ -85,10 +85,10 @@ const PostComment = ({ postId }: PostCommentProps) => {
       toast.error(res?.message || "Could not delete comment");
     }
   };
-
+//Remove PostId from dependency array if any error in future, modifed for Linting Issues
   useEffect(() => {
     if (postId) fetchComments();
-  }, [postId]);
+  }, [fetchComments,postId]);
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 bg-zinc-950/60 backdrop-blur-lg rounded-2xl shadow-xl">

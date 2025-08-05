@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   console.log("Token emailVerified:", token?.emailVerified);
 
   // Public routes
-  const publicRoutes = ["/", "/auth/sign-in", "/auth/sign-up", "/auth/verify-email"];
+  const publicRoutes = ["/", "/auth/sign-in", "/auth/sign-up", "/auth/verify-email","/contact","/about" ,"/privacy-policy"];
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(route + "/")
   );
@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
   // 3. Handle email verification status
   if (token) {
     // Force token refresh by adding a timestamp query parameter
-    const shouldRefreshToken = request.nextUrl.searchParams.get('refreshToken');
+    //const shouldRefreshToken = request.nextUrl.searchParams.get('refreshToken');
     
     // If email is verified, redirect away from verification page
     if (token.emailVerified && pathname.startsWith("/auth/verify-email")) {

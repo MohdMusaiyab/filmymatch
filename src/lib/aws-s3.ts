@@ -51,7 +51,7 @@ export async function generatePresignedUrl(
 
 export async function changeFileVisibility(
   oldKey: string, 
-  _newVisibility?: string // Optional (unused in new structure)
+   // Optional (unused in new structure)
 ): Promise<string> {
   const fileName = oldKey.split('/').pop()!; // Extract filename from temp path
   const newKey = generateFinalKey('', '', fileName); // Ignore userId/postId
@@ -84,7 +84,7 @@ export function generateFinalKey(
   _userId: string,      // Not needed anymore (kept for backward compatibility)
   _postId: string,      // Not needed anymore
   fileName: string,     // Original filename
-  _visibility?: string  // Optional (unused in new structure)
+  // // Optional (unused in new structure)
 ): string {
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
   const randomSuffix = Math.random().toString(36).slice(2, 8); // Avoid collisions
@@ -95,6 +95,7 @@ export function extractKeyFromUrl(url: string): string {
     const urlObj = new URL(url);
     return urlObj.pathname.substring(1); // Remove leading slash
   } catch (error) {
+    console.error("Error extracting key from URL:", error);
     throw new Error("Invalid S3 URL format");
   }
 }

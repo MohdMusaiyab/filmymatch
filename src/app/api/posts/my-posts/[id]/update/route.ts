@@ -224,11 +224,15 @@ export async function PUT(
 
     console.log("=== API DEBUG END ===");
 
-    return NextResponse.json(updatedPost, { status: 200 });
+    return NextResponse.json({
+      success: true,
+      message: "Post updated successfully",
+      data: updatedPost,
+    }, { status: 200 });
   } catch (error) {
     console.error("Post update error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { message: "Internal Server Error" ,code: "INTERNAL_SERVER_ERROR",success: false},
       { status: 500 }
     );
   }

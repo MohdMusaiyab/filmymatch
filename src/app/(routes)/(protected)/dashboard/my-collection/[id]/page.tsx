@@ -68,7 +68,7 @@ export default function CollectionDetailsPage() {
         userId: editData?.userId
       })
 
-      const presignedData = response.data
+      const presignedData = response.data.data
 
       const uploadResponse = await fetch(presignedData.uploadUrl, {
         method: 'PUT',

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { toggleFollow, isFollowing } from "@/actions/follow";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId }) => {
     const [isFollowingUser, setIsFollowingUser] = useState<boolean | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const fetchFollowStatus = async () => {
+    const fetchFollowStatus = useCallback(async () => {
         setLoading(true);
         const res = await isFollowing(userId);
         if (res.success) {
@@ -24,7 +24,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId }) => {
             toast.error(res.message || "Failed to check follow status");
         }
         setLoading(false);
-    };
+    }, [userId]);
 
     const handleToggleFollow = async () => {
         if (!session?.user?.id) {
@@ -46,7 +46,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId }) => {
         if (session?.user?.id && session.user.id !== userId) {
             fetchFollowStatus();
         }
-    }, [session, userId]);
+    }, [session, userId, fetchFollowStatus]);
 
     if (!session?.user?.id || session.user.id === userId) return null;
 

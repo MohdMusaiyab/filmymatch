@@ -1,7 +1,6 @@
 "use client";
 
 import { X, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { ActiveTab } from "@/types";
 import { useSidebar } from "@/app/context/SidebarContext";
 import { useEffect, useState } from "react";
@@ -21,7 +20,6 @@ const navItems: { icon: string; label: string; tab: ActiveTab }[] = [
 
 export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
   const { userId, sidebarCollapsed, toggleSidebar } = useSidebar();
-  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect screen size

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   getUserCollectionNames,
@@ -15,7 +15,7 @@ interface Props {
   userId: string;
 }
 
-const AddCollectionButton = ({ postId, userId }: Props) => {
+const AddCollectionButton = ({ postId }: Props) => {
   const [open, setOpen] = useState(false);
   const [collections, setCollections] = useState<
     { id: string; name: string; isDraft: boolean; containsPost: boolean }[]
@@ -24,16 +24,24 @@ const AddCollectionButton = ({ postId, userId }: Props) => {
   const [newCollectionName, setNewCollectionName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const fetchCollections = async () => {
+  const fetchCollections = useCallback(async () => {
     const res = await getUserCollectionNames(postId);
     if (res.success) {
       setCollections(res.data || []);
     }
-  };
+  }, [postId]);
 
   useEffect(() => {
-    if (open) fetchCollections();
-  }, [open]);
+    if (open) {
+      const fetchCollections = async () => {
+        const res = await getUserCollectionNames(postId);
+        if (res.success) {
+          setCollections(res.data || []);
+        }
+      };
+      fetchCollections();
+    }
+  }, [open, postId]);
 
   const handleAddToCollection = async (collectionId: string) => {
     setLoading(true);

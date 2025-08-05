@@ -73,7 +73,11 @@ export async function GET(
         images: signedImages,
         isSaved,
       },
-    });
+      message: "Post fetched successfully",
+      code: "POST_FETCHED_SUCCESSFULLY",
+    },
+    { status: 200 }
+  );
   } catch (error) {
     console.error("Single post fetch error:", error);
     return NextResponse.json(

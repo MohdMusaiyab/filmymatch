@@ -4,7 +4,6 @@ import api from "@/lib/api";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Snippet } from '@/app/components/ui/Snippet';
-import Button from '@/app/components/Button';
 
 interface Post {
   id: string;
@@ -35,12 +34,17 @@ interface Post {
 
 
 interface ApiResponse {
-  posts: Post[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
+  success: boolean;
+  message: string;
+  code: string;
+  data: {
+    posts: Post[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
   };
 }
 
@@ -62,11 +66,11 @@ const PostsPage = () => {
 
         const response = await api.get<ApiResponse>("/posts/my-posts?page=1&limit=10");
 
-        if (!response.data.posts) {
+        if (!response.data.data.posts) {
           throw new Error("No posts data received");
         }
 
-        setPosts(response.data.posts);
+        setPosts(response.data.data?.posts);
       } catch (err) {
         console.error("Failed to load posts:", err);
         setError(err instanceof Error ? err.message : "An unknown error occurred");
@@ -153,7 +157,7 @@ const PostsPage = () => {
             </div>
             <div className="ml-3">
               <p className="text-sm text-blue-700">
-                You haven't created any posts yet.{" "}
+                You haven&apos;t created any posts yet.{" "}
                 <Link
                   href="/dashboard/create-post"
                   className="font-medium text-blue-600 hover:text-blue-500"

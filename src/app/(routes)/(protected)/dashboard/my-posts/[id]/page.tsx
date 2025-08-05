@@ -219,10 +219,11 @@ const EditPostPage = () => {
         }
 
         try {
-          const { data: presignedData } = await api.post('/upload/presigned-url', {
+          const response = await api.post('/upload/presigned-url', {
             fileName: file.file.name,
             fileType: file.file.type
           });
+          const presignedData = response.data.data;
 
           const uploadedFile = await new Promise<FileWithPreview>((resolve, reject) => {
             const xhr = new XMLHttpRequest();

@@ -10,7 +10,6 @@ import {
   BookOpen,
   Share2,
   Tag,
-  Quote,
   ChevronDown,
 } from "lucide-react";
 
@@ -47,31 +46,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   </div>
 );
 
-interface TestimonialCardProps {
-  quote: string;
-  author: string;
-  role: string;
-}
 
-const TestimonialCard: React.FC<TestimonialCardProps> = ({
-  quote,
-  author,
-  role,
-}) => (
-  <div className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:bg-gray-800/60 transition-all duration-300">
-    <Quote className="w-8 h-8 text-blue-400 mb-4" />
-    <p className="text-gray-300 mb-4 italic">"{quote}"</p>
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-gradient-to-br from-pastel-blue to-accent-blue rounded-full flex items-center justify-center">
-        <span className="text-sm font-bold text-white">{author.charAt(0)}</span>
-      </div>
-      <div>
-        <p className="text-white font-medium">{author}</p>
-        <p className="text-gray-400 text-sm">{role}</p>
-      </div>
-    </div>
-  </div>
-);
 
 interface FloatingElementProps {
   children: React.ReactNode;
@@ -136,7 +111,7 @@ const AnimatedBackground = () => {
 };
 
 export default function Page() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
