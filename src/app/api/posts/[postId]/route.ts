@@ -6,11 +6,11 @@ import { extractKeyFromUrl, generatePresignedViewUrl } from "@/lib/aws-s3";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    const postId = params.postId;
+    const {postId} = await params;
 
     if (!postId) {
       return NextResponse.json(

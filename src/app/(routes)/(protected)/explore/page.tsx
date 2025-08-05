@@ -258,13 +258,6 @@ const FeedPage = () => {
             onChange={(e) => debouncedSearch(e.target.value)}
             className="w-full py-2 pl-4 bg-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm sm:text-base"
           />
-          {/* <input
-            type="text"
-            placeholder="Search posts..."
-            defaultValue={searchTerm}
-            onChange={(e) => debouncedSearch(e.target.value)}
-            className="w-full p-2 pl-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          /> */}
         </div>
 
         {/* categories dropdown */}
