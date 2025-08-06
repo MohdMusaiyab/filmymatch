@@ -12,6 +12,7 @@ import { Snippet } from "@/app/components/ui/Snippet";
 import { getUserCollections } from "@/actions/collection";
 import { toast } from "sonner";
 import { Edit, Settings, Library, Bookmark, Grid3X3 } from "lucide-react";
+import Image from "next/image";
 
 const UserProfilePage = () => {
   const { data: session } = useSession();
@@ -19,7 +20,9 @@ const UserProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
   const [isPanel, setIsPanel] = useState(false);
-  const [activeTab, setActiveTab] = useState<"posts" | "collections" | "saved">("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "collections" | "saved">(
+    "posts"
+  );
   const [collections, setCollections] = useState<any[]>([]);
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [savedLoading, setSavedLoading] = useState(false);
@@ -66,11 +69,15 @@ const UserProfilePage = () => {
   const handleToggleSetting = () => setIsPanel((prev) => !prev);
 
   if (loading) {
-    return <div className="text-center py-20 text-zinc-300">Loading profile...</div>;
+    return (
+      <div className="text-center py-20 text-zinc-300">Loading profile...</div>
+    );
   }
 
   if (!profileData) {
-    return <div className="text-center py-20 text-red-500">Profile not found.</div>;
+    return (
+      <div className="text-center py-20 text-red-500">Profile not found.</div>
+    );
   }
 
   const { profile, posts } = profileData;
@@ -78,9 +85,15 @@ const UserProfilePage = () => {
   return (
     <>
       {isPanel && (
-        <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center" onClick={() => setIsPanel(false)}>
+        <div
+          className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center"
+          onClick={() => setIsPanel(false)}
+        >
           <div className="relative z-50" onClick={(e) => e.stopPropagation()}>
-            <ProfileSideBar userId={profile.id} onClose={() => setIsPanel(false)} />
+            <ProfileSideBar
+              userId={profile.id}
+              onClose={() => setIsPanel(false)}
+            />
           </div>
         </div>
       )}
@@ -93,7 +106,13 @@ const UserProfilePage = () => {
             <div className="flex items-center justify-center">
               <div className="w-26 h-26 rounded-full overflow-hidden border border-zinc-700">
                 {profile.avatar ? (
-                  <img src={profile.avatar} alt={profile.username} className="w-full h-full object-cover" />
+                  <Image
+                    src={profile.avatar}
+                    alt={profile.username}
+                    className="w-full h-full object-cover"
+                    height={104}
+                    width={104}
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-indigo-600 text-white text-2xl font-bold">
                     {profile.username.charAt(0).toUpperCase()}
@@ -137,7 +156,9 @@ const UserProfilePage = () => {
                 ))}
               </div>
 
-              <p className="text-sm text-zinc-200">{profile.bio || "No bio yet."}</p>
+              <p className="text-sm text-zinc-200">
+                {profile.bio || "No bio yet."}
+              </p>
             </div>
           </div>
 
@@ -147,7 +168,9 @@ const UserProfilePage = () => {
               <button
                 onClick={() => setActiveTab("posts")}
                 className={`flex items-center gap-2 pb-2 text-sm uppercase tracking-wide ${
-                  activeTab === "posts" ? "border-b-2 border-zinc-300 text-white" : "text-zinc-400"
+                  activeTab === "posts"
+                    ? "border-b-2 border-zinc-300 text-white"
+                    : "text-zinc-400"
                 }`}
               >
                 <Grid3X3 size={18} />
@@ -156,7 +179,9 @@ const UserProfilePage = () => {
               <button
                 onClick={() => setActiveTab("collections")}
                 className={`flex items-center gap-2 pb-2 text-sm uppercase tracking-wide ${
-                  activeTab === "collections" ? "border-b-2 border-zinc-300 text-white" : "text-zinc-400"
+                  activeTab === "collections"
+                    ? "border-b-2 border-zinc-300 text-white"
+                    : "text-zinc-400"
                 }`}
               >
                 <Library size={18} />
@@ -166,7 +191,9 @@ const UserProfilePage = () => {
                 <button
                   onClick={() => setActiveTab("saved")}
                   className={`flex items-center gap-2 pb-2 text-sm uppercase tracking-wide ${
-                    activeTab === "saved" ? "border-b-2 border-zinc-300 text-white" : "text-zinc-400"
+                    activeTab === "saved"
+                      ? "border-b-2 border-zinc-300 text-white"
+                      : "text-zinc-400"
                   }`}
                 >
                   <Bookmark size={18} />
@@ -198,7 +225,9 @@ const UserProfilePage = () => {
                     />
                   ))
                 ) : (
-                  <p className="text-zinc-500 col-span-full text-center">No posts available.</p>
+                  <p className="text-zinc-500 col-span-full text-center">
+                    No posts available.
+                  </p>
                 ))}
 
               {activeTab === "collections" &&
@@ -210,14 +239,20 @@ const UserProfilePage = () => {
                       className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 shadow hover:shadow-lg transition duration-200"
                     >
                       {collection.coverImage && (
-                        <img
+                        <Image
+                          width={400}
+                          height={160}
                           src={collection.coverImage}
                           alt={collection.name}
                           className="w-full h-40 object-cover rounded-lg mb-4"
                         />
                       )}
-                      <h3 className="text-white text-lg font-semibold mb-1">{collection.name}</h3>
-                      <p className="text-zinc-400 text-sm line-clamp-2 mb-2">{collection.description}</p>
+                      <h3 className="text-white text-lg font-semibold mb-1">
+                        {collection.name}
+                      </h3>
+                      <p className="text-zinc-400 text-sm line-clamp-2 mb-2">
+                        {collection.description}
+                      </p>
                       <div className="text-zinc-500 text-xs">
                         {collection.posts.length}{" "}
                         {collection.posts.length === 1 ? "post" : "posts"} •{" "}
@@ -226,12 +261,16 @@ const UserProfilePage = () => {
                     </Link>
                   ))
                 ) : (
-                  <p className="text-zinc-500 col-span-full text-center mt-10">No collections to show.</p>
+                  <p className="text-zinc-500 col-span-full text-center mt-10">
+                    No collections to show.
+                  </p>
                 ))}
 
               {activeTab === "saved" &&
                 (savedLoading ? (
-                  <p className="text-zinc-500 col-span-full text-center">Loading saved posts...</p>
+                  <p className="text-zinc-500 col-span-full text-center">
+                    Loading saved posts...
+                  </p>
                 ) : savedPosts.length > 0 ? (
                   savedPosts.map((post: any) => (
                     <Snippet
@@ -246,7 +285,9 @@ const UserProfilePage = () => {
                     />
                   ))
                 ) : (
-                  <p className="text-zinc-500 col-span-full text-center">No saved posts.</p>
+                  <p className="text-zinc-500 col-span-full text-center">
+                    No saved posts.
+                  </p>
                 ))}
             </div>
           </div>

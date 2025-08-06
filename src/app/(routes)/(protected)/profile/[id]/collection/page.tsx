@@ -81,6 +81,7 @@ const UserCollectionsPage = () => {
           }))
         );
       } catch (err) {
+        console.error("Error fetching collections:", err);
         toast.error("Something went wrong while loading collections");
         notFound();
       } finally {

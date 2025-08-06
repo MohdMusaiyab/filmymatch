@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useDropzone } from 'react-dropzone'
 import { VisibilityEnum } from '@/schemas/common'
 import api from '@/lib/api'
+import Image from 'next/image'
 
 interface Post {
   id: string
@@ -88,13 +89,14 @@ export default function CollectionDetailsPage() {
 
       toast.success('Image uploaded successfully!')
     } catch (error) {
+      console.error('Failed to upload image', error)
       toast.error('Failed to upload image')
     } finally {
       setIsUploading(false)
     }
   }
 
-  const fetchCollection = async () => {
+  const fetchCollection = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -122,7 +124,7 @@ export default function CollectionDetailsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [collectionId])
 
   const handleRemovePost = async (postId: string) => {
     if (!collectionId || !postId || !collection) return
@@ -221,7 +223,7 @@ export default function CollectionDetailsPage() {
 
   useEffect(() => {
     fetchCollection()
-  }, [collectionId])
+  }, [collectionId, fetchCollection])
 
   if (loading && !collection) {
     return (
@@ -238,7 +240,7 @@ export default function CollectionDetailsPage() {
           <h1 className="text-2xl font-bold mb-2">Error</h1>
           <p>{error}</p>
           <Link
-            href="/collections"
+            href="/dashboard/my-collection"
             className="mt-4 inline-block text-blue-500 hover:underline"
           >
             Back to Collections
@@ -254,7 +256,7 @@ export default function CollectionDetailsPage() {
         <div className="text-center p-4">
           <h1 className="text-2xl font-bold mb-2">Collection not found</h1>
           <Link
-            href="/collections"
+            href="/dashboard/my-collection"
             className="mt-4 inline-block text-blue-500 hover:underline"
           >
             Back to Collections
@@ -304,9 +306,11 @@ export default function CollectionDetailsPage() {
           } ${isEditing ? 'hover:ring-2 hover:ring-blue-400' : 'pointer-events-none'}`}
         >
           <input {...getInputProps()} />
-          <img
+          <Image
             src={editData.coverImage || '/default-cover.jpg'}
             alt={editData.name || 'Collection cover'}
+            width={800}
+            height={400}
             className="w-full h-full object-cover"
           />
           {isEditing && (
@@ -451,9 +455,11 @@ export default function CollectionDetailsPage() {
 
                 {post.coverImage && (
                   <div className="relative h-40 w-full bg-gray-700">
-                    <img
+                    <Image
                       src={post.coverImage}
                       alt={post.title || 'Post cover'}
+                      width={400}
+                      height={160}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -472,9 +478,11 @@ export default function CollectionDetailsPage() {
                   <div className="flex items-center gap-3 mt-4">
                     {post.user.avatar ? (
                       <div className="relative w-8 h-8 rounded-full overflow-hidden">
-                        <img
+                        <Image  
                           src={post.user.avatar}
                           alt={post.user.username || 'User avatar'}
+                          width={32}
+                          height={32}
                           className="w-full h-full object-cover"
                         />
                       </div>

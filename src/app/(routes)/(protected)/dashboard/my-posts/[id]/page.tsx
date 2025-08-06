@@ -13,6 +13,7 @@ import {
 import PostComment from "@/app/components/Comment";
 import LikeButton from "@/app/components/LikeButton";
 import { toast } from "sonner";
+import Image from "next/image";
 
 type FileWithPreview = {
   file: File;
@@ -294,7 +295,7 @@ const EditPostPage = () => {
 
     try {
       // 1. Upload ALL files first (including new ones)
-      const { success, uploadedFiles } = await uploadFiles();
+      const { success } = await uploadFiles();
       if (!success) {
         toast.error("Some files failed to upload");
         setIsSubmitting(false);
@@ -467,10 +468,13 @@ const EditPostPage = () => {
             {files.map((file, index) => (
               <div key={index} className="border rounded-lg p-3 relative">
                 {file.file.type.startsWith("image/") || !file.file.type ? (
-                  <img
+                  <Image
                     src={file.preview}
                     alt={file.file.name}
                     className="w-full h-32 object-cover rounded"
+                    width={400}
+                    height={128}
+                    unoptimized
                   />
                 ) : (
                   <video

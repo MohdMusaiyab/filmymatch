@@ -3,7 +3,6 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import {
   extractKeyFromUrl,
-  generatePresignedUrl,
   generatePresignedViewUrl,
   changeFileVisibility,
 } from "@/lib/aws-s3";

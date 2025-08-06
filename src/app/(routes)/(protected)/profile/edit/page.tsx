@@ -66,6 +66,7 @@ const EditProfilePage = () => {
           deactivateAccount: data.isActive ?? false,
         });
       } catch (err) {
+        console.error(err);
         toast.error("Failed to load user profile");
       } finally {
         setLoading(false);
@@ -152,6 +153,7 @@ const EditProfilePage = () => {
       toast.success("Profile updated successfully");
       router.push(`/profile/${user?.id}`);
     } catch (err) {
+      console.error(err);
       toast.error("Failed to update profile");
     }
   };

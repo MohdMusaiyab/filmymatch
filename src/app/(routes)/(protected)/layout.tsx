@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import { ActiveTab } from "@/types";
 import { Header } from "@/app/components/general/Header";
-import { SidebarProvider, useSidebar } from "@/app/context/SidebarContext";
+import { SidebarProvider } from "@/app/context/SidebarContext";
 import { Sidebar } from "@/app/components/ui/Sidebar";
 
 const InnerLayout = ({ children }: { children: React.ReactNode }) => {
-  const { sidebarCollapsed } = useSidebar();
+  // const { sidebarCollapsed } = useSidebar();
   const [activeTab, setActiveTab] = useState<ActiveTab>("home");
 
   return (

@@ -1,10 +1,11 @@
 "use client"
-import React, { use } from 'react'
+import React from 'react'
 import { Snippet } from '@/app/components/ui/Snippet'
 import { getCollectionById } from '@/actions/collection'
 import { toast } from 'sonner'
 import { notFound, redirect } from 'next/navigation'
 import { useParams } from 'next/navigation'
+import Image from 'next/image'
 
 interface Post {
   id: string
@@ -73,6 +74,7 @@ const CollectionPage = () => {
           setCollection(result.data)
         }
       } catch (error) {
+        console.error('Failed to fetch collection:', error)
         toast.error('Failed to load collection')
         redirect('/collections')
       } finally {
@@ -110,10 +112,14 @@ const CollectionPage = () => {
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-end mb-6">
           {collection.coverImage && (
             <div className="w-full md:w-48 h-48 rounded-xl overflow-hidden">
-              <img
+              <Image
                 src={collection.coverImage}
                 alt={collection.name}
                 className="w-full h-full object-cover"
+                fill
+                sizes="192px"
+                style={{ objectFit: 'cover' }}
+                priority
               />
             </div>
           )}

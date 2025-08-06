@@ -2,7 +2,6 @@
 
 import { useEffect, useState, Fragment } from "react";
 import { useParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { Bookmark, BookmarkCheck, Heart, Edit2 } from "lucide-react";

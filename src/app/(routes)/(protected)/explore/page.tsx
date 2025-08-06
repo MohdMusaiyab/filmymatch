@@ -91,19 +91,17 @@ const FeedPage = () => {
   );
 
   // Debounced search with proper cleanup
-  const debouncedSearch = useCallback(
-    (() => {
-      let timeoutId: NodeJS.Timeout;
-      return (value: string) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          setSearchTerm(value);
-          setPage(1);
-        }, 500); // Increased debounce time for better performance
-      };
-    })(),
-    []
-  );
+  const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedSearch = useCallback((value: string) => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchTerm(value);
+      setPage(1);
+    }, 500); // Increased debounce time for better performance
+  }, []);
 
   const toggleMenu = useCallback(
     (id: string) => {

@@ -87,6 +87,7 @@ const SavedPostsPage = () => {
         setPosts([]);
       }
     } catch (err) {
+      console.error(err);
       setError('An unexpected error occurred');
       setPosts([]);
     } finally {
@@ -97,7 +98,7 @@ const SavedPostsPage = () => {
 
   useEffect(() => {
     fetchSavedPosts(currentPage, searchTerm);
-  }, [currentPage]);
+  }, [currentPage,searchTerm]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +126,7 @@ const SavedPostsPage = () => {
     const maxVisiblePages = 5;
     
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
     
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
