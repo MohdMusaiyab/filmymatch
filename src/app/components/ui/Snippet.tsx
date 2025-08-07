@@ -5,43 +5,41 @@ import Image from "next/image";
 import AddCollectionButton from "../AddCollectionButton";
 import { ToggleSaveButton } from "../ToggleSaveButton";
 import { useSession } from "next-auth/react";
+import { Post } from "@/types/Post";
 
 interface SnippetProps {
-  post: {
-    id: string;
-    title: string;
-    description: string;
-    category: string;
-    visibility: string;
-    coverImage?: string;
-    user: {
-      id: string;
-      username: string;
-      avatar?: string | null;
-    };
-    images: {
-      id: string;
-      url: string;
-      description?: string | null;
-    }[];
-    _count: {
-      likes: number;
-      comments: number;
-    };
-    createdAt: string;
-    linkTo?: string; // ✅ new prop to allow dynamic link
-    isSaved: boolean; // ✅ Add this
-  };
+  // post: {
+  //   id: string;
+  //   title: string;
+  //   description: string;
+  //   category: string;
+  //   visibility: string;
+  //   coverImage?: string;
+  //   user: {
+  //     id: string;
+  //     username: string;
+  //     avatar?: string | null;
+  //   };
+  //   images: {
+  //     id: string;
+  //     url: string;
+  //     description?: string | null;
+  //   }[];
+  //   _count: {
+  //     likes: number;
+  //     comments: number;
+  //   };
+  //   createdAt: string;
+  //   linkTo?: string; // ✅ new prop to allow dynamic link
+  //   isSaved: boolean; // ✅ Add this
+  // };
+  post: Post;
   menuOpen: string | null;
   toggleMenu: (id: string) => void;
   showActions?: boolean;
 }
 
-export const Snippet = ({
-  post,
-  menuOpen,
-  toggleMenu,
-}: SnippetProps) => {
+export const Snippet = ({ post, menuOpen, toggleMenu }: SnippetProps) => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   return (
@@ -81,58 +79,64 @@ export const Snippet = ({
           {/* Main Content */}
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <Link href={`/explore/post/${post.id}`} className="min-w-0">
+                <Link
+                href={post.linkTo ? post.linkTo : `/explore/post/${post.id}`}
+                className="min-w-0"
+                >
                 <h3 className="text-white  text-lg font-semibold leading-tight hover:underline">
                   {post.title}
                 </h3>
               </Link>
               <div className="flex justify-center align center">
-              <ToggleSaveButton
-                postId={post.id}
-                initialIsSaved={post.isSaved}
-              />
+                <ToggleSaveButton
+                  postId={post.id}
+                  initialIsSaved={post.isSaved}
+                />
 
-              {/* Dropdown Trigger - Exactly like your previous example */}
-              <div className="relative">
-                <button
-                  onClick={() => toggleMenu(post.id)}
-                  className="py-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                  aria-label="More options"
-                  aria-haspopup="true"
-                  aria-expanded={menuOpen === post.id}
-                >
-                  <MoreVertical size={18} />
-                </button>
+                {/* Dropdown Trigger - Exactly like your previous example */}
+                <div className="relative">
+                  <button
+                    onClick={() => toggleMenu(post.id)}
+                    className="py-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    aria-label="More options"
+                    aria-haspopup="true"
+                    aria-expanded={menuOpen === post.id}
+                  >
+                    <MoreVertical size={18} />
+                  </button>
 
-                {/* Dropdown Menu - Exactly like your previous example */}
-                {menuOpen === post.id && (
-                  <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-xl shadow-lg z-30 py-1 animate-fade-in">
-                    {/* add to collection */}
-                    <AddCollectionButton postId={post.id} userId={post.user.id} />
-                    {/* show edit & delete only if it's own post */}
-                    {userId === post.user.id && (
-                      <>
-                        <Link
-                          href={`/dashboard/my-posts/${post.id}`}
-                          className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 transition rounded-md"
-                        >
-                          <Edit size={16} className="mr-2" />
-                          Edit
-                        </Link>
+                  {/* Dropdown Menu - Exactly like your previous example */}
+                  {menuOpen === post.id && (
+                    <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-xl shadow-lg z-30 py-1 animate-fade-in">
+                      {/* add to collection */}
+                      <AddCollectionButton
+                        postId={post.id}
+                        userId={post.user.id}
+                      />
+                      {/* show edit & delete only if it's own post */}
+                      {userId === post.user.id && (
+                        <>
+                          <Link
+                            href={`/dashboard/my-posts/${post.id}`}
+                            className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 transition rounded-md"
+                          >
+                            <Edit size={16} className="mr-2" />
+                            Edit
+                          </Link>
 
-                        <button className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition rounded-md">
-                          <Trash size={16} className="mr-2" />
-                          Delete
-                        </button>
-                      </>
-                    )}
-                    <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 transition rounded-md">
-                      <Share size={16} className="mr-2" />
-                      Share
-                    </button>
-                  </div>
-                )}
-              </div>
+                          <button className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition rounded-md">
+                            <Trash size={16} className="mr-2" />
+                            Delete
+                          </button>
+                        </>
+                      )}
+                      <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 transition rounded-md">
+                        <Share size={16} className="mr-2" />
+                        Share
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -156,8 +160,8 @@ export const Snippet = ({
 
             {/* Stats */}
             <div className="mt-4 flex items-center gap-6 text-xs text-gray-500">
-              <span>{post._count?.likes?? 0} Likes</span>
-              <span>{post._count?.comments?? 0} Comments</span>
+              <span>{post._count?.likes ?? 0} Likes</span>
+              <span>{post._count?.comments ?? 0} Comments</span>
               <span className="capitalize">
                 {post.visibility.toLowerCase()}
               </span>

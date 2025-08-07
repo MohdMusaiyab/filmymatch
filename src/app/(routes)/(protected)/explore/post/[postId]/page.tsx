@@ -7,31 +7,31 @@ import Image from "next/image";
 import { Bookmark, BookmarkCheck, Heart, Edit2 } from "lucide-react";
 import { Dialog, Transition } from "@headlessui/react";
 import api from "@/lib/api";
-
-interface Post {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  visibility: string;
-  coverImage?: string | null;
-  user: {
-    id: string;
-    username: string;
-    avatar?: string | null;
-  };
-  images: {
-    id: string;
-    url: string;
-    description?: string | null;
-  }[];
-  _count: {
-    likes: number;
-    comments: number;
-  };
-  createdAt: string;
-  isSaved: boolean;
-}
+import { Post } from "@/types/Post";
+// interface Post {
+//   id: string;
+//   title: string;
+//   description: string;
+//   category: string;
+//   visibility: string;
+//   coverImage?: string | null;
+//   user: {
+//     id: string;
+//     username: string;
+//     avatar?: string | null;
+//   };
+//   images: {
+//     id: string;
+//     url: string;
+//     description?: string | null;
+//   }[];
+//   _count: {
+//     likes: number;
+//     comments: number;
+//   };
+//   createdAt: string;
+//   isSaved: boolean;
+// }
 
 export default function PostPage() {
   const { postId } = useParams() as { postId: string };

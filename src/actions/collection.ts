@@ -448,6 +448,7 @@ export async function getCollectionById(collectionId: string) {
             userId: true,
             createdAt: true,
             updatedAt: true,
+            category: true,
             user: {
               select: {
                 id: true,

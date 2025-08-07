@@ -6,22 +6,22 @@ import { toast } from 'sonner'
 import { notFound, redirect } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
-
-interface Post {
-  id: string
-  title: string
-  coverImage: string | null
-  visibility: string
-  userId: string
-  user: {
-    id: string
-    username: string
-    avatar: string | null
-  }
-  createdAt: string
-  updatedAt: string
-  isSaved: boolean; // ✅ Add this line
-}
+import { Post } from '@/types/Post'
+// interface Post {
+//   id: string
+//   title: string
+//   coverImage: string | null
+//   visibility: string
+//   userId: string
+//   user: {
+//     id: string
+//     username: string
+//     avatar: string | null
+//   }
+//   createdAt: string
+//   updatedAt: string
+//   isSaved: boolean; // ✅ Add this line
+// }
 
 interface Collection {
   id: string
@@ -115,11 +115,11 @@ const CollectionPage = () => {
               <Image
                 src={collection.coverImage}
                 alt={collection.name}
-                className="w-full h-full object-cover"
-                fill
-                sizes="192px"
+                className="w-full h-full object-cover"  
                 style={{ objectFit: 'cover' }}
                 priority
+                width={192}
+                height={192}
               />
             </div>
           )}
@@ -156,7 +156,7 @@ const CollectionPage = () => {
                 id: post.id,
                 title: post.title,
                 description: post.title, // fallback
-                category: 'Post',
+                category: post.category ,
                 visibility: post.visibility,
                 coverImage: post.coverImage || undefined,
                 user: {

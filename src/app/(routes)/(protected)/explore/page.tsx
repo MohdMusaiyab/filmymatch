@@ -6,31 +6,31 @@ import { TagsEnum } from "@/schemas/common";
 import { CategoryEnum } from "@/schemas/common";
 import { Snippet } from "@/app/components/ui/Snippet";
 import api from '@/lib/api'
-
-interface Post {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  visibility: string;
-  coverImage?: string;
-  user: {
-    id: string;
-    username: string;
-    avatar?: string | null;
-  };
-  images: {
-    id: string;
-    url: string;
-    description?: string | null;
-  }[];
-  _count: {
-    likes: number;
-    comments: number;
-  };
-  createdAt: string;
-  isSaved: boolean;
-}
+import { Post } from "@/types/Post";
+// interface Post {
+//   id: string;
+//   title: string;
+//   description: string;
+//   category: string;
+//   visibility: string;
+//   coverImage?: string;
+//   user: {
+//     id: string;
+//     username: string;
+//     avatar?: string | null;
+//   };
+//   images: {
+//     id: string;
+//     url: string;
+//     description?: string | null;
+//   }[];
+//   _count: {
+//     likes: number;
+//     comments: number;
+//   };
+//   createdAt: string;
+//   isSaved: boolean;
+// }
 
 interface ApiResponse {
   success: boolean;
