@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nextjs-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app               # Hot reload
+      - /app/node_modules    # Prevent overwriting node_modules
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
