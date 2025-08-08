@@ -42,8 +42,7 @@ const Dashboard = () => {
         const response = await api.get("/collections/my-collections/recent", {
           withCredentials: true,
         });
-        console.log(response)
-        setRecentCollections(response.data.collections);
+        setRecentCollections(response.data.data.collections); 
       } catch (error) {
         console.error("Failed to fetch collections:", error);
       }
@@ -51,13 +50,6 @@ const Dashboard = () => {
 
     fetchCollections();
   }, []);
-
-  // const collections: Collection[] = [
-  //   { id: 1, tag: "Films", count: 24, icon: "🎬" },
-  //   { id: 2, tag: "Podcasts", count: 16, icon: "🎙️" },
-  //   { id: 3, tag: "Books", count: 32, icon: "📚" },
-  //   { id: 4, tag: "Articles", count: 18, icon: "📄" },
-  // ];
 
   const drafts: Draft[] = [
     {

@@ -9,7 +9,15 @@ export async function GET() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized access. Please log in.",
+          code: "UNAUTHORIZED",
+          data: null,
+        },
+        { status: 401 }
+      );
     }
 
     const collections = await prisma.collection.findMany({
@@ -35,7 +43,9 @@ export async function GET() {
     const signedCollections = await Promise.all(
       collections.map(async (collection) => {
         const signedCoverImage = collection.coverImage
-          ? await generatePresignedViewUrl(extractKeyFromUrl(collection.coverImage))
+          ? await generatePresignedViewUrl(
+            extractKeyFromUrl(collection.coverImage)
+          )
           : null;
 
         return {
@@ -45,9 +55,32 @@ export async function GET() {
       })
     );
 
-    return NextResponse.json({ collections: signedCollections });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Recent collections fetched successfully.",
+        code: "RECENT_COLLECTIONS_FETCHED",
+        data: {
+          collections: signedCollections,
+          pagination: {
+            total: signedCollections.length,
+            limit: 4,
+            offset: 0,
+          },
+        },
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Recent Collections Fetch Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "An unexpected error occurred while fetching recent collections.",
+        code: "INTERNAL_SERVER_ERROR",
+        data: null,
+      },
+      { status: 500 }
+    );
   }
 }
