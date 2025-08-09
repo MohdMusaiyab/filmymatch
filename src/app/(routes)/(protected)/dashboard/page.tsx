@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [recentCollections, setRecentCollections] = useState<Collection[]>([]);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
   const toggleMenu = (postId: string) => {
@@ -42,7 +43,7 @@ const Dashboard = () => {
         const response = await api.get("/collections/my-collections/recent", {
           withCredentials: true,
         });
-        setRecentCollections(response.data.data.collections); 
+        setRecentCollections(response.data.data.collections);
       } catch (error) {
         console.error("Failed to fetch collections:", error);
       }
@@ -51,24 +52,39 @@ const Dashboard = () => {
     fetchCollections();
   }, []);
 
-  const drafts: Draft[] = [
-    {
-      id: 1,
-      title: "YouTube: The Future of AI in Design",
-      type: "YouTube",
-      status: "Draft",
-      timeAgo: "Started yesterday",
-      icon: "📺",
-    },
-    {
-      id: 2,
-      title: "The Matrix: Resurrections",
-      type: "Film",
-      status: "Draft",
-      timeAgo: "Started 3 days ago",
-      icon: "🎬",
-    },
-  ];
+  useEffect(() => {
+    const fetchDrafts = async () => {
+      try {
+        const response = await api.get("/posts/my-posts/drafts", {
+          withCredentials: true,
+        });
+        setDrafts(response.data.data.drafts); 
+      } catch (error) {
+        console.error("Failed to fetch drafts:", error);
+      }
+    };
+
+    fetchDrafts();
+  }, []);
+
+  // const drafts: Draft[] = [
+  //   {
+  //     id: 1,
+  //     title: "YouTube: The Future of AI in Design",
+  //     type: "YouTube",
+  //     status: "Draft",
+  //     timeAgo: "Started yesterday",
+  //     icon: "📺",
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "The Matrix: Resurrections",
+  //     type: "Film",
+  //     status: "Draft",
+  //     timeAgo: "Started 3 days ago",
+  //     icon: "🎬",
+  //   },
+  // ];
 
   if (loading) {
     return (
