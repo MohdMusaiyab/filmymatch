@@ -29,6 +29,7 @@ export interface Draft {
   status: string;
   timeAgo: string;
   icon: string;
+  createdAt: string;
 }
 
 export type ActiveTab = 'home' | 'explore' | 'library';
