@@ -11,6 +11,8 @@ import Link from "next/link";
 const Dashboard = () => {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [recentCollections, setRecentCollections] = useState<Collection[]>([]);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
   const toggleMenu = (postId: string) => {
@@ -35,31 +37,54 @@ const Dashboard = () => {
     fetchRecentPosts();
   }, []);
 
-  const collections: Collection[] = [
-    { id: 1, tag: "Films", count: 24, icon: "🎬" },
-    { id: 2, tag: "Podcasts", count: 16, icon: "🎙️" },
-    { id: 3, tag: "Books", count: 32, icon: "📚" },
-    { id: 4, tag: "Articles", count: 18, icon: "📄" },
-  ];
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const response = await api.get("/collections/my-collections/recent", {
+          withCredentials: true,
+        });
+        setRecentCollections(response.data.data.collections);
+      } catch (error) {
+        console.error("Failed to fetch collections:", error);
+      }
+    };
 
-  const drafts: Draft[] = [
-    {
-      id: 1,
-      title: "YouTube: The Future of AI in Design",
-      type: "YouTube",
-      status: "Draft",
-      timeAgo: "Started yesterday",
-      icon: "📺",
-    },
-    {
-      id: 2,
-      title: "The Matrix: Resurrections",
-      type: "Film",
-      status: "Draft",
-      timeAgo: "Started 3 days ago",
-      icon: "🎬",
-    },
-  ];
+    fetchCollections();
+  }, []);
+
+  useEffect(() => {
+    const fetchDrafts = async () => {
+      try {
+        const response = await api.get("/posts/my-posts/drafts", {
+          withCredentials: true,
+        });
+        setDrafts(response.data.data.drafts); 
+      } catch (error) {
+        console.error("Failed to fetch drafts:", error);
+      }
+    };
+
+    fetchDrafts();
+  }, []);
+
+  // const drafts: Draft[] = [
+  //   {
+  //     id: 1,
+  //     title: "YouTube: The Future of AI in Design",
+  //     type: "YouTube",
+  //     status: "Draft",
+  //     timeAgo: "Started yesterday",
+  //     icon: "📺",
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "The Matrix: Resurrections",
+  //     type: "Film",
+  //     status: "Draft",
+  //     timeAgo: "Started 3 days ago",
+  //     icon: "🎬",
+  //   },
+  // ];
 
   if (loading) {
     return (
@@ -74,7 +99,7 @@ const Dashboard = () => {
       <div className="space-y-12">
         <section>
           <h2 className="text-xl font-semibold mb-4">Your Collections</h2>
-          <Collections collections={collections} />
+          <Collections collections={recentCollections} showCoverImage={false} />
         </section>
 
         <section>

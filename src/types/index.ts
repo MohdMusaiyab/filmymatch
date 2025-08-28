@@ -1,8 +1,11 @@
 export interface Collection {
-  id: number;
-  tag: string;
-  count: number;
-  icon: string;
+  id: string;
+  name: string;
+  description?: string;
+  coverImage?: string | null;
+  visibility: "PUBLIC" | "PRIVATE" | "FOLLOWERS";
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Highlight {
@@ -26,6 +29,7 @@ export interface Draft {
   status: string;
   timeAgo: string;
   icon: string;
+  createdAt: string;
 }
 
 export type ActiveTab = 'home' | 'explore' | 'library';
