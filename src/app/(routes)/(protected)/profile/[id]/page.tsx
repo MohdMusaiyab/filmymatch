@@ -48,6 +48,20 @@ const UserProfilePage = () => {
     fetchProfile();
   }, [id]);
 
+  // New useEffect to refetch posts when switching to posts tab
+  useEffect(() => {
+      const refetchProfile = async () => {
+      if (activeTab === "posts" && id && typeof id === "string" && profileData) {
+        const res = await getUserProfile({ userId: id });
+        if (res.success) {
+          setProfileData(res.data);
+        }
+      }
+    };
+
+    refetchProfile();
+  }, [activeTab, id, profileData]);
+
   useEffect(() => {
     const fetchSavedPosts = async () => {
       if (activeTab !== "saved") return;
@@ -218,6 +232,8 @@ const UserProfilePage = () => {
                           avatar: profile.avatar,
                         },
                         linkTo: `/dashboard/my-posts/${post.id}`,
+                        // Explicitly preserve the isSaved property:
+                        isSaved: post.isSaved,
                       }}
                       menuOpen={null}
                       toggleMenu={() => {}}

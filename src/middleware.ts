@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   console.log("Token emailVerified:", token?.emailVerified);
 
   // Public routes
-  const publicRoutes = ["/", "/auth/sign-in", "/auth/sign-up", "/auth/verify-email","/contact","/about" ,"/privacy-policy"];
+  const publicRoutes = ["/", "/auth/sign-in", "/auth/sign-up", "/auth/verify-email","/contact","/about" ,"/privacy-policy", "/auth/forgot-password"];
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(route + "/")
   );
