@@ -26,6 +26,11 @@ const UserProfilePage = () => {
   const [collections, setCollections] = useState<any[]>([]);
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [savedLoading, setSavedLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+
+  const toggleMenu = (postId: string) => {
+    setMenuOpen(menuOpen === postId ? null : postId);
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -231,12 +236,12 @@ const UserProfilePage = () => {
                           username: profile.username,
                           avatar: profile.avatar,
                         },
-                        linkTo: `/dashboard/my-posts/${post.id}`,
+                        // linkTo: `/dashboard/my-posts/${post.id}`,
                         // Explicitly preserve the isSaved property:
                         isSaved: post.isSaved,
                       }}
-                      menuOpen={null}
-                      toggleMenu={() => {}}
+                      menuOpen={menuOpen}
+                      toggleMenu={toggleMenu}
                       showActions={false}
                     />
                   ))
