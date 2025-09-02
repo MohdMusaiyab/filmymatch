@@ -32,4 +32,4 @@ export interface Draft {
   createdAt: string;
 }
 
-export type ActiveTab = 'home' | 'explore' | 'library';
+export type ActiveTab = 'home' | 'explore' | 'library' | 'saved';

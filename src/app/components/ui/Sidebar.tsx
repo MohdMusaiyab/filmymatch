@@ -16,6 +16,7 @@ const navItems: { icon: string; label: string; tab: ActiveTab }[] = [
   { icon: "🏠", label: "Home", tab: "home" },
   { icon: "🔍", label: "Explore", tab: "explore" },
   { icon: "📚", label: "My Library", tab: "library" },
+  { icon: "📌", label: "Saved", tab: "saved"},
 ];
 
 export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
@@ -81,6 +82,8 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                         ? "/explore"
                         : tab === "library"
                         ? "/dashboard/my-collection"
+                        : tab === "saved"
+                        ? ""
                         : "#"
                     }
                     onClick={() => {
