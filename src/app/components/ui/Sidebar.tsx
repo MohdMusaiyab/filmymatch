@@ -83,7 +83,7 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                         : tab === "library"
                         ? "/dashboard/my-collection"
                         : tab === "saved"
-                        ? ""
+                        ? "/dashboard/saved"
                         : "#"
                     }
                     onClick={() => {
