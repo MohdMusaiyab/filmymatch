@@ -11,12 +11,12 @@ interface SidebarProps {
   setActiveTab: (tab: ActiveTab) => void;
 }
 
-const navItems: { icon: string; label: string; tab: ActiveTab }[] = [
+const navItems: { label: string; tab: ActiveTab }[] = [
   //use lucide-react icons here
-  { icon: "🏠", label: "Home", tab: "home" },
-  { icon: "🔍", label: "Explore", tab: "explore" },
-  { icon: "📚", label: "My Library", tab: "library" },
-  { icon: "📌", label: "Saved", tab: "saved"},
+  { label: "Home", tab: "home" },
+  { label: "Explore", tab: "explore" },
+  { label: "My Library", tab: "library" },
+  { label: "Saved", tab: "saved"},
 ];
 
 export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
@@ -69,7 +69,7 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
           }`}
         >
           <ul className="space-y-2">
-            {navItems.map(({ icon, label, tab }) => {
+            {navItems.map(({ label, tab }) => {
               const isActive = activeTab === tab;
 
               return (
@@ -90,7 +90,7 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                       setActiveTab(tab);
                       if (isMobile) toggleSidebar();
                     }}
-                    className={`group flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium transition-colors duration-200
+                    className={`group flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200
                       ${sidebarCollapsed ? "justify-center" : "w-full"}
                       ${
                         isActive
@@ -101,7 +101,6 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                     aria-current={isActive ? "page" : undefined}
                     title={sidebarCollapsed ? label : undefined}
                   >
-                    <span className="text-lg">{icon}</span>
                     {!sidebarCollapsed && (
                       <span className="whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out">
                         {label}
