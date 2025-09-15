@@ -13,7 +13,7 @@ export const Header = () => {
 
   return (
     <header
-      className={`sticky top-0 py-4 sm:pr-4 md:pr-8 pr-12 flex justify-between items-center transition-all duration-300 bg-black ${
+      className={`sticky top-0 py-4 sm:pr-4 md:pr-8 pr-12 flex justify-between items-center transition-all duration-300 bg-white border-b border-gray-200 ${
         sidebarCollapsed ? "pl-24" : "pl-54"
       }`}
     >

@@ -40,13 +40,13 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
     <>
       {isMobile && !sidebarCollapsed && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          className="fixed inset-0 z-30 bg-white shadow-lg md:hidden"
           onClick={toggleSidebar}
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out bg-gray-900 border-r border-gray-800 flex flex-col ${sidebarWidth}`}
+        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out bg-white shadow-lg flex flex-col ${sidebarWidth}`}
         aria-label="Sidebar navigation"
       >
         {/* {sidebar header} */}
@@ -114,7 +114,7 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
         </nav>
 
         {/* Footer */}
-        <div className="p-3 mt-auto border-t border-gray-800">
+        <div className="p-3 mt-auto shadow-lg">
           {/* //use Link here too */}
           <Link
             href={`/profile/${userId}`}

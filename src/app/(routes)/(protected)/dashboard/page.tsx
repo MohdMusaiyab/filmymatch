@@ -98,7 +98,7 @@ const Dashboard = () => {
     <div className="overflow-x-hidden">
       <div className="space-y-12">
         <section>
-          <h2 className="text-xl font-semibold mb-4">Your Collections</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Your Collections</h2>
           <Collections collections={recentCollections} showCoverImage={false} />
         </section>
 

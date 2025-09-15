@@ -22,7 +22,7 @@ export const Collections = ({ collections, showCoverImage = true }: CollectionsP
         <Link
           key={collection.id}
           href={`/explore/collection/${collection.id}`}
-          className="bg-gray-900 rounded-xl hover:bg-gray-800 p-4 transition"
+          className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
         >
           {showCoverImage && (
             <div className="relative w-full h-32 mb-3 rounded-md overflow-hidden bg-gray-700">
@@ -41,8 +41,8 @@ export const Collections = ({ collections, showCoverImage = true }: CollectionsP
             </div>
           )}
 
-          <h3 className="font-semibold text-lg truncate">{collection.name}</h3>
-          <span className="text-xs text-gray-400 capitalize">
+          <h3 className="font-semibold text-gray-800 mb-2 px-5 py-5">{collection.name}</h3>
+          <span className="text-xs text-gray-400 capitalize px-5 py-5">
             {collection.visibility.toLowerCase()}
           </span>
         </Link>
