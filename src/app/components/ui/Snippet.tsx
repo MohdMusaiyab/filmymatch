@@ -6,6 +6,8 @@ import AddCollectionButton from "../AddCollectionButton";
 import { ToggleSaveButton } from "../ToggleSaveButton";
 import { useSession } from "next-auth/react";
 import { Post } from "@/types/Post";
+import { Visibility } from "@/types";
+import { VisibilityTag } from "../VisibilityTag";
 
 interface SnippetProps {
   // post: {
@@ -162,9 +164,7 @@ export const Snippet = ({ post, menuOpen, toggleMenu }: SnippetProps) => {
             <div className="mt-4 flex items-center gap-6 text-xs text-gray-500">
               <span>{post._count?.likes ?? 0} Likes</span>
               <span>{post._count?.comments ?? 0} Comments</span>
-              <span className="capitalize">
-                {post.visibility.toLowerCase()}
-              </span>
+              <VisibilityTag visibility={post.visibility as Visibility} />
             </div>
           </div>
         </div>

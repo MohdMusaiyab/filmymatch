@@ -33,3 +33,5 @@ export interface Draft {
 }
 
 export type ActiveTab = 'home' | 'explore' | 'library' | 'saved';
+
+export type Visibility = 'public' | 'private' | 'followers' | 'draft';

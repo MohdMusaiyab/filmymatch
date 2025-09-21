@@ -1,6 +1,14 @@
 "use client";
 
-import { X, ChevronRight, Home, Compass, BookOpen, Bookmark } from "lucide-react";
+import {
+  X,
+  ChevronRight,
+  Home,
+  Compass,
+  BookOpen,
+  Bookmark,
+  User,
+} from "lucide-react";
 import { ActiveTab } from "@/types";
 import { useSidebar } from "@/app/context/SidebarContext";
 import { useEffect, useState } from "react";
@@ -14,7 +22,11 @@ interface SidebarProps {
 const navItems: { label: string; tab: ActiveTab; icon: React.ReactNode }[] = [
   { label: "Home", tab: "home", icon: <Home className="w-5 h-5" /> },
   { label: "Explore", tab: "explore", icon: <Compass className="w-5 h-5" /> },
-  { label: "My Library", tab: "library", icon: <BookOpen className="w-5 h-5" /> },
+  {
+    label: "My Library",
+    tab: "library",
+    icon: <BookOpen className="w-5 h-5" />,
+  },
   { label: "Saved", tab: "saved", icon: <Bookmark className="w-5 h-5" /> },
 ];
 
@@ -45,14 +57,18 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out bg-white shadow-lg flex flex-col ${sidebarWidth}`}
+        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out bg-white shadow-lg flex flex-col 
+          ${sidebarCollapsed ? "items-center" : ""}
+          ${sidebarWidth}`}
         aria-label="Sidebar navigation"
       >
         {/* Header */}
         <div className="py-4 px-2 flex items-center justify-end">
           <button
             onClick={toggleSidebar}
-            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={
+              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
             className="p-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             {sidebarCollapsed ? <ChevronRight size={20} /> : <X size={20} />}
@@ -83,12 +99,16 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
                       setActiveTab(tab);
                       if (isMobile) toggleSidebar();
                     }}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-md font-medium transition-colors
-                      ${sidebarCollapsed ? "justify-center" : "justify-start"}
+                    className={`flex items-center gap-3 py-3 rounded-lg text-md font-medium transition-colors
+                      ${
+                        sidebarCollapsed
+                          ? "justify-center px-3"
+                          : "justify-start px-4"
+                      }
                       ${
                         isActive
-                          ? "bg-blue-500/20 text-gray-900"
-                          : "text-gray-500 hover:bg-gray-800 hover:text-white"
+                          ? "bg-blue-300/20 text-accent-blue"
+                          : "text-gray-900 hover:bg-blue-200/20"
                       }
                       focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500`}
                     aria-current={isActive ? "page" : undefined}
@@ -107,13 +127,14 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
         <div className="p-3 mt-auto">
           <Link
             href={`/profile/${userId}`}
-            className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors
-              ${sidebarCollapsed ? "justify-center" : "justify-start"}
-              text-gray-500 hover:bg-gray-800 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500`}
+            className={`flex items-center gap-3 py-3 rounded-lg text-md font-medium transition-colors
+      ${sidebarCollapsed ? "justify-center px-3" : "justify-start px-4"}
+      text-gray-900 hover:bg-blue-200/20
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500`}
             aria-label="Go to Profile"
             title={sidebarCollapsed ? "Profile" : undefined}
           >
-            <span className="text-lg">👤</span>
+            <User className="w-5 h-5" />
             {!sidebarCollapsed && <span>Profile</span>}
           </Link>
         </div>

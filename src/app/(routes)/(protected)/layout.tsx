@@ -3,13 +3,13 @@
 import React, { useState } from "react";
 import { ActiveTab } from "@/types";
 import { Header } from "@/app/components/general/Header";
-import { SidebarProvider } from "@/app/context/SidebarContext";
+import { SidebarProvider, useSidebar } from "@/app/context/SidebarContext";
 import { Sidebar } from "@/app/components/ui/Sidebar";
 
 const InnerLayout = ({ children }: { children: React.ReactNode }) => {
   // const { sidebarCollapsed } = useSidebar();
   const [activeTab, setActiveTab] = useState<ActiveTab>("home");
-
+  const { sidebarCollapsed } = useSidebar();
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <Header />
@@ -18,7 +18,7 @@ const InnerLayout = ({ children }: { children: React.ReactNode }) => {
         <div
           className={`flex-grow overflow-auto hide-scrollbar transition-all duration-300`}
         >
-          <div className="ml-64 min-h-screen mx-auto px-4 md:px-6 mt-6">
+          <div className={`${sidebarCollapsed ? "ml-24" : "ml-64"} min-h-screen mx-auto px-4 md:px-6 mt-6 transition-all duration-300 ease-in-out`}>
             {children}
           </div>
         </div>
