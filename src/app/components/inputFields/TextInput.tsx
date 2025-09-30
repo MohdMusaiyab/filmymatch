@@ -41,7 +41,7 @@ const TextInput: React.FC<TextInputProps> = ({
   return (
     <div className={`mb-3 ${className}`}>
       {label && (
-        <label htmlFor={id} className="block text-sm font-small text-gray-300 mb-1">
+        <label htmlFor={id} className="block text-sm font-small font-semibold text-slate-600 mb-1">
           {label}
         </label>
       )}

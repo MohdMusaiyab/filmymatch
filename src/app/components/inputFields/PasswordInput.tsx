@@ -73,7 +73,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
       {label && (
         <label
           htmlFor={id}
-          className="block text-sm font-small text-gray-300 mb-1"
+          className="block text-sm font-small text-slate-600 mb-1 font-semibold"
         >
           {label}
         </label>

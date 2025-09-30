@@ -9,6 +9,8 @@ import {
 import { changePassword } from "@/actions/user/changePassword";
 import PasswordInput from "@/app/components/inputFields/PasswordInput";
 import Button from "@/app/components/Button";
+import Image from "next/image";
+import forgotImage from "../../../../../../public/assets/forgot.png";
 
 const Page = () => {
   const router = useRouter();
@@ -67,7 +69,6 @@ const Page = () => {
       } else {
         setError(result.message);
 
-        // If there's an existing token, show verification screen with remaining time
         if (
           result.code === "TOKEN_ALREADY_SENT" &&
           result.message.includes("minutes")
@@ -136,14 +137,12 @@ const Page = () => {
       setError("");
       setMessage("");
 
-      // Use the server action to reset password
       const result = await changePassword(newPassword, email);
 
       if (result.success) {
         setSuccess(true);
         setMessage(result.message || "Password has been reset successfully");
 
-        // Redirect to sign-in after delay
         setTimeout(() => {
           router.push("/auth/sign-in");
         }, 2000);
@@ -159,42 +158,106 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-4 text-gray-800">
-          Forgot Password
-        </h1>
-
-        {success ? (
-          <div className="text-center space-y-4">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-              <svg
-                className="h-6 w-6 text-green-600"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900">{message}</h3>
-            <p className="text-sm text-gray-500">Redirecting to sign in...</p>
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row">
+      {/* Left Side - Image Section */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100">
+        <div className="w-full h-full flex flex-col items-center justify-center p-10">
+          <div className="relative w-full h-[60vh] max-w-2xl mb-8">
+            <Image
+              src={forgotImage}
+              alt="Reset your password"
+              fill
+              className="object-contain drop-shadow-2xl"
+              priority
+            />
           </div>
-        ) : showPasswordReset ? (
-          <div className="space-y-6">
-            <div className="text-center">
-              <p className="text-gray-600">Reset your password for:</p>
-              <p className="font-medium text-gray-800 mt-1">{email}</p>
-            </div>
+          <div className="text-center max-w-md space-y-3 px-6">
+            <h2 className="text-2xl font-bold text-blue-900">
+              Reset Your Password
+            </h2>
+            <p className="text-blue-800 text-opacity-80">
+              Don&apos;t worry! We&apos;ll help you regain access to your
+              account with a secure verification process.
+            </p>
+          </div>
+        </div>
+      </div>
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div>
+      {/* Right Side - Form Section */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-8 lg:py-12">
+        <div className="w-full max-w-md">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-blue-800 mb-2">
+              {success ? "Password Reset!" : "Forgot Password"}
+            </h1>
+            <p className="text-blue-800 text-base font-bold">
+              {success
+                ? "Your password has been successfully reset"
+                : "Enter your email to reset your password"}
+            </p>
+          </div>
+
+          {/* Mobile Image - Only visible on mobile */}
+          <div className="lg:hidden mb-8">
+            <div className="relative w-48 h-48 mx-auto">
+              <Image
+                src={forgotImage}
+                alt="Reset your password"
+                fill
+                className="object-contain"
+              />
+            </div>
+          </div>
+
+          {success ? (
+            <div className="text-center space-y-6 bg-white rounded-xl p-8 shadow-lg border border-green-100">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
+                <svg
+                  className="h-8 w-8 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800">{message}</h3>
+              <p className="text-gray-600">Redirecting to sign in...</p>
+              <div className="w-12 h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full mx-auto animate-pulse"></div>
+            </div>
+          ) : showPasswordReset ? (
+            <div className="space-y-6 bg-white rounded-xl p-8 shadow-lg border border-blue-100">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                  <svg
+                    className="w-8 h-8 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-gray-600">Reset your password for:</p>
+                  <p className="font-semibold text-gray-800 mt-2 text-lg">
+                    {email}
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleResetPassword} className="space-y-4">
                 <PasswordInput
                   label="New Password"
                   id="newPassword"
@@ -202,12 +265,9 @@ const Page = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new password"
-                  showStrength={true} // Optional: remove if you don’t want strength bar
-                  className="mb-4" // Optional: keep layout spacing consistent
+                  showStrength={true}
                 />
-              </div>
 
-              <div>
                 <PasswordInput
                   label="Confirm Password"
                   id="confirmPassword"
@@ -215,128 +275,121 @@ const Page = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
-                  className="mb-4" // Optional: ensures spacing is consistent
                 />
-              </div>
 
-              {error && (
-                <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-md">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center">
                       <svg
-                        className="h-5 w-5 text-red-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
+                        className="w-5 h-5 text-red-500 mr-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
                         <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">{error}</p>
+                      <p className="text-red-700 text-sm">{error}</p>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {message && (
-                <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-md">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
+                {message && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center">
                       <svg
-                        className="h-5 w-5 text-green-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
+                        className="w-5 h-5 text-green-500 mr-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
                         <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
                         />
                       </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-green-700">{message}</p>
+                      <p className="text-green-700 text-sm">{message}</p>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <Button
-                type="submit"
-                disabled={resetting}
-                className="w-full flex justify-center items-center gap-2"
-                variant="gradient-blue"
-                size="md"
-              >
-                {resetting && (
+                <Button
+                  type="submit"
+                  disabled={resetting}
+                  variant="custom-blue"
+                  size="lg"
+                  className="w-full"
+                >
+                  {resetting ? (
+                    <>
+                      <div className="w-5 h-5 border-t-2 border-white border-solid rounded-full animate-spin mr-3"></div>
+                      Resetting...
+                    </>
+                  ) : (
+                    "Reset Password"
+                  )}
+                </Button>
+              </form>
+            </div>
+          ) : showVerification ? (
+            <div className="space-y-6 bg-white rounded-xl p-8 shadow-lg border border-blue-100">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
                   <svg
-                    className="animate-spin h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-8 h-8 text-blue-600"
                     fill="none"
                     viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
                     <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                     />
                   </svg>
-                )}
-                {resetting ? "Resetting..." : "Reset Password"}
-              </Button>
-            </form>
-          </div>
-        ) : showVerification ? (
-          <div className="space-y-6">
-            <div className="text-center">
-              <p className="text-gray-600">
-                We&apos;ve sent a verification code to:
-              </p>
-              <p className="font-medium text-gray-800 mt-1">{email}</p>
-
-              {timeRemaining && (
-                <div className="mt-4">
-                  <div className="text-sm font-medium text-gray-500">
-                    Code expires in
-                  </div>
-                  <div
-                    className={`text-xl font-semibold mt-1 ${
-                      timeRemaining === "Expired"
-                        ? "text-red-600"
-                        : "text-blue-600"
-                    }`}
-                  >
-                    {timeRemaining}
-                  </div>
                 </div>
-              )}
-            </div>
+                <div>
+                  <p className="text-gray-600">
+                    We&apos;ve sent a verification code to:
+                  </p>
+                  <p className="font-semibold text-gray-800 mt-1 text-lg">
+                    {email}
+                  </p>
+                </div>
 
-            <form onSubmit={handleVerifyToken} className="space-y-6">
-              <div>
-                <label
-                  htmlFor="otp"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Verification Code
-                </label>
-                <div className="mt-1">
+                {timeRemaining && (
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-sm font-medium text-blue-700 mb-1">
+                      Code expires in
+                    </div>
+                    <div
+                      className={`text-2xl font-bold ${
+                        timeRemaining === "Expired"
+                          ? "text-red-600"
+                          : "text-blue-600"
+                      }`}
+                    >
+                      {timeRemaining}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleVerifyToken} className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="otp"
+                    className="block text-sm font-semibold text-gray-800 mb-3"
+                  >
+                    Verification Code
+                  </label>
                   <input
                     id="otp"
                     name="otp"
@@ -347,189 +400,187 @@ const Page = () => {
                     onChange={(e) =>
                       setOtp(e.target.value.replace(/[^0-9]/g, ""))
                     }
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-center text-lg tracking-widest"
+                    className="w-full px-4 py-3 text-lg text-center tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="Enter 6-digit code"
                     maxLength={6}
                   />
                 </div>
-              </div>
 
-              {error && (
-                <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-md">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center">
                       <svg
-                        className="h-5 w-5 text-red-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
+                        className="w-5 h-5 text-red-500 mr-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
                         <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
+                      <p className="text-red-700 text-sm">{error}</p>
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                )}
+
+                {message && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center">
+                      <svg
+                        className="w-5 h-5 text-green-500 mr-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <p className="text-green-700 text-sm">{message}</p>
                     </div>
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={verifying || timeRemaining === "Expired"}
+                  variant="custom-blue"
+                  size="lg"
+                  className="w-full flex items-center justify-center"
+                >
+                  {verifying ? (
+                    <>
+                      <div className="w-5 h-5 border-t-2 border-white border-solid rounded-full animate-spin mr-3"></div>
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify Code"
+                  )}
+                </Button>
+
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    onClick={handleSendResetToken}
+                    disabled={
+                      loading ||
+                      (timeRemaining !== null && timeRemaining !== "Expired")
+                    }
+                    variant="outline"
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-700 disabled:text-red-600 disabled:cursor-not-allowed"
+                  >
+                    {loading
+                      ? "Sending..."
+                      : timeRemaining && timeRemaining !== "Expired"
+                      ? "Code already sent"
+                      : "Resend verification code"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div className="space-y-6 bg-white rounded-xl p-8 shadow-lg border border-blue-100">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                  <svg
+                    className="w-8 h-8 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-gray-600">
+                    Enter your email address to reset your password
+                  </p>
+                </div>
+              </div>
+
+              <EmailInput
+                label="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                error={error.includes("email") ? error : ""}
+                id="reset-email"
+                name="email"
+              />
+
+              {message && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center">
+                    <svg
+                      className="w-5 h-5 text-green-500 mr-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <p className="text-green-700 text-sm">{message}</p>
                   </div>
                 </div>
               )}
 
-              {message && (
-                <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-md">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg
-                        className="h-5 w-5 text-green-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-green-700">{message}</p>
-                    </div>
+              {error && !error.includes("email") && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center">
+                    <svg
+                      className="w-5 h-5 text-red-500 mr-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <p className="text-red-700 text-sm">{error}</p>
                   </div>
                 </div>
               )}
 
               <Button
-                type="submit"
-                disabled={verifying || timeRemaining === "Expired"}
-                className="w-full flex justify-center items-center gap-2"
-                variant="gradient-blue" // or your preferred variant
-                size="md"
+                onClick={handleSendResetToken}
+                disabled={loading || !email}
+                variant="custom-blue"
+                size="lg"
+                className="w-full flex items-center justify-center"
               >
-                {verifying && (
-                  <svg
-                    className="animate-spin h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-t-2 border-white border-solid rounded-full animate-spin mr-3"></div>
+                    Sending...
+                  </>
+                ) : (
+                  "Send Verification Code"
                 )}
-                {verifying ? "Verifying..." : "Verify Code"}
               </Button>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={handleSendResetToken}
-                  disabled={
-                    loading ||
-                    (timeRemaining !== null && timeRemaining !== "Expired")
-                  }
-                  className="text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline transition ease-in-out duration-150"
-                >
-                  {loading
-                    ? "Sending..."
-                    : timeRemaining && timeRemaining !== "Expired"
-                    ? "Code already sent"
-                    : "Resend verification code"}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="text-center">
-              <p className="text-gray-600">
-                Enter your email address to reset your password
-              </p>
             </div>
-
-            <EmailInput
-              label="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={error.includes("email") ? error : ""}
-              id="reset-email"
-              name="email"
-            />
-
-            {message && (
-              <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-md">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-green-500"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-green-700">{message}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <Button
-              onClick={handleSendResetToken}
-              disabled={loading || !email}
-              className="w-full flex justify-center items-center gap-2 py-3"
-              variant="gradient-blue" // or another variant if preferred
-              size="md"
-            >
-              {loading && (
-                <svg
-                  className="animate-spin h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              )}
-              {loading ? "Sending..." : "Send Verification Code"}
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
