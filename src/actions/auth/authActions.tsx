@@ -61,6 +61,7 @@ export async function sendVerificationToken(
     const existingToken = await prisma.verificationToken.findFirst({
       where: {
         userId: user.id,
+        purpose: "email_verification", // Add purpose filter
         expiresAt: { gt: new Date() },
       },
     });
@@ -86,6 +87,7 @@ export async function sendVerificationToken(
         token: otp,
         expiresAt,
         userId: user.id,
+        purpose: "email_verification", // Add purpose
       },
     });
 
@@ -170,8 +172,12 @@ export async function verifyToken(
     }
 
     // Find and validate token
-    const verificationToken = await prisma.verificationToken.findFirst({
-      where: { userId: user.id, token: otp },
+     const verificationToken = await prisma.verificationToken.findFirst({
+      where: { 
+        userId: user.id, 
+        token: otp,
+        purpose: "email_verification" // Add purpose filter
+      },
     });
 
     if (!verificationToken) {
@@ -229,6 +235,7 @@ export async function checkVerificationToken(email: string) {
     const token = await prisma.verificationToken.findFirst({
       where: {
         userId: user.id,
+        purpose: "email_verification", // Add purpose filter
         expiresAt: { gt: new Date() },
       },
     });

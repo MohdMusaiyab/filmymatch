@@ -19,6 +19,7 @@ export const VerificationTokenSchema = z.object({
   token: z.string(),
   expiresAt: z.date(),
   userId: z.string(),
+  purpose: z.string().default("email_verification"), // ← ADD THIS LINE
 });
 
 export type Login = z.infer<typeof LoginSchema>;

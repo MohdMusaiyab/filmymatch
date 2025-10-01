@@ -24,7 +24,7 @@ const EmailInput: React.FC<EmailInputProps> = ({
   return (
     <div className={`mb-3 ${className}`}>
       {label && (
-        <label className="block text-sm font-small text-gray-300 mb-1">
+        <label className="block text-sm font-small text-slate-600 font-semibold mb-1">
           {label}
         </label>
       )}

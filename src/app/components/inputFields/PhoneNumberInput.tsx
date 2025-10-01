@@ -106,7 +106,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
   return (
     <div className={`mb-3 ${className}`}>
       {label && (
-        <label className="block text-sm font-small text-gray-300 mb-1">
+        <label className="block text-sm font-small text-slate-600 mb-1 font-semibold">
           {label}
         </label>
       )}
