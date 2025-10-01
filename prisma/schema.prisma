@@ -61,6 +61,7 @@ model VerificationToken {
   token     String   @unique
   expiresAt DateTime
   userId    String
+  purpose   String   @default("email_verification")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])

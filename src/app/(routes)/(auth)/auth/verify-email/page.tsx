@@ -158,15 +158,15 @@ const EmailVerificationPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-blue-100">
           <div className="text-center">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-2xl font-bold blue-800 mb-4">
               Sign In Required
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-blue-600 mb-6">
               Please sign in to verify your email address.
             </p>
             <button
               onClick={() => router.push("/auth/sign-in")}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.02]"
+              className="w-full py-3 text-blue-600 font-medium hover:from-blue-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.02]"
             >
               Go to Sign In
             </button>
