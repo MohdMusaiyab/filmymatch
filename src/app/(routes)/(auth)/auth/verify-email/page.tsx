@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import {
   sendVerificationToken,
   verifyToken,
@@ -144,7 +144,10 @@ const EmailVerificationPage = () => {
       setVerifying(false);
     }
   };
-
+  const handleTryDifferentAccount = () => {
+    signOut();
+    router.push("/auth/sign-in");
+  };
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
@@ -335,6 +338,16 @@ const EmailVerificationPage = () => {
                   "Send Verification Code"
                 )}
               </Button>
+              
+              {/* Try with different account button */}
+              <div className="text-center pt-4 border-t border-gray-100">
+                <button
+                  onClick={handleTryDifferentAccount}
+                  className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors duration-200"
+                >
+                  Try with different account
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-6 bg-white rounded-xl p-8 shadow-lg border border-blue-100">
@@ -499,6 +512,16 @@ const EmailVerificationPage = () => {
                       ? "Code already sent"
                       : "Resend verification code"}
                   </Button>
+                </div>
+
+                {/* Try with different account button */}
+                <div className="text-center pt-4 border-t border-gray-100">
+                  <button
+                    onClick={handleTryDifferentAccount}
+                    className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors duration-200"
+                  >
+                    Try with different account
+                  </button>
                 </div>
               </form>
             </div>

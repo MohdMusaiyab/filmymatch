@@ -108,11 +108,10 @@ const LoginPage: React.FC = () => {
             />
           </div>
           <div className="text-center max-w-md space-y-3 px-6 z-10">
-            <h2 className="text-2xl font-bold text-blue-900">
-              Welcome Back!
-            </h2>
+            <h2 className="text-2xl font-bold text-blue-900">Welcome Back!</h2>
             <p className="text-indigo-800 text-opacity-80">
-              Continue your cinematic journey. Access your personalized recommendations and connect with fellow film lovers.
+              Continue your cinematic journey. Access your personalized
+              recommendations and connect with fellow film lovers.
             </p>
           </div>
         </div>
@@ -133,9 +132,11 @@ const LoginPage: React.FC = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-blue-100 
+            <div
+              className="bg-white rounded-xl p-6 shadow-lg border border-blue-100 
                           hover:border-blue-200 transition-all duration-300
-                          hover:shadow-blue-100/50 hover:shadow-xl">
+                          hover:shadow-blue-100/50 hover:shadow-xl"
+            >
               <EmailInput
                 label="Email"
                 placeholder="Enter your email"
@@ -207,7 +208,7 @@ const LoginPage: React.FC = () => {
           </form>
 
           {/* Footer */}
-          <div className="mt-7 text-center">
+          <div className="mt-7 text-center space-y-4">
             <p className="text-gray-600">
               Don&apos;t have an account?{" "}
               <Link
@@ -218,8 +219,31 @@ const LoginPage: React.FC = () => {
               </Link>
             </p>
 
+            {/* Back to Home Link */}
+            <div>
+              <Link
+                href="/"
+                className="text-blue-600 hover:text-blue-700 font-medium text-sm inline-flex items-center transition-all duration-200 hover:scale-105"
+              >
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>
+                Back to Home
+              </Link>
+            </div>
+
             {/* Terms and Privacy */}
-            <div className="mt-6 text-center">
+            <div className="mt-4 text-center">
               <p className="text-gray-500 text-xs">
                 By signing in, you agree to our{" "}
                 <a
@@ -245,7 +269,8 @@ const LoginPage: React.FC = () => {
                   Welcome Back!
                 </h3>
                 <p className="text-sm text-indigo-700 text-opacity-80">
-                  Continue your cinematic journey with personalized recommendations
+                  Continue your cinematic journey with personalized
+                  recommendations
                 </p>
               </div>
             </div>
