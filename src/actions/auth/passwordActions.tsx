@@ -52,6 +52,7 @@ export async function sendPasswordResetToken(
     const existingToken = await prisma.verificationToken.findFirst({
       where: {
         userId: user.id,
+        purpose: "password_reset", // Add purpose filter
         expiresAt: { gt: new Date() },
       },
     });
@@ -72,11 +73,12 @@ export async function sendPasswordResetToken(
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    await prisma.verificationToken.create({
+await prisma.verificationToken.create({
       data: {
         token: otp,
         expiresAt,
         userId: user.id,
+        purpose: "password_reset", // Add purpose
       },
     });
 
@@ -155,7 +157,11 @@ export async function verifyToken(
 
     // Find and validate token
     const verificationToken = await prisma.verificationToken.findFirst({
-      where: { userId: user.id, token: otp },
+      where: { 
+        userId: user.id, 
+        token: otp,
+        purpose: "password_reset" // Add purpose filter
+      },
     });
 
     if (!verificationToken) {
@@ -209,6 +215,7 @@ export async function checkVerificationToken(email: string) {
     const token = await prisma.verificationToken.findFirst({
       where: {
         userId: user.id,
+        purpose: "password_reset", // Add purpose filter
         expiresAt: { gt: new Date() },
       },
     });
