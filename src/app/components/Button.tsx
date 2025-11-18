@@ -32,7 +32,7 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   // Base styles - added letter spacing for better readability
   const baseStyles =
-    "font-semibold rounded-full focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 tracking-wide";
+    "font-semibold rounded-lg focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 tracking-wide";
 
   const sizeStyles = {
     sm: "px-3 py-1 text-xs sm:px-3.5 sm:py-1.5 sm:text-sm",
@@ -43,15 +43,15 @@ const Button: React.FC<ButtonProps> = ({
   const variantStyles = {
     "black-white": "bg-black text-white hover:bg-gray-900 focus:ring-gray-500",
     "black-gradient":
-      "bg-black text-[#a5c8ff] hover:bg-gray-900 focus:ring-[#a5c8ff]",
+      "bg-black text-[#5865F2] hover:bg-gray-900 focus:ring-[#5865F2]",
     "gradient-blue":
-      "bg-gradient-to-bl from-blue-100 via-pastel-blue to-accent-blue text-black hover:from-[#a5c8ff] hover:to-[#7da7f0] focus:ring-[#7da7f0]",
+      "bg-gradient-to-bl from-[#8b9dff] via-[#6b7ef5] to-[#5865F2] text-white hover:from-[#7a8cff] hover:to-[#4854e0] focus:ring-[#5865F2]",
     danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
     yellow: "bg-yellow-400 text-black hover:bg-yellow-500 focus:ring-yellow-500",
-    "custom-blue": "bg-[#a5c8ff] text-black hover:bg-[#7da7f0] focus:ring-[#a5c8ff]",
+    "custom-blue": "bg-[#5865F2] text-white hover:bg-[#4854e0] focus:ring-[#5865F2]",
     "google-oauth": 
-      "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-[#7da7f0] shadow-sm flex items-center justify-center gap-2",
-    outline: "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-[#7da7f0] shadow-sm",
+      "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-[#5865F2] shadow-sm flex items-center justify-center gap-2",
+    outline: "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-[#5865F2] shadow-sm",
   };
 
   // Combine all styles

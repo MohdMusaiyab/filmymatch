@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,38 +19,38 @@ model User {
   isActive           Boolean             @default(true)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
-  verificationTokens VerificationToken[]
   collections        Collection[]
   comments           Comment[]
-  likes              Like[]
   followers          Follow[]            @relation("Follower")
   followings         Follow[]            @relation("Following")
-  posts              Post[] // Added relation to posts
-  savedPosts         SavedPost[]         @relation("SavedPosts")
   highlightedPosts   HighlightedPost[]   @relation("HighlightedPosts")
+  likes              Like[]
+  posts              Post[]
+  savedPosts         SavedPost[]         @relation("SavedPosts")
+  verificationTokens VerificationToken[]
 }
 
 model SavedPost {
   id        String   @id @default(cuid())
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, name: "SavedPosts")
   userId    String
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation("SavedPosts", fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, postId]) // Prevent duplicates
+  @@unique([userId, postId])
 }
 
 model HighlightedPost {
   id        String   @id @default(cuid())
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, name: "HighlightedPosts")
   userId    String
-  notes     String? // Optional user notes
+  notes     String?
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation("HighlightedPosts", fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, postId]) // Prevent duplicates
+  @@unique([userId, postId])
 }
 
 model VerificationToken {
@@ -66,6 +63,105 @@ model VerificationToken {
 
   @@index([token])
   @@index([userId])
+}
+
+model Post {
+  id            String            @id @default(cuid())
+  title         String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  category      Category
+  coverImage    String?
+  description   String
+  isDraft       Boolean           @default(false)
+  tags          TAGS[]
+  userId        String
+  visibility    Visibility        @default(PRIVATE)
+  comments      Comment[]
+  highlightedBy HighlightedPost[]
+  images        Image[]
+  likes         Like[]
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedBy       SavedPost[]
+  collections   Collection[]      @relation("PostsInCollections")
+
+  @@index([userId])
+  @@index([visibility])
+  @@index([category])
+  @@index([isDraft])
+  @@index([createdAt])
+  @@index([visibility, isDraft])
+  @@index([category, visibility, isDraft])
+  @@index([userId, createdAt])
+  @@index([visibility, createdAt])
+}
+
+model Collection {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  coverImage  String?
+  visibility  Visibility @default(PRIVATE)
+  isDraft     Boolean    @default(false)
+  userId      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts       Post[]     @relation("PostsInCollections")
+
+  @@index([userId])
+}
+
+model Image {
+  id          String   @id @default(cuid())
+  url         String
+  description String?
+  postId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }
 
 enum Category {
@@ -119,108 +215,4 @@ enum Visibility {
   PUBLIC
   PRIVATE
   FOLLOWERS
-}
-
-model Post {
-  id            String            @id @default(cuid())
-  title         String
-  description   String
-  category      Category
-  coverImage    String?
-  visibility    Visibility        @default(PRIVATE)
-  images        Image[]
-  tags          TAGS[]
-  isDraft       Boolean           @default(false)
-  userId        String // Added author reference
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  collections   Collection[]      @relation("PostsInCollections") // Changed to many-to-many
-  comments      Comment[]
-  likes         Like[]
-  highlightedBy HighlightedPost[] // Added opposite relation field
-  savedBy       SavedPost[] // Added opposite relation field
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-
-  // Existing index
-  @@index([userId])
-  
-  // Performance optimization indexes
-  @@index([visibility]) // For filtering by visibility (PUBLIC, PRIVATE, FOLLOWERS)
-  @@index([category]) // For filtering by category
-  @@index([isDraft]) // For filtering out drafts
-  @@index([createdAt]) // For sorting by creation date (most common sort)
-  @@index([visibility, isDraft]) // Composite index for common filter combination
-  @@index([category, visibility, isDraft]) // Composite index for category + visibility filtering
-  @@index([userId, createdAt]) // For user's posts sorted by date
-  @@index([visibility, createdAt]) // For public posts sorted by date (most common query)
-  
-  // Array index for tags filtering (GIN index for array operations)
-}
-
-model Collection {
-  id          String     @id @default(cuid())
-  name        String
-  description String?
-  coverImage  String?
-  visibility  Visibility @default(PRIVATE)
-  isDraft     Boolean    @default(false)
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  posts       Post[]     @relation("PostsInCollections") // Changed to many-to-many
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@index([userId])
-}
-
-model Image {
-  id          String   @id @default(cuid())
-  url         String
-  description String?
-  postId      String
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([postId])
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([postId])
-}
-
-model Like {
-  id        String   @id @default(cuid())
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, postId]) // Prevent duplicate likes
-  @@index([postId])
-}
-
-model Follow {
-  id          String   @id @default(cuid())
-  followerId  String
-  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
-  followingId String
-  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([followerId, followingId]) // Prevent duplicate follows
-  @@index([followerId])
-  @@index([followingId])
 }

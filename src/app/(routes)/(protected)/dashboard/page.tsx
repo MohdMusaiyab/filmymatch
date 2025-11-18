@@ -58,7 +58,7 @@ const Dashboard = () => {
         const response = await api.get("/posts/my-posts/drafts", {
           withCredentials: true,
         });
-        setDrafts(response.data.data.drafts); 
+        setDrafts(response.data.data.drafts);
       } catch (error) {
         console.error("Failed to fetch drafts:", error);
       }
@@ -96,9 +96,14 @@ const Dashboard = () => {
 
   return (
     <div className="overflow-x-hidden">
-      <div className="space-y-12">
-        <section>
-          <h2 className="text-xl font-semibold text-gray-800">Your Collections</h2>
+      <div className="p-2">
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-gray-800">
+              Recent Collections
+            </h3>
+            <button className="text-primary font-medium hover:text-primary/80 transition-colors">View All</button>
+          </div>
           <Collections collections={recentCollections} showCoverImage={false} />
         </section>
 

@@ -1,5 +1,5 @@
 // components/Snippet.tsx
-import { MoreVertical, Edit, Trash, Share } from "lucide-react";
+import { MoreVertical, Edit, Trash, Share, Bookmark, Ellipsis } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import AddCollectionButton from "../AddCollectionButton";
@@ -45,19 +45,73 @@ export const Snippet = ({ post, menuOpen, toggleMenu }: SnippetProps) => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md overflow-hidden transition-shadow">
       {post.coverImage && (
-        <Image
-          src={post.coverImage}
-          alt="Cover"
-          width={800}
-          height={192}
-          className="w-full h-48 object-cover rounded-t-2xl"
-          style={{ width: "100%", height: "12rem" }}
-          priority
-        />
+        <div className="relative">
+          <Image
+            src={post.coverImage}
+            alt="Cover"
+            width={800}
+            height={192}
+            className="w-full h-64 object-cover"
+            style={{ width: "100%", height: "12rem" }}
+            priority
+          />
+
+        {/* Top-right Buttons (Bookmark + Menu) */}
+          <div className="absolute top-3 right-3 flex gap-2">
+            {/* Save / Bookmark Button */}
+            <ToggleSaveButton postId={post.id} initialIsSaved={post.isSaved} />
+
+            {/* Dropdown Menu Button */}
+            <div className="relative">
+              <button
+                onClick={() => toggleMenu(post.id)}
+                className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors "
+                aria-label="More options"
+                aria-haspopup="true"
+                aria-expanded={menuOpen === post.id}
+              >
+                <Ellipsis size={18} color="#4b5563" />
+              </button>
+
+              {/* Dropdown Content */}
+              {menuOpen === post.id && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-30 py-1 animate-fade-in">
+                  {/* Add to Collection */}
+                  <AddCollectionButton postId={post.id} userId={post.user.id} />
+
+                  {/* Owner-only Options */}
+                  {userId === post.user.id && (
+                    <>
+                      <Link
+                        href={`/dashboard/my-posts/${post.id}`}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition rounded-md"
+                      >
+                        <Edit size={16} className="mr-2" />
+                        Edit
+                      </Link>
+
+                      <button className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-50 transition rounded-md">
+                        <Trash size={16} className="mr-2" />
+                        Delete
+                      </button>
+                    </>
+                  )}
+
+                  {/* Share Option */}
+                  <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition rounded-md">
+                    <Share size={16} className="mr-2" />
+                    Share
+                  </button>
+                </div>
+              )}
+              </div>
+          </div>
+
+        </div>
       )}
-      <div className="p-6">
+      <div className="p-5">
         <div className="flex items-start gap-4">
           {/* User Avatar */}
           <Link href={`/profile/${post.user.id}`}>
@@ -89,14 +143,13 @@ export const Snippet = ({ post, menuOpen, toggleMenu }: SnippetProps) => {
                   {post.title}
                 </h3>
               </Link>
-              <div className="flex justify-center align center">
+              {/* <div className="flex justify-center align center">
                 <ToggleSaveButton
                   postId={post.id}
                   initialIsSaved={post.isSaved}
                 />
 
-                {/* Dropdown Trigger - Exactly like your previous example */}
-                <div className="relative">
+                 <div className="relative">
                   <button
                     onClick={() => toggleMenu(post.id)}
                     className="py-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -107,15 +160,12 @@ export const Snippet = ({ post, menuOpen, toggleMenu }: SnippetProps) => {
                     <MoreVertical size={18} />
                   </button>
 
-                  {/* Dropdown Menu - Exactly like your previous example */}
                   {menuOpen === post.id && (
                     <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-xl shadow-lg z-30 py-1 animate-fade-in">
-                      {/* add to collection */}
                       <AddCollectionButton
                         postId={post.id}
                         userId={post.user.id}
                       />
-                      {/* show edit & delete only if it's own post */}
                       {userId === post.user.id && (
                         <>
                           <Link
@@ -138,8 +188,8 @@ export const Snippet = ({ post, menuOpen, toggleMenu }: SnippetProps) => {
                       </button>
                     </div>
                   )}
-                </div>
-              </div>
+                </div> 
+              </div> */}
             </div>
 
             {/* Meta Info */}

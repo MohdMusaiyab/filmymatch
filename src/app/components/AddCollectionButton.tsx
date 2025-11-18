@@ -81,8 +81,9 @@ const AddCollectionButton = ({ postId }: Props) => {
       {/* Trigger Button */}
       <button
         onClick={() => setOpen(true)}
-        className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition"
+        className="flex items-center w-full px-4 py-2 rounded-md bg-primary text-sm text-gray-700 hover:bg-primary/90 transition"
       >
+        <Plus size={16} className="mr-2"/>
         Add to Collection
       </button>
 
