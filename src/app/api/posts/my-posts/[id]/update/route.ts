@@ -57,7 +57,9 @@ export async function PUT(
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    const existingImageUrls = existingPost.images.map((img: ExistingImageData) => img.url);
+    const existingImageUrls = existingPost.images.map(
+      (img: ExistingImageData) => img.url
+    );
     console.log("Existing image URLs:", existingImageUrls);
 
     const newImages: ImageData[] = incomingImages.filter(
@@ -69,7 +71,8 @@ export async function PUT(
     );
 
     const deletedImages = existingPost.images.filter(
-      (img: ExistingImageData) => !incomingImages.some((i: ImageData) => i.url === img.url)
+      (img: ExistingImageData) =>
+        !incomingImages.some((i: ImageData) => i.url === img.url)
     );
 
     console.log("New images to process:", newImages);
@@ -139,9 +142,11 @@ export async function PUT(
           console.log("Cover image is new image, mapped to:", finalCoverImage);
         } else {
           // Check if the cover URL matches any of the processed new images directly
-          const matchingProcessed = processedNewImages.find((img: ImageData) => {
-            return img.url.split("?")[0] === cleanCoverUrl;
-          });
+          const matchingProcessed = processedNewImages.find(
+            (img: ImageData) => {
+              return img.url.split("?")[0] === cleanCoverUrl;
+            }
+          );
 
           if (matchingProcessed) {
             finalCoverImage = matchingProcessed.url.split("?")[0];
@@ -166,7 +171,17 @@ export async function PUT(
     console.log("Final cover image URL:", finalCoverImage);
 
     // Update database
+    // Update database
     const updatedPost = await prisma.$transaction(async (tx) => {
+      // RE-VERIFY ownership inside transaction to prevent race conditions
+      const ownedPost = await tx.post.findFirst({
+        where: { id: postId, userId: session.user.id },
+      });
+
+      if (!ownedPost) {
+        throw new Error("Post not found or access denied");
+      }
+
       // 1. Delete removed image records
       if (deletedImages.length > 0) {
         await tx.image.deleteMany({
@@ -178,9 +193,9 @@ export async function PUT(
         console.log("Deleted image records from DB:", deletedImages.length);
       }
 
-      // 2. Update post metadata
+      // 2. Update post metadata WITH SECURE WHERE CLAUSE
       const post = await tx.post.update({
-        where: { id: postId },
+        where: { id: postId, userId: session.user.id }, // ✅ ADDED userId here
         data: {
           title,
           description,
@@ -209,7 +224,9 @@ export async function PUT(
 
       // 4. Update descriptions for kept images
       for (const img of keptImages) {
-        const existing = existingPost.images.find((ex: ExistingImageData) => ex.url === img.url);
+        const existing = existingPost.images.find(
+          (ex: ExistingImageData) => ex.url === img.url
+        );
         if (existing && existing.description !== img.description) {
           await tx.image.update({
             where: { id: existing.id },
@@ -224,15 +241,22 @@ export async function PUT(
 
     console.log("=== API DEBUG END ===");
 
-    return NextResponse.json({
-      success: true,
-      message: "Post updated successfully",
-      data: updatedPost,
-    }, { status: 200 });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Post updated successfully",
+        data: updatedPost,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Post update error:", error);
     return NextResponse.json(
-      { message: "Internal Server Error" ,code: "INTERNAL_SERVER_ERROR",success: false},
+      {
+        message: "Internal Server Error",
+        code: "INTERNAL_SERVER_ERROR",
+        success: false,
+      },
       { status: 500 }
     );
   }
