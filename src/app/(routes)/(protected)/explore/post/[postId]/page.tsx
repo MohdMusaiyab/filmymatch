@@ -1,45 +1,19 @@
+// app/posts/[postId]/page.tsx
 "use client";
 
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import Image from "next/image";
-import { Bookmark, BookmarkCheck, Heart, Edit2 } from "lucide-react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Bookmark, BookmarkCheck, Heart, Share2 } from "lucide-react";
 import api from "@/lib/api";
 import { Post } from "@/types/Post";
-// interface Post {
-//   id: string;
-//   title: string;
-//   description: string;
-//   category: string;
-//   visibility: string;
-//   coverImage?: string | null;
-//   user: {
-//     id: string;
-//     username: string;
-//     avatar?: string | null;
-//   };
-//   images: {
-//     id: string;
-//     url: string;
-//     description?: string | null;
-//   }[];
-//   _count: {
-//     likes: number;
-//     comments: number;
-//   };
-//   createdAt: string;
-//   isSaved: boolean;
-// }
+import { ImageGallery } from "@/app/components/ui/ImageGallery";
 
 export default function PostPage() {
   const { postId } = useParams() as { postId: string };
+  const { data: session } = useSession();
   const [post, setPost] = useState<Post | null>(null);
-  const [previewImg, setPreviewImg] = useState<null | {
-    url: string;
-    description?: string | null;
-  }>(null);
 
   useEffect(() => {
     if (!postId) return;
@@ -57,158 +31,92 @@ export default function PostPage() {
     fetchPost();
   }, [postId]);
 
-  if (!post) return <div className="p-6 text-center">Loading...</div>;
+  if (!post) return <div className="p-4 text-center min-h-screen flex items-center justify-center">Loading...</div>;
+
+  const isOwner = session?.user?.id === post.user?.id;
 
   return (
-    <div className="max-w-4xl mx-auto px-4">
-      <div className="flex items-center gap-3 mb-4">
-        <h1 className="text-2xl font-bold text-white">{post.title}</h1>
-        <Link
-          href={`/dashboard/my-posts/${post.id}`}
-          className="flex items-center justify-center hover:text-gray-300 transition"
-        >
-          <Edit2 size={18} />
-        </Link>
-      </div>
-
-      <div className="flex items-center gap-3 text-sm text-gray-500 mb-6 flex-wrap">
-        <div className="flex items-center gap-2">
-          {post.user?.avatar ? (
-            <Image
-              src={post.user.avatar}
-              alt={post.user.username}
-              width={36}
-              height={36}
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-gray-700">
-              {post.user?.username?.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <span className="font-medium">{post.user.username}</span>
-        </div>
-        <span>&bull;</span>
-        <span className="capitalize">{post.visibility}</span>
-        <span>&bull;</span>
-        <span className="capitalize">{post.category}</span>
-        <span>&bull;</span>
-        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-      </div>
-
-      <p className="text-lg text-white leading-relaxed mb-8">
-        {post.description}
-      </p>
-
-      {/* Images and Descriptions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        {post.images?.map((img) => (
-          <div
-            key={img.id}
-            className="rounded-lg overflow-hidden transition border border-gray-700"
-          >
-            {post.images && (
-              <div className="relative w-full h-56">
-                <Image
-                  src={img.url}
-                  alt="Post image"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover cursor-pointer"
-                  onClick={() => setPreviewImg(img)}
-                  priority
-                />
-              </div>
-            )}
-            <div className="p-4">
-              <p className="text-sm text-gray-300">
-                {img.description && img.description.length > 40
-                  ? `${img.description.slice(0, 40)} ...`
-                  : img.description || "No description available."}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-6 text-gray-600 border-t pt-4">
-        <div className="flex items-center gap-2 hover:text-red-500 cursor-pointer">
-          <Heart className="w-5 h-5" />
-        </div>
-        <div className="flex items-center gap-2 hover:text-blue-600 cursor-pointer">
-          <span>
-            {post.isSaved ? (
-              <BookmarkCheck className="w-5 h-5" />
-            ) : (
-              <Bookmark className="w-5 h-5" />
-            )}
-          </span>
-        </div>
-      </div>
-
-      <Transition.Root show={!!previewImg} as={Fragment}>
-        <Dialog
-          as="div"
-          className="relative z-50"
-          onClose={() => setPreviewImg(null)}
-        >
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-70 transition-opacity" />
-          </Transition.Child>
-
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 pb-20 sm:pb-8 min-h-screen">
+      {/* Header Section */}
+      <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+        {/* Title and Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
+            {post.title}
+          </h1>
+          <div className="flex items-center justify-between sm:justify-end gap-2">
+            {isOwner && (
+              <Link
+                href={`/dashboard/my-posts/${post.id}`}
+                className="px-3 sm:px-4 py-2 bg-[#5865F2] text-white hover:bg-[#4854e0] focus:ring-[#5865F2] rounded-lg transition-colors text-sm sm:text-base whitespace-nowrap"
               >
-                <Dialog.Panel className="relative transform overflow-hidden border border-gray-700 rounded-lg bg-black shadow-xl transition-all w-full max-w-3xl">
-                  {/* Image */}
-                  {previewImg?.url && (
-                    <Image
-                      src={previewImg.url}
-                      alt="Preview"
-                      width={1200}
-                      height={800}
-                      className="w-full object-contain max-h-[70vh] bg-black py-6"
-                    />
-                  )}
-
-                  {/* Full Description */}
-                  {previewImg?.description && (
-                    <div className="mb-6 px-6 text-left">
-                      <p className="text-sm text-gray-300 whitespace-pre-line">
-                        {previewImg.description}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Close Button */}
-                  <button
-                    onClick={() => setPreviewImg(null)}
-                    className="absolute top-2 right-2 text-white hover:text-red-400 transition"
-                  >
-                    ✕
-                  </button>
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
+                Edit
+              </Link>
+            )}
+            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100">
+              <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
           </div>
-        </Dialog>
-      </Transition.Root>
+        </div>
+        
+        {/* Description */}
+        <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6 break-words">
+          {post.description}
+        </p>
+        
+        {/* Metadata */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
+          <span>Created: {new Date(post.createdAt).toLocaleDateString()}</span>
+          <span className="hidden sm:inline">•</span>
+          <span>{post.images?.length || 0} images</span>
+          <span className="hidden sm:inline">•</span>
+          <span>{post._count?.likes || 0} likes</span>
+          <span className="hidden sm:inline">•</span>
+          <span>{post._count?.comments || 0} comments</span>
+        </div>
+      </section>
+
+      {/* Image Gallery Section */}
+      {post.images && post.images.length > 0 ? (
+        <ImageGallery images={post.images} />
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center text-gray-500">
+          No images available for this post.
+        </div>
+      )}
+
+      {/* Action Buttons - Fixed at bottom for mobile, normal for desktop */}
+      <div className="fixed bottom-16 left-4 right-4 bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:static sm:bg-transparent sm:shadow-none sm:border-t sm:border-gray-200 sm:pt-6 sm:px-0 sm:mt-8 z-30">
+        <div className="flex items-center justify-around sm:justify-start sm:gap-8 text-gray-600">
+          <button className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 hover:text-red-500 cursor-pointer transition-colors group">
+            <div className="p-2 rounded-full group-hover:bg-red-50 transition-colors">
+              <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <span className="text-xs sm:text-sm font-medium">{post._count?.likes || 0}</span>
+          </button>
+          
+          <button className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 hover:text-blue-600 cursor-pointer transition-colors group">
+            <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
+              {post.isSaved ? (
+                <BookmarkCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+              ) : (
+                <Bookmark className="w-5 h-5 sm:w-6 sm:h-6" />
+              )}
+            </div>
+            <span className="text-xs sm:text-sm font-medium">Save</span>
+          </button>
+
+          <button className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 hover:text-green-600 cursor-pointer transition-colors group sm:ml-auto">
+            <div className="p-2 rounded-full group-hover:bg-green-50 transition-colors">
+              <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <span className="text-xs sm:text-sm font-medium">Share</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Extra bottom padding for mobile to account for fixed action bar and bottom navigation */}
+      <div className="h-20 sm:h-0"></div>
     </div>
   );
 }

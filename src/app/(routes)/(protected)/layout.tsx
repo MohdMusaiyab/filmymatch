@@ -18,7 +18,7 @@ const InnerLayout = ({ children }: { children: React.ReactNode }) => {
         <div
           className={`flex-grow overflow-auto hide-scrollbar transition-all duration-300`}
         >
-          <div className={`${sidebarCollapsed ? "ml-24" : "ml-64"} min-h-screen mx-auto px-4 md:px-6 mt-6 transition-all duration-300 ease-in-out`}>
+          <div className={`${sidebarCollapsed ? "ml-24" : ""} min-h-screen mx-auto px-4 md:px-6 mt-6 transition-all duration-300 ease-in-out`}>
             {children}
           </div>
         </div>
