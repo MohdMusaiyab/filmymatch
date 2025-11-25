@@ -5,11 +5,9 @@ import {
   Compass,
   BookOpen,
   Bookmark,
-  User,
   Plus,
 } from "lucide-react";
 import { ActiveTab } from "@/types";
-import { useSidebar } from "@/app/context/SidebarContext";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -19,6 +17,7 @@ import Logo from "@/assets/Snippit-logo-v2.svg";
 interface SidebarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
+  userId: string | null;
 }
 
 const navItems: { label: string; tab: ActiveTab; icon: React.ReactNode }[] = [
@@ -28,8 +27,7 @@ const navItems: { label: string; tab: ActiveTab; icon: React.ReactNode }[] = [
   { label: "Saved", tab: "saved", icon: <Bookmark className="w-4.5 h-4.5" /> },
 ];
 
-export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
-  const { userId } = useSidebar();
+export const Sidebar = ({ activeTab, setActiveTab, userId }: SidebarProps) => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { Bell, User } from "lucide-react";
-import { useSidebar } from "@/app/context/SidebarContext";
 
-export const Header = () => {
-  const { userId } = useSidebar();
+interface HeaderProps {
+  userId: string | null;
+}
 
+export const Header = ({ userId }: HeaderProps) => {
   return (
     <header
       className="sticky top-0 py-2 px-4 sm:px-6 md:px-6 flex justify-end items-center transition-all duration-300 bg-white border-b border-gray-200 z-30"
