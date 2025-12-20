@@ -102,19 +102,26 @@ const Dashboard = () => {
             <h3 className="text-xl font-semibold text-gray-800">
               Recent Collections
             </h3>
-            <button className="text-primary font-medium hover:text-primary/80 transition-colors">View All</button>
+            <Link
+              href={`/dashboard/my-collection`}
+              className="text-primary font-medium hover:text-primary/80 transition-colors"
+            >
+              View All
+            </Link>
           </div>
           <Collections collections={recentCollections} showCoverImage={false} />
         </section>
 
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Recent Posts</h2>
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-gray-800">
+              Recent Posts
+            </h3>
             <Link
               href="/dashboard/my-posts"
-              className="text-blue-500 hover:text-blue-600 text-sm font-medium"
+              className="text-primary font-medium hover:text-primary/80 transition-colors"
             >
-              View All →
+              View All
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -130,12 +137,12 @@ const Dashboard = () => {
               ))
             ) : (
               <div className="text-center py-8 col-span-full">
-                <p className="text-gray-500">
+                <p className="text-gray-400 text-sm">
                   You haven&#39;t created any posts yet
                 </p>
                 <Link
                   href="/dashboard/create-post"
-                  className="mt-2 inline-block text-blue-500 hover:text-blue-600 font-medium"
+                  className="mt-2 inline-block text-primary hover:text-primary/80 font-medium"
                 >
                   Create your first post
                 </Link>
@@ -144,9 +151,17 @@ const Dashboard = () => {
           </div>
         </section>
 
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Your Drafts</h2>
-          <Drafts drafts={drafts} />
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-gray-800">Your Drafts</h3>
+            <Link
+              href="#"
+              className="text-primary font-medium hover:text-primary/80 transition-colors"
+            >
+              View All
+            </Link>
+          </div>
+            <Drafts drafts={drafts} />
         </section>
       </div>
     </div>

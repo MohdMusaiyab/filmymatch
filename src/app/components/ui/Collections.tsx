@@ -19,6 +19,35 @@ export const Collections = ({
     );
   }
 
+  function timeAgo(date: string | Date): string {
+    const inputDate = new Date(date);
+
+    if (isNaN(inputDate.getTime())) return "";
+
+    const seconds = Math.floor((Date.now() - inputDate.getTime()) / 1000);
+
+    if (seconds < 5) return "Just now";
+    if (seconds < 60) return `${seconds}s`;
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d`;
+
+    const weeks = Math.floor(days / 7);
+    if (weeks < 4) return `${weeks}w`;
+
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo`;
+
+    const years = Math.floor(days / 365);
+    return `${years}y`;
+  }
+
   return (
     <div className="grid grid-cols-3 gap-6">
       {collections.map((collection) => (
@@ -39,7 +68,9 @@ export const Collections = ({
             #{collection.name}
           </h4>
           <p className="text-white/90 text-sm mb-3">
-          12 posts · Created 12 days ago
+            {collection.postCount}{" "}
+            {collection.postCount === 1 ? "post" : "posts"} · Created{" "}
+            {timeAgo(collection.createdAt)}
             {/* {collection.postsCount} posts · Created {collection.createdAgo} */}
           </p>
           <div className="flex items-center justify-between">

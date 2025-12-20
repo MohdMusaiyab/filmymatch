@@ -26,8 +26,8 @@ export const Header = ({ userId }: HeaderProps) => {
 
         {/* Profile Icon */}
         <Link
-          href={`/profile/${userId}`}
-          className="flex items-center gap-3 py-3 px-4 rounded-lg text-md font-medium transition-colors
+           href={`/profile/${userId}`}
+          className="flex items-center gap-3 p-2 rounded-full text-md font-medium transition-colors
             text-gray-900 hover:bg-[#5865F2]/6
             focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
           aria-label="Profile"

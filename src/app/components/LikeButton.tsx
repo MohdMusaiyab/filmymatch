@@ -47,14 +47,14 @@ const LikeButton = ({ postId, className = "" }: LikeButtonProps) => {
   return (
     <motion.button
       onClick={handleToggleLike}
-      className={`flex items-center gap-2 text-sm text-zinc-400 hover:text-pink-500 transition ${className}`}
+      className={`flex items-center gap-1 text-sm text-zinc-400 hover:text-pink-500 transition ${className}`}
       whileTap={{ scale: 0.9 }}
       disabled={loading}
     >
       {liked ? (
-        <Heart size={20} className="text-pink-500" fill="currentColor" />
+        <Heart size={18} className="text-red-500" fill="currentColor" />
       ) : (
-        <Heart size={20} />
+        <Heart size={18} />
       )}
       <span>{count}</span>
     </motion.button>

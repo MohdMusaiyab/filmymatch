@@ -143,8 +143,8 @@ export const Sidebar = ({ activeTab, setActiveTab, userId }: SidebarProps) => {
                   className={`flex items-center gap-3 py-3 px-4 rounded-lg text-[15px] md:text-[16px] font-medium tracking-tight transition-all duration-200
                     ${
                       isActive
-                        ? "bg-[#5865F2]/10 text-[#5865F2]"
-                        : "text-gray-800 hover:bg-[#5865F2]/5 hover:text-[#5865F2]"
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-800 hover:bg-primary/5 hover:text-primary"
                     }`}
                   aria-current={isActive ? "page" : undefined}
                 >

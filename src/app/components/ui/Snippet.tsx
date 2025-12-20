@@ -1,40 +1,24 @@
-// components/Snippet.tsx
-import { MoreVertical, Edit, Trash, Share, Bookmark, Ellipsis } from "lucide-react";
+import {
+  MoreVertical,
+  Edit,
+  Trash,
+  Share,
+  MessageCircle,
+  Heart,
+  Ellipsis,
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { FileText } from "lucide-react";
 import AddCollectionButton from "../AddCollectionButton";
 import { ToggleSaveButton } from "../ToggleSaveButton";
+import LikeButton from "../LikeButton"
 import { useSession } from "next-auth/react";
 import { Post } from "@/types/Post";
 import { Visibility } from "@/types";
 import { VisibilityTag } from "../VisibilityTag";
 
 interface SnippetProps {
-  // post: {
-  //   id: string;
-  //   title: string;
-  //   description: string;
-  //   category: string;
-  //   visibility: string;
-  //   coverImage?: string;
-  //   user: {
-  //     id: string;
-  //     username: string;
-  //     avatar?: string | null;
-  //   };
-  //   images: {
-  //     id: string;
-  //     url: string;
-  //     description?: string | null;
-  //   }[];
-  //   _count: {
-  //     likes: number;
-  //     comments: number;
-  //   };
-  //   createdAt: string;
-  //   linkTo?: string; // ✅ new prop to allow dynamic link
-  //   isSaved: boolean; // ✅ Add this
-  // };
   post: Post;
   menuOpen: string | null;
   toggleMenu: (id: string) => void;
@@ -44,78 +28,105 @@ interface SnippetProps {
 export const Snippet = ({ post, menuOpen, toggleMenu }: SnippetProps) => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
+
+  function timeAgo(date: string | Date): string {
+    const inputDate = new Date(date);
+
+    if (isNaN(inputDate.getTime())) return "";
+
+    const seconds = Math.floor((Date.now() - inputDate.getTime()) / 1000);
+
+    if (seconds < 5) return "Just now";
+    if (seconds < 60) return `${seconds}s`;
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d`;
+
+    const weeks = Math.floor(days / 7);
+    if (weeks < 4) return `${weeks}w`;
+
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo`;
+
+    const years = Math.floor(days / 365);
+    return `${years}y`;
+  }
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md overflow-hidden transition-shadow">
-      {post.coverImage && (
-        <div className="relative">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md overflow-hidden transition-shadow" onClick={()=>{post.linkTo ? post.linkTo : `/explore/post/${post.id}`}}>
+      <div className="relative h-48 w-full">
+        {/* Cover Image OR Dummy Placeholder */}
+        {post.coverImage ? (
           <Image
             src={post.coverImage}
             alt="Cover"
-            width={800}
-            height={192}
-            className="w-full h-64 object-cover"
-            style={{ width: "100%", height: "12rem" }}
+            fill
+            className="object-cover"
             priority
           />
-
-        {/* Top-right Buttons (Bookmark + Menu) */}
-          <div className="absolute top-3 right-3 flex gap-2">
-            {/* Save / Bookmark Button */}
-            <ToggleSaveButton postId={post.id} initialIsSaved={post.isSaved} />
-
-            {/* Dropdown Menu Button */}
-            <div className="relative">
-              <button
-                onClick={() => toggleMenu(post.id)}
-                className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors "
-                aria-label="More options"
-                aria-haspopup="true"
-                aria-expanded={menuOpen === post.id}
-              >
-                <Ellipsis size={18} color="#4b5563" />
-              </button>
-
-              {/* Dropdown Content */}
-              {menuOpen === post.id && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-30 py-1 animate-fade-in">
-                  {/* Add to Collection */}
-                  <AddCollectionButton postId={post.id} userId={post.user.id} />
-
-                  {/* Owner-only Options */}
-                  {userId === post.user.id && (
-                    <>
-                      <Link
-                        href={`/dashboard/my-posts/${post.id}`}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition rounded-md"
-                      >
-                        <Edit size={16} className="mr-2" />
-                        Edit
-                      </Link>
-
-                      <button className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-50 transition rounded-md">
-                        <Trash size={16} className="mr-2" />
-                        Delete
-                      </button>
-                    </>
-                  )}
-
-                  {/* Share Option */}
-                  <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition rounded-md">
-                    <Share size={16} className="mr-2" />
-                    Share
-                  </button>
-                </div>
-              )}
-              </div>
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <FileText size={48} className="text-primary/80" />
           </div>
+        )}
 
+        {/* Top-right Buttons (always visible) */}
+        <div className="absolute top-3 right-3 flex gap-2 z-10">
+          <ToggleSaveButton postId={post.id} initialIsSaved={post.isSaved} />
+
+          <div className="relative">
+            <button
+              onClick={() => toggleMenu(post.id)}
+              className="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center transition hover:bg-white hover:shadow-md active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="More options"
+              aria-haspopup="true"
+              aria-expanded={menuOpen === post.id}
+            >
+              <Ellipsis size={18} color="#4b5563" />
+            </button>
+
+            {menuOpen === post.id && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-30 py-1 animate-fade-in">
+                <AddCollectionButton postId={post.id} userId={post.user.id} />
+
+                {userId === post.user.id && (
+                  <>
+                    <Link
+                      href={`/dashboard/my-posts/${post.id}`}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition"
+                    >
+                      <Edit size={16} className="mr-2" />
+                      Edit
+                    </Link>
+
+                    <button className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-primary/10 hover:text-primary transition">
+                      <Trash size={16} className="mr-2" />
+                      Delete
+                    </button>
+                  </>
+                )}
+
+                <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition">
+                  <Share size={16} className="mr-2" />
+                  Share
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
+
       <div className="p-5">
-        <div className="flex items-start gap-4">
+        <div className="flex items-center gap-3 mb-3">
           {/* User Avatar */}
           <Link href={`/profile/${post.user.id}`}>
-            <div className="w-8 h-8 bg-blue-500/10 rounded-xl flex items-center justify-center overflow-hidden">
+            <div className="w-8 h-8 bg-primary/20 overflow-hidden rounded-full">
               {post.user.avatar ? (
                 <Image
                   src={post.user.avatar}
@@ -131,91 +142,31 @@ export const Snippet = ({ post, menuOpen, toggleMenu }: SnippetProps) => {
               )}
             </div>
           </Link>
+          <div>
+            <Link href={`/profile/${post.user.id}`}>
+              <h4 className="font-semibold text-gray-900">
+                {post.user.username}
+              </h4>
+            </Link>
+            <p className="text-xs text-gray-500">{timeAgo(post.createdAt)}</p>
+          </div>
+        </div>
 
-          {/* Main Content */}
-          <div className="flex-1">
-            <div className="flex justify-between items-center">
-                <Link
-                href={post.linkTo ? post.linkTo : `/explore/post/${post.id}`}
-                className="min-w-0"
-                >
-                <h3 className="text-white  text-lg font-semibold leading-tight hover:underline">
-                  {post.title}
-                </h3>
-              </Link>
-              {/* <div className="flex justify-center align center">
-                <ToggleSaveButton
-                  postId={post.id}
-                  initialIsSaved={post.isSaved}
-                />
+        <Link href={post.linkTo ? post.linkTo : `/explore/post/${post.id}`}>
+          <h3 className="font-semibold text-gray-900 mb-1">{post.title}</h3>
+        </Link>
+        <p className="text-gray-600 text-sm mb-4">{post.description}</p>
 
-                 <div className="relative">
-                  <button
-                    onClick={() => toggleMenu(post.id)}
-                    className="py-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                    aria-label="More options"
-                    aria-haspopup="true"
-                    aria-expanded={menuOpen === post.id}
-                  >
-                    <MoreVertical size={18} />
-                  </button>
-
-                  {menuOpen === post.id && (
-                    <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-xl shadow-lg z-30 py-1 animate-fade-in">
-                      <AddCollectionButton
-                        postId={post.id}
-                        userId={post.user.id}
-                      />
-                      {userId === post.user.id && (
-                        <>
-                          <Link
-                            href={`/dashboard/my-posts/${post.id}`}
-                            className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 transition rounded-md"
-                          >
-                            <Edit size={16} className="mr-2" />
-                            Edit
-                          </Link>
-
-                          <button className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition rounded-md">
-                            <Trash size={16} className="mr-2" />
-                            Delete
-                          </button>
-                        </>
-                      )}
-                      <button className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-gray-700 transition rounded-md">
-                        <Share size={16} className="mr-2" />
-                        Share
-                      </button>
-                    </div>
-                  )}
-                </div> 
-              </div> */}
-            </div>
-
-            {/* Meta Info */}
-            <div className="mt-2 flex flex-col items-start gap-2 text-sm text-gray-400">
-              <span className="inline-block bg-gray-800 px-2 py-0.5 rounded text-xs font-medium">
-                {post.category}
-              </span>
-              <div className="flex gap-2">
-                <span className="truncate">@{post.user.username}</span>
-                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="mt-5">
-              <p className="text-gray-300 italic leading-relaxed">
-                {post.description}
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div className="mt-4 flex items-center gap-6 text-xs text-gray-500">
-              <span>{post._count?.likes ?? 0} Likes</span>
-              <span>{post._count?.comments ?? 0} Comments</span>
-              <VisibilityTag visibility={post.visibility as Visibility} />
-            </div>
+        <div className="flex items-center justify-between">
+          <VisibilityTag visibility={post.visibility as Visibility} />
+          <div className="flex items-center gap-3 text-sm text-zinc-400">
+            <span className="flex items-center gap-1">
+              <LikeButton postId={post.id}/>
+            </span>
+            <span className="flex items-center gap-1">
+              <MessageCircle size={18} />
+              {post._count?.comments ?? 0}
+            </span>
           </div>
         </div>
       </div>

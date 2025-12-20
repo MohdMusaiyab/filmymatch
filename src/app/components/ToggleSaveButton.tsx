@@ -38,7 +38,7 @@ export const ToggleSaveButton = ({ postId, initialIsSaved }: ToggleSaveButtonPro
     <motion.button
       onClick={handleToggle}
       whileTap={{ scale: 0.95 }}
-      className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors cursor-pointer"
+      className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors cursor-pointer hover:shadow-md active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       disabled={isPending}
       aria-label={isSaved ? "Unsave post" : "Save post"}
     >
