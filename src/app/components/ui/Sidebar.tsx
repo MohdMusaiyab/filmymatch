@@ -21,10 +21,10 @@ interface SidebarProps {
 }
 
 const navItems: { label: string; tab: ActiveTab; icon: React.ReactNode }[] = [
-  { label: "Home", tab: "home", icon: <Home className="w-4.5 h-4.5" /> },
-  { label: "Explore", tab: "explore", icon: <Compass className="w-4.5 h-4.5" /> },
-  { label: "My Library", tab: "library", icon: <BookOpen className="w-4.5 h-4.5" /> },
-  { label: "Saved", tab: "saved", icon: <Bookmark className="w-4.5 h-4.5" /> },
+  { label: "Home", tab: "home", icon: <Home className="w-5 h-5" /> },
+  { label: "Explore", tab: "explore", icon: <Compass className="w-5 h-5" /> },
+  { label: "Library", tab: "library", icon: <BookOpen className="w-5 h-5" /> },
+  { label: "Saved", tab: "saved", icon: <Bookmark className="w-5 h-5" /> },
 ];
 
 export const Sidebar = ({ activeTab, setActiveTab, userId }: SidebarProps) => {
@@ -77,7 +77,6 @@ export const Sidebar = ({ activeTab, setActiveTab, userId }: SidebarProps) => {
                   <div className={`${isActive ? "scale-110" : "scale-100"} transition-transform`}>
                     {icon}
                   </div>
-                  <span className="text-[12px] mt-1">{label}</span>
                 </Link>
               </li>
             );
@@ -90,8 +89,7 @@ export const Sidebar = ({ activeTab, setActiveTab, userId }: SidebarProps) => {
               className="flex flex-col items-center justify-center py-2 px-3 rounded-md transition-colors text-gray-600 hover:text-gray-900"
               aria-label="Create Snippet"
             >
-              <Plus className="w-5 h-5" />
-              <span className="text-[12px] mt-1">Create</span>
+              <Plus className="w-7 h-7 p-1 bg-primary text-white rounded-full" />
             </Link>
           </li>
         </ul>

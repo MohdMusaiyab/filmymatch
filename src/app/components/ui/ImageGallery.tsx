@@ -98,7 +98,7 @@ export const ImageGallery = ({ images }: ImageGalleryProps) => {
               <div className="flex justify-end">
                 <button
                   onClick={() => openModal(img, index)}
-                  className="bg-[#5865F2] text-white hover:bg-[#4854e0] focus:ring-[#5865F2] text-xs sm:text-sm  font-medium transition-colors"
+                  className="text-primary focus:ring-[#5865F2] text-xs sm:text-sm  font-medium transition-colors"
                 >
                   View Details
                 </button>

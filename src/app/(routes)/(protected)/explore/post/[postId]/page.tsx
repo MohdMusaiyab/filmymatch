@@ -5,7 +5,15 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Bookmark, BookmarkCheck, Heart, Share2 } from "lucide-react";
+import {
+  Bookmark,
+  BookmarkCheck,
+  Heart,
+  Share2,
+  Calendar,
+  Images,
+  MessageCircle,
+} from "lucide-react";
 import api from "@/lib/api";
 import { Post } from "@/types/Post";
 import { ImageGallery } from "@/app/components/ui/ImageGallery";
@@ -31,48 +39,70 @@ export default function PostPage() {
     fetchPost();
   }, [postId]);
 
-  if (!post) return <div className="p-4 text-center min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!post)
+    return (
+      <div className="p-4 text-center min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
 
   const isOwner = session?.user?.id === post.user?.id;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 pb-20 sm:pb-8 min-h-screen">
       {/* Header Section */}
-      <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+      <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8 mb-8">
         {/* Title and Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
-            {post.title}
-          </h1>
-          <div className="flex items-center justify-between sm:justify-end gap-2">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          {/* Content */}
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
+              {post.title}
+            </h1>
+
+            <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6">
+              {post.description}
+            </p>
+
+            {/* Meta info */}
+            <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <Calendar size={16} />
+                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Images size={16} />
+                <span>{(post.images?.length===1 || post.images?.length===0) ? `${post.images?.length} image` : `${post.images?.length} images`}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Heart size={16} className="text-red-500" fill="currentColor" />
+                <span>{(post._count?.likes===1 || post._count?.likes===0 )? `${post._count?.likes} like` : `${post._count?.likes} likes`}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <MessageCircle size={16} />
+                <span>{(post._count?.comments===1 || post._count?.comments===0 )? `${post._count?.comments} comment` : `${post._count?.comments} comments`}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 sm:mt-1">
             {isOwner && (
               <Link
                 href={`/dashboard/my-posts/${post.id}`}
-                className="px-3 sm:px-4 py-2 bg-[#5865F2] text-white hover:bg-[#4854e0] focus:ring-[#5865F2] rounded-lg transition-colors text-sm sm:text-base whitespace-nowrap"
+                className="px-3 sm:px-4 py-2 bg-primary text-white hover:bg-[#4854e0] rounded-lg transition-colors text-sm sm:text-base whitespace-nowrap"
               >
                 Edit
               </Link>
             )}
+
             <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100">
               <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
-        </div>
-        
-        {/* Description */}
-        <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6 break-words">
-          {post.description}
-        </p>
-        
-        {/* Metadata */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
-          <span>Created: {new Date(post.createdAt).toLocaleDateString()}</span>
-          <span className="hidden sm:inline">•</span>
-          <span>{post.images?.length || 0} images</span>
-          <span className="hidden sm:inline">•</span>
-          <span>{post._count?.likes || 0} likes</span>
-          <span className="hidden sm:inline">•</span>
-          <span>{post._count?.comments || 0} comments</span>
         </div>
       </section>
 
@@ -92,9 +122,11 @@ export default function PostPage() {
             <div className="p-2 rounded-full group-hover:bg-red-50 transition-colors">
               <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <span className="text-xs sm:text-sm font-medium">{post._count?.likes || 0}</span>
+            <span className="text-xs sm:text-sm font-medium">
+              {post._count?.likes || 0}
+            </span>
           </button>
-          
+
           <button className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 hover:text-blue-600 cursor-pointer transition-colors group">
             <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
               {post.isSaved ? (
