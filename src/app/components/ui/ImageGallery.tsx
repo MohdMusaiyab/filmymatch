@@ -70,7 +70,7 @@ export const ImageGallery = ({ images }: ImageGalleryProps) => {
         {images.map((img, index) => (
           <div
             key={img.id}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer"
           >
             {/* Image Container */}
             <div className="relative w-full h-48 sm:h-56 md:h-64 overflow-hidden">
@@ -98,7 +98,7 @@ export const ImageGallery = ({ images }: ImageGalleryProps) => {
               <div className="flex justify-end">
                 <button
                   onClick={() => openModal(img, index)}
-                  className="text-primary focus:ring-[#5865F2] text-xs sm:text-sm  font-medium transition-colors"
+                  className="text-primary hover:text-primary/80"
                 >
                   View Details
                 </button>
