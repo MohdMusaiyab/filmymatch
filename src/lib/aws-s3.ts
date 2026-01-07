@@ -49,12 +49,17 @@ export async function generatePresignedUrl(
   };
 }
 
-export async function changeFileVisibility(
-  oldKey: string, 
-   // Optional (unused in new structure)
-): Promise<string> {
-  const fileName = oldKey.split('/').pop()!; // Extract filename from temp path
-  const newKey = generateFinalKey('', '', fileName); // Ignore userId/postId
+export async function changeFileVisibility(oldKey: string): Promise<string> {
+  // Extract just the filename from the temp path
+  const fileName = oldKey.split('/').pop()!;
+  
+  // Generate final key with proper naming
+  const timestamp = Date.now();
+  const randomSuffix = Math.random().toString(36).slice(2, 8);
+  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
+  const newKey = `uploads/${timestamp}-${randomSuffix}-${sanitizedFileName}`;
+
+  console.log(`Moving S3 file: ${oldKey} -> ${newKey}`);
 
   // Copy to permanent location
   await s3Client.send(
@@ -66,7 +71,7 @@ export async function changeFileVisibility(
   );
 
   // Delete temp file
-  await deleteFile(oldKey); 
+  await deleteFile(oldKey);
 
   return `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${newKey}`;
 }
@@ -93,7 +98,11 @@ export function generateFinalKey(
 export function extractKeyFromUrl(url: string): string {
   try {
     const urlObj = new URL(url);
-    return urlObj.pathname.substring(1); // Remove leading slash
+    // Remove leading slash and any query parameters (for signed URLs)
+    const fullPath = urlObj.pathname.substring(1);
+    // Split at '?' to remove query parameters if present
+    const [key] = fullPath.split('?');
+    return key;
   } catch (error) {
     console.error("Error extracting key from URL:", error);
     throw new Error("Invalid S3 URL format");

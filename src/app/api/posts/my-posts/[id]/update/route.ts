@@ -20,6 +20,11 @@ interface ExistingImageData {
   description: string | null;
 }
 
+// Helper function to clean URLs (remove query parameters and hash)
+function cleanUrl(url: string): string {
+  return url.split('?')[0].split('#')[0];
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -44,40 +49,46 @@ export async function PUT(
 
     console.log("=== API DEBUG START ===");
     console.log("Incoming coverImageUrl:", coverImageUrl);
-    console.log("Incoming images:", incomingImages);
+    console.log("Incoming images count:", incomingImages?.length || 0);
 
     const finalVisibility = isDraft ? "PRIVATE" : requestedVisibility;
 
     const existingPost = await prisma.post.findUnique({
       where: { id: postId, userId: session.user.id },
-      select: { images: true, coverImage: true },
+      select: { 
+        images: true, 
+        coverImage: true,
+        userId: true // Added for security check
+      },
     });
 
     if (!existingPost) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
+    // Clean all URLs for consistent comparison
     const existingImageUrls = existingPost.images.map(
-      (img: ExistingImageData) => img.url
+      (img: ExistingImageData) => cleanUrl(img.url)
     );
     console.log("Existing image URLs:", existingImageUrls);
 
+    // Filter images using clean URLs
     const newImages: ImageData[] = incomingImages.filter(
-      (img: ImageData) => !existingImageUrls.includes(img.url)
+      (img: ImageData) => !existingImageUrls.includes(cleanUrl(img.url))
     );
 
     const keptImages: ImageData[] = incomingImages.filter((img: ImageData) =>
-      existingImageUrls.includes(img.url)
+      existingImageUrls.includes(cleanUrl(img.url))
     );
 
     const deletedImages = existingPost.images.filter(
       (img: ExistingImageData) =>
-        !incomingImages.some((i: ImageData) => i.url === img.url)
+        !incomingImages.some((i: ImageData) => cleanUrl(i.url) === cleanUrl(img.url))
     );
 
-    console.log("New images to process:", newImages);
-    console.log("Kept images:", keptImages);
-    console.log("Deleted images:", deletedImages);
+    console.log("New images to process:", newImages.length);
+    console.log("Kept images:", keptImages.length);
+    console.log("Deleted images:", deletedImages.length);
 
     // Process new images (move from temp to permanent location)
     const processedNewImages: ImageData[] = [];
@@ -94,11 +105,12 @@ export async function PUT(
         processedNewImages.push(processedImage);
 
         // Store mapping of old URL to new URL
-        urlMapping.set(img.url.split("?")[0], newUrl.split("?")[0]);
+        urlMapping.set(cleanUrl(img.url), cleanUrl(newUrl));
 
         console.log(`Processed image: ${img.url} -> ${newUrl}`);
       } catch (error) {
         console.error("Failed to process new image:", img.url, error);
+        // Continue with other images even if one fails
       }
     }
 
@@ -115,62 +127,63 @@ export async function PUT(
       })
     );
 
-    // ✅ Process cover image logic
-    // let finalCoverImage: string | null = null;
-    //Replacing above with this
-    let finalCoverImage: string | null = existingPost.coverImage; // Preserve existing by default
+    // ✅ Process cover image logic with automatic selection
+    let finalCoverImage: string | null = existingPost.coverImage;
     console.log("Existing cover image:", finalCoverImage);
 
     if (coverImageUrl) {
-      const cleanCoverUrl = coverImageUrl.split("?")[0];
-      console.log("Clean cover URL from request:", cleanCoverUrl);
+      // User explicitly selected a cover image
+      const cleanCoverUrl = cleanUrl(coverImageUrl);
+      console.log("User selected cover URL:", cleanCoverUrl);
 
-      // Check if cover image is among kept images (existing images)
-      const isKeptImage = keptImages.some((img: ImageData) => {
-        const cleanImgUrl = img.url.split("?")[0];
-        return cleanImgUrl === cleanCoverUrl;
-      });
+      // Check if this image exists in the final image set
+      const allFinalImages = [
+        ...keptImages.map((img: ImageData) => cleanUrl(img.url)),
+        ...processedNewImages.map((img: ImageData) => cleanUrl(img.url))
+      ];
 
-      if (isKeptImage) {
+      if (allFinalImages.includes(cleanCoverUrl)) {
         finalCoverImage = cleanCoverUrl;
-        console.log("Cover image is existing image:", finalCoverImage);
+        console.log("Cover image set to:", finalCoverImage);
       } else {
-        // Check if cover image is among new images (check both original and processed URLs)
-        const mappedUrl = urlMapping.get(cleanCoverUrl);
-        if (mappedUrl) {
-          finalCoverImage = mappedUrl;
-          console.log("Cover image is new image, mapped to:", finalCoverImage);
-        } else {
-          // Check if the cover URL matches any of the processed new images directly
-          const matchingProcessed = processedNewImages.find(
-            (img: ImageData) => {
-              return img.url.split("?")[0] === cleanCoverUrl;
-            }
-          );
-
-          if (matchingProcessed) {
-            finalCoverImage = matchingProcessed.url.split("?")[0];
-            console.log(
-              "Cover image found in processed images:",
-              finalCoverImage
-            );
-          } else {
-            console.log(
-              "Cover image URL not found in any images, setting to null"
-            );
-            //Set to exisitng or noull
-            finalCoverImage = existingPost.coverImage || null;
-          }
-        }
+        console.warn("Selected cover image not found in final images, will auto-select");
+        finalCoverImage = null; // Will trigger auto-selection below
       }
-    } else {
-      console.log("No cover image URL provided");
-      finalCoverImage = existingPost.coverImage || null;
+    }
+
+    // Auto-select cover image if needed
+    if (!finalCoverImage && (keptImages.length > 0 || processedNewImages.length > 0)) {
+      // Prefer kept images first (existing), then new images
+      if (keptImages.length > 0) {
+        finalCoverImage = cleanUrl(keptImages[0].url);
+        console.log("Auto-selected first kept image as cover:", finalCoverImage);
+      } else if (processedNewImages.length > 0) {
+        finalCoverImage = cleanUrl(processedNewImages[0].url);
+        console.log("Auto-selected first new image as cover:", finalCoverImage);
+      }
+    }
+
+    // If cover image was deleted but we have other images, auto-select
+    if (finalCoverImage && deletedImages.some((img: ExistingImageData) => cleanUrl(img.url) === finalCoverImage)) {
+      console.log("Previous cover image was deleted, auto-selecting new cover");
+      
+      if (keptImages.length > 0) {
+        finalCoverImage = cleanUrl(keptImages[0].url);
+      } else if (processedNewImages.length > 0) {
+        finalCoverImage = cleanUrl(processedNewImages[0].url);
+      } else {
+        finalCoverImage = null;
+      }
+    }
+
+    // If no images at all, set cover to null
+    if (keptImages.length === 0 && processedNewImages.length === 0) {
+      finalCoverImage = null;
+      console.log("No images left, cover image set to null");
     }
 
     console.log("Final cover image URL:", finalCoverImage);
 
-    // Update database
     // Update database
     const updatedPost = await prisma.$transaction(async (tx) => {
       // RE-VERIFY ownership inside transaction to prevent race conditions
@@ -210,11 +223,11 @@ export async function PUT(
 
       console.log("Updated post with cover image:", post.coverImage);
 
-      // 3. Create new image records
+      // 3. Create new image records (store clean URLs)
       if (processedNewImages.length > 0) {
         await tx.image.createMany({
           data: processedNewImages.map((img: ImageData) => ({
-            url: img.url,
+            url: cleanUrl(img.url), // Store clean URL
             description: img.description,
             postId,
           })),
@@ -225,14 +238,14 @@ export async function PUT(
       // 4. Update descriptions for kept images
       for (const img of keptImages) {
         const existing = existingPost.images.find(
-          (ex: ExistingImageData) => ex.url === img.url
+          (ex: ExistingImageData) => cleanUrl(ex.url) === cleanUrl(img.url)
         );
         if (existing && existing.description !== img.description) {
           await tx.image.update({
             where: { id: existing.id },
             data: { description: img.description },
           });
-          console.log("Updated image description for:", img.url);
+          console.log("Updated image description for:", cleanUrl(img.url));
         }
       }
 

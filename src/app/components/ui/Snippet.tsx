@@ -1,15 +1,12 @@
 import {
-  MoreVertical,
   Edit,
   Trash,
   Share,
   MessageCircle,
-  Heart,
   Ellipsis,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { FileText } from "lucide-react";
 import AddCollectionButton from "../AddCollectionButton";
 import { ToggleSaveButton } from "../ToggleSaveButton";
 import LikeButton from "../LikeButton"
@@ -17,7 +14,7 @@ import { useSession } from "next-auth/react";
 import { Post } from "@/types/Post";
 import { Visibility } from "@/types";
 import { VisibilityTag } from "../VisibilityTag";
-
+const DEFAULT_COVER_IMAGE = "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 interface SnippetProps {
   post: Post;
   menuOpen: string | null;
@@ -62,19 +59,13 @@ export const Snippet = ({ post, menuOpen, toggleMenu }: SnippetProps) => {
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md overflow-hidden transition-shadow" onClick={()=>{post.linkTo ? post.linkTo : `/explore/post/${post.id}`}}>
       <div className="relative h-48 w-full">
         {/* Cover Image OR Dummy Placeholder */}
-        {post.coverImage ? (
-          <Image
-            src={post.coverImage}
-            alt="Cover"
-            fill
-            className="object-cover"
-            priority
-          />
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-            <FileText size={48} className="text-primary/80" />
-          </div>
-        )}
+         <Image
+    src={post.coverImage || DEFAULT_COVER_IMAGE}
+    alt="Cover"
+    fill
+    className="object-cover"
+    priority
+  />
 
         {/* Top-right Buttons (always visible) */}
         <div className="absolute top-3 right-3 flex gap-2 z-10">

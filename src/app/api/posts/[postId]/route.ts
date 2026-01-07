@@ -10,7 +10,7 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    const {postId} = await params;
+    const { postId } = await params;
 
     if (!postId) {
       return NextResponse.json(
@@ -65,19 +65,20 @@ export async function GET(
       isSaved = !!saved;
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        ...post,
-        coverImage: signedCoverImage,
-        images: signedImages,
-        isSaved,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          ...post,
+          coverImage: signedCoverImage,
+          images: signedImages,
+          isSaved,
+        },
+        message: "Post fetched successfully",
+        code: "POST_FETCHED_SUCCESSFULLY",
       },
-      message: "Post fetched successfully",
-      code: "POST_FETCHED_SUCCESSFULLY",
-    },
-    { status: 200 }
-  );
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Single post fetch error:", error);
     return NextResponse.json(
