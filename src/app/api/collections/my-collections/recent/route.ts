@@ -37,8 +37,14 @@ export async function GET() {
         visibility: true,
         createdAt: true,
         updatedAt: true,
+        _count: {
+          select: {
+            posts: true, // ✅ POST COUNT
+          },
+        },
       },
     });
+
 
     const signedCollections = await Promise.all(
       collections.map(async (collection) => {
@@ -49,11 +55,18 @@ export async function GET() {
           : null;
 
         return {
-          ...collection,
+          id: collection.id,
+          name: collection.name,
+          description: collection.description,
           coverImage: signedCoverImage,
+          visibility: collection.visibility,
+          createdAt: collection.createdAt,
+          updatedAt: collection.updatedAt,
+          postCount: collection._count.posts,
         };
       })
     );
+
 
     return NextResponse.json(
       {

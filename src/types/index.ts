@@ -1,11 +1,13 @@
 export interface Collection {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   coverImage?: string | null;
   visibility: "PUBLIC" | "PRIVATE" | "FOLLOWERS";
-  createdAt: string;
-  updatedAt: string;
+  isDraft: boolean;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  postCount: number;
 }
 
 export interface Highlight {
@@ -25,6 +27,7 @@ export interface Highlight {
 export interface Draft {
   id: number;
   title: string;
+  description?: string | null;
   type: string;
   status: string;
   timeAgo: string;

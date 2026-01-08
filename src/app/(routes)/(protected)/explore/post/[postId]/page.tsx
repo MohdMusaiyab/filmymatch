@@ -1,45 +1,27 @@
+// app/posts/[postId]/page.tsx
 "use client";
 
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import Image from "next/image";
-import { Bookmark, BookmarkCheck, Heart, Edit2 } from "lucide-react";
-import { Dialog, Transition } from "@headlessui/react";
+import {
+  Heart,
+  Share2,
+  Calendar,
+  Images,
+  MessageCircle,
+  Edit2,
+} from "lucide-react";
 import api from "@/lib/api";
 import { Post } from "@/types/Post";
-// interface Post {
-//   id: string;
-//   title: string;
-//   description: string;
-//   category: string;
-//   visibility: string;
-//   coverImage?: string | null;
-//   user: {
-//     id: string;
-//     username: string;
-//     avatar?: string | null;
-//   };
-//   images: {
-//     id: string;
-//     url: string;
-//     description?: string | null;
-//   }[];
-//   _count: {
-//     likes: number;
-//     comments: number;
-//   };
-//   createdAt: string;
-//   isSaved: boolean;
-// }
+import { ImageGallery } from "@/app/components/ui/ImageGallery";
+import { ToggleSaveButton } from "@/app/components/ToggleSaveButton";
 
 export default function PostPage() {
   const { postId } = useParams() as { postId: string };
+  const { data: session } = useSession();
   const [post, setPost] = useState<Post | null>(null);
-  const [previewImg, setPreviewImg] = useState<null | {
-    url: string;
-    description?: string | null;
-  }>(null);
 
   useEffect(() => {
     if (!postId) return;
@@ -57,158 +39,133 @@ export default function PostPage() {
     fetchPost();
   }, [postId]);
 
-  if (!post) return <div className="p-6 text-center">Loading...</div>;
-
-  return (
-    <div className="max-w-4xl mx-auto px-4">
-      <div className="flex items-center gap-3 mb-4">
-        <h1 className="text-2xl font-bold text-white">{post.title}</h1>
-        <Link
-          href={`/dashboard/my-posts/${post.id}`}
-          className="flex items-center justify-center hover:text-gray-300 transition"
-        >
-          <Edit2 size={18} />
-        </Link>
-      </div>
-
-      <div className="flex items-center gap-3 text-sm text-gray-500 mb-6 flex-wrap">
-        <div className="flex items-center gap-2">
-          {post.user?.avatar ? (
-            <Image
-              src={post.user.avatar}
-              alt={post.user.username}
-              width={36}
-              height={36}
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-gray-700">
-              {post.user?.username?.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <span className="font-medium">{post.user.username}</span>
+  const PostSkeleton = () => (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6 animate-pulse">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        <div className="h-8 w-3/4 bg-gray-200 rounded" />
+        <div className="h-4 w-full bg-gray-200 rounded" />
+        <div className="h-4 w-5/6 bg-gray-200 rounded" />
+        <div className="flex gap-4 mt-4">
+          <div className="h-4 w-24 bg-gray-200 rounded" />
+          <div className="h-4 w-24 bg-gray-200 rounded" />
         </div>
-        <span>&bull;</span>
-        <span className="capitalize">{post.visibility}</span>
-        <span>&bull;</span>
-        <span className="capitalize">{post.category}</span>
-        <span>&bull;</span>
-        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
       </div>
-
-      <p className="text-lg text-white leading-relaxed mb-8">
-        {post.description}
-      </p>
-
-      {/* Images and Descriptions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        {post.images?.map((img) => (
+      <div className="max-w-6xl px-4 sm:px-6 py-4 h-8 w-1/4 bg-gray-200 rounded"></div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(3)].map((_, i) => (
           <div
-            key={img.id}
-            className="rounded-lg overflow-hidden transition border border-gray-700"
-          >
-            {post.images && (
-              <div className="relative w-full h-56">
-                <Image
-                  src={img.url}
-                  alt="Post image"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover cursor-pointer"
-                  onClick={() => setPreviewImg(img)}
-                  priority
-                />
-              </div>
-            )}
-            <div className="p-4">
-              <p className="text-sm text-gray-300">
-                {img.description && img.description.length > 40
-                  ? `${img.description.slice(0, 40)} ...`
-                  : img.description || "No description available."}
-              </p>
-            </div>
-          </div>
+            key={i}
+            className="h-64 bg-gray-200 rounded-xl border border-gray-200"
+          />
         ))}
       </div>
+    </div>
+  );
 
-      <div className="flex items-center gap-6 text-gray-600 border-t pt-4">
-        <div className="flex items-center gap-2 hover:text-red-500 cursor-pointer">
-          <Heart className="w-5 h-5" />
-        </div>
-        <div className="flex items-center gap-2 hover:text-blue-600 cursor-pointer">
-          <span>
-            {post.isSaved ? (
-              <BookmarkCheck className="w-5 h-5" />
-            ) : (
-              <Bookmark className="w-5 h-5" />
-            )}
-          </span>
-        </div>
-      </div>
+  if (!post) return <PostSkeleton />;
 
-      <Transition.Root show={!!previewImg} as={Fragment}>
-        <Dialog
-          as="div"
-          className="relative z-50"
-          onClose={() => setPreviewImg(null)}
-        >
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-70 transition-opacity" />
-          </Transition.Child>
+  const isOwner = session?.user?.id === post.user?.id;
 
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className="relative transform overflow-hidden border border-gray-700 rounded-lg bg-black shadow-xl transition-all w-full max-w-3xl">
-                  {/* Image */}
-                  {previewImg?.url && (
-                    <Image
-                      src={previewImg.url}
-                      alt="Preview"
-                      width={1200}
-                      height={800}
-                      className="w-full object-contain max-h-[70vh] bg-black py-6"
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 pb-20 sm:pb-8 min-h-screen">
+      {/* Header Section */}
+      <section className="bg-white rounded-2xl border border-gray-200 p-6 mb-10">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          {/* Left */}
+          <div className="flex-1">
+            {/* Author */}
+            <div className="flex items-center gap-3 mb-4">
+              <Link href={`/profile/${post.user.id}`}>
+                <div className="w-10 h-10 rounded-full bg-primary/20 overflow-hidden ring-1 ring-gray-200">
+                  {post.user.avatar ? (
+                    <img
+                      src={post.user.avatar}
+                      alt={post.user.username}
+                      className="w-full h-full object-cover"
                     />
+                  ) : (
+                    <span className="flex items-center justify-center h-full font-semibold text-gray-700">
+                      {post.user.username.charAt(0).toUpperCase()}
+                    </span>
                   )}
+                </div>
+              </Link>
 
-                  {/* Full Description */}
-                  {previewImg?.description && (
-                    <div className="mb-6 px-6 text-left">
-                      <p className="text-sm text-gray-300 whitespace-pre-line">
-                        {previewImg.description}
-                      </p>
-                    </div>
-                  )}
+              <div className="leading-tight">
+                <Link href={`/profile/${post.user.id}`}>
+                  <p className="font-semibold text-gray-900 hover:underline">
+                    {post.user.username}
+                  </p>
+                </Link>
+                <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <Calendar size={12} />
+                  {new Date(post.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
 
-                  {/* Close Button */}
-                  <button
-                    onClick={() => setPreviewImg(null)}
-                    className="absolute top-2 right-2 text-white hover:text-red-400 transition"
-                  >
-                    ✕
-                  </button>
-                </Dialog.Panel>
-              </Transition.Child>
+            {/* Title */}
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              {post.title}
+            </h1>
+
+            {/* Description */}
+            <p className="text-gray-600 leading-relaxed max-w-3xl mb-5">
+              {post.description}
+            </p>
+
+            {/* Meta Pills */}
+            <div className="flex flex-wrap gap-2">
+              <span className="flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-200">
+                <Images size={13} /> {post.images?.length || 0} media
+              </span>
+              <span className="flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-200">
+                <Heart size={13} /> {post._count?.likes || 0} likes
+              </span>
+              <span className="flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-200">
+                <MessageCircle size={13} /> {post._count?.comments || 0}{" "}
+                comments
+              </span>
             </div>
           </div>
-        </Dialog>
-      </Transition.Root>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-1 sm:gap-2 self-start">
+            <ToggleSaveButton postId={post.id} initialIsSaved={post.isSaved} />
+
+            {isOwner && (
+              <Link
+                href={`/dashboard/my-posts/${post.id}`}
+                className="p-2 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 transition"
+              >
+                <Edit2 size={18} />
+              </Link>
+            )}
+
+            <button className="p-2 rounded-lg text-gray-500 hover:text-primary hover:bg-gray-100 transition">
+              <Share2 size={18} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Media Section */}
+      <section className="mb-12">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Media</h2>
+
+        <div>
+          {post.images?.length ? (
+            <ImageGallery images={post.images} />
+          ) : (
+            <div className="text-center text-gray-400 py-12">
+              No media available for this post.
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Extra bottom padding for mobile to account for fixed action bar and bottom navigation */}
+      <div className="h-20 sm:h-0"></div>
     </div>
   );
 }

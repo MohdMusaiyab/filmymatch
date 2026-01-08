@@ -4,6 +4,9 @@
   --shadow-boxShadow: 0 0 12px rgba(146, 186, 255, 0.6); 
   --color-pastel-blue: #94BBFF;
   --color-accent-blue: #71A0FF;
+  --color-primary: #5865F2;
+  --font-weight-semibold: 600;
+  --font-weight-medium: 500;
 }
 
 /* Hide scrollbar but allow scrolling */

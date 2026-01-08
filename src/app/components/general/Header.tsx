@@ -1,48 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { Plus } from "lucide-react";
+import { Bell, User } from "lucide-react";
 
-import Logo from "@/assets/logo-colored.png";
-import Button from "@/app/components/Button";
-import { useSidebar } from "@/app/context/SidebarContext";
+interface HeaderProps {
+  userId: string | null;
+}
 
-export const Header = () => {
-  const { sidebarCollapsed } = useSidebar();
-
+export const Header = ({ userId }: HeaderProps) => {
   return (
     <header
-      className={`sticky top-0 py-4 sm:pr-4 md:pr-8 pr-12 flex justify-between items-center transition-all duration-300 bg-white border-b border-gray-200 ${
-        sidebarCollapsed ? "pl-24" : "pl-64"
-      }`}
+      className="sticky top-0 py-2 px-4 sm:px-6 md:px-6 flex justify-end items-center transition-all duration-300 bg-white border-b border-gray-200 z-30"
     >
-      <div>
-        <Image
-          src={Logo}
-          alt="Company Logo"
-          width={90}
-          height={90}
-          className="ml-6 hidden md:block"
-        />
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <Link href="/dashboard/create-post" className="hidden md:block">
-          <Button type="button" variant="custom-blue" size="md">
-            + Create Snippet
-          </Button>
+      <div className="flex items-center space-x-3">
+        {/* Notification Icon */}
+        <Link
+          href="/notifications"
+          className="relative p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
+          aria-label="Notifications"
+        >
+          <Bell className="w-6 h-6 text-gray-700" />
+          {/* Notification badge (optional - uncomment if you want to show unread count) */}
+          {/* <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span> */}
         </Link>
 
-        <Link href="/dashboard/create-post" className="block md:hidden">
-          <Button
-            type="button"
-            variant="custom-blue"
-            size="sm"
-            className="rounded-full w-10 h-10 md:w-8 md:h-8 flex items-center justify-center"
-          >
-            <Plus className="w-5 h-5" />
-          </Button>
+        {/* Profile Icon */}
+        <Link
+           href={`/profile/${userId}`}
+          className="flex items-center gap-3 p-2 rounded-full text-md font-medium transition-colors
+            text-gray-900 hover:bg-[#5865F2]/6
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
+          aria-label="Profile"
+        >
+          <User className="w-6 h-6 text-gray-700" />
         </Link>
       </div>
     </header>

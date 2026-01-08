@@ -7,6 +7,7 @@ import {
   changeFileVisibility,
 } from "@/lib/aws-s3";
 import { Visibility } from "@/schemas/common";
+import { Prisma } from "@prisma/client";
 //Server Action for Creating a Collection , the User will always be the logged in User
 export async function createCollection(name: string) {
   const session = await getSession();
@@ -80,114 +81,190 @@ export async function addNewPostToCollection(
   collectionId: string,
   postId: string
 ) {
-  //check for Session and user id
-  const user = await getSession();
-  if (!user) {
-    return {
-      success: false,
-      error: {
-        message: "Unauthorized access",
-        code: "UNAUTHORIZED",
-      },
-    };
-  }
-
-  const loggedInUserId = user?.id;
-  //Find the Collection with the given ID and User ID
-  const collection = await prisma.collection.findFirst({
-    where: {
-      id: collectionId,
-      userId: loggedInUserId,
-    },
-    select: {
-      posts: {
-        select: {
-          id: true,
+  try {
+    // 🛡️ Session validation
+    const user = await getSession();
+    if (!user?.id) {
+      return {
+        success: false,
+        error: {
+          message: "Unauthorized access",
+          code: "UNAUTHORIZED",
         },
-      },
-    },
-  });
+      };
+    }
 
-  if (!collection) {
-    return {
-      success: false,
-      error: {
-        message: "Collection not found",
-        code: "NOT_FOUND",
-      },
-    };
-  }
-  //Check if the Post is already in the Collection
-  const existingPost = collection.posts.find((post) => post.id === postId);
-  if (existingPost) {
-    return {
-      success: false,
-      error: {
-        message: "Post already exists in the collection",
-        code: "DUPLICATE_POST",
-      },
-    };
-  }
-  const post = await prisma.post.findUnique({
-    where: { id: postId },
-    select: {
-      id: true,
-      visibility: true,
-      userId: true,
-    },
-  });
+    const loggedInUserId = user.id;
 
-  if (!post) {
-    return {
-      success: false,
-      error: {
-        message: "Post does not exist",
-        code: "POST_NOT_FOUND",
-      },
-    };
-  }
+    // Input validation
+    if (!collectionId || !postId) {
+      return {
+        success: false,
+        error: {
+          message: "Collection ID and Post ID are required",
+          code: "INVALID_INPUT",
+        },
+      };
+    }
 
-  const isOwner = post.userId === loggedInUserId;
-  const isPublic = post.visibility === "PUBLIC";
-
-  let isFollower = false;
-  if (post.visibility === "FOLLOWERS" && !isOwner) {
-    const follow = await prisma.follow.findFirst({
+    // ✅ Check collection ownership and post existence
+    const collection = await prisma.collection.findFirst({
       where: {
-        followerId: loggedInUserId,
-        followingId: post.userId,
+        id: collectionId,
+        userId: loggedInUserId,
+      },
+      select: {
+        id: true,
+        coverImage: true,
+        posts: {
+          where: { id: postId },
+          select: { id: true },
+        },
+        _count: {
+          select: { posts: true }
+        }
       },
     });
-    isFollower = !!follow;
-  }
 
-  const hasAccess = isOwner || isPublic || isFollower;
+    if (!collection) {
+      return {
+        success: false,
+        error: {
+          message: "Collection not found",
+          code: "NOT_FOUND",
+        },
+      };
+    }
 
-  if (!hasAccess) {
+    // Check for duplicate post
+    if (collection.posts.length > 0) {
+      return {
+        success: false,
+        error: {
+          message: "Post already exists in the collection",
+          code: "DUPLICATE_POST",
+        },
+      };
+    }
+
+    // Check post existence and access
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: {
+        id: true,
+        visibility: true,
+        userId: true,
+        coverImage: true,
+      },
+    });
+
+    if (!post) {
+      return {
+        success: false,
+        error: {
+          message: "Post does not exist",
+          code: "POST_NOT_FOUND",
+        },
+      };
+    }
+
+    const isOwner = post.userId === loggedInUserId;
+    const isPublic = post.visibility === "PUBLIC";
+
+    let isFollower = false;
+    if (post.visibility === "FOLLOWERS" && !isOwner) {
+      const follow = await prisma.follow.findFirst({
+        where: {
+          followerId: loggedInUserId,
+          followingId: post.userId,
+        },
+      });
+      isFollower = !!follow;
+    }
+
+    const hasAccess = isOwner || isPublic || isFollower;
+
+    if (!hasAccess) {
+      return {
+        success: false,
+        error: {
+          message: "You do not have access to this post",
+          code: "FORBIDDEN",
+        },
+      };
+    }
+
+    // ✅ Auto-set cover image logic
+    let coverImageUpdate = {};
+    
+    // Case 1: Collection has no cover image AND post has cover image
+    if (!collection.coverImage && post.coverImage) {
+      coverImageUpdate = { coverImage: post.coverImage };
+      console.log(`Auto-setting collection cover to post image: ${post.coverImage}`);
+    }
+    // Case 2: Collection is empty (first post) AND post has cover image
+    else if (collection._count.posts === 0 && post.coverImage) {
+      coverImageUpdate = { coverImage: post.coverImage };
+      console.log(`First post - setting collection cover: ${post.coverImage}`);
+    }
+
+    // ✅ Secure update with ownership check AND cover image management
+    await prisma.collection.update({
+      where: {
+        id: collectionId,
+        userId: loggedInUserId, // Prevent unauthorized updates
+      },
+      data: {
+        posts: {
+          connect: { id: postId },
+        },
+        ...coverImageUpdate, // Apply cover image update if needed
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      message: "Post added to the collection successfully",
+      data: {
+        coverImageUpdated: Object.keys(coverImageUpdate).length > 0
+      }
+    };
+  } catch (error) {
+    console.error("Add post to collection failed:", error);
+    
+    // Handle specific Prisma errors
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        return {
+          success: false,
+          error: {
+            message: "Collection or post not found",
+            code: "NOT_FOUND",
+          },
+        };
+      }
+      if (error.code === 'P2028') {
+        return {
+          success: false,
+          error: {
+            message: "Database connection issue, please try again",
+            code: "DATABASE_ERROR",
+          },
+        };
+      }
+    }
+    
     return {
       success: false,
       error: {
-        message: "You do not have access to this post",
-        code: "FORBIDDEN",
+        message: "Operation failed",
+        code: "SERVER_ERROR",
+        details: error instanceof Error ? error.message : undefined,
       },
     };
   }
-  //Add the Post in the Collection
-  await prisma.collection.update({
-    where: { id: collectionId },
-    data: {
-      posts: {
-        connect: { id: postId },
-      },
-    },
-  });
-
-  return {
-    success: true,
-    message: "Post added to the collection successfully",
-  };
 }
-
 //Removing a Post from the Collection
 
 export async function removePostFromCollection(
@@ -195,16 +272,14 @@ export async function removePostFromCollection(
   postId: string
 ) {
   try {
-    // Session check
     const user = await getSession();
-    if (!user) {
+    if (!user?.id) {
       return {
         success: false,
         error: { message: "Unauthorized", code: "UNAUTHORIZED" },
       };
     }
 
-    // Validate inputs
     if (!collectionId || !postId) {
       return {
         success: false,
@@ -213,12 +288,18 @@ export async function removePostFromCollection(
     }
 
     return await prisma.$transaction(async (tx) => {
-      // Verify collection ownership and post existence
+      // Get collection with posts and current cover image
       const collection = await tx.collection.findFirst({
-        where: {
-          id: collectionId,
-          userId: user.id,
-          posts: { some: { id: postId } },
+        where: { id: collectionId, userId: user.id },
+        include: {
+          posts: {
+            where: { id: postId },
+            select: { id: true, coverImage: true },
+          },
+          // Get remaining posts for cover image logic
+          _count: {
+            select: { posts: true },
+          },
         },
       });
 
@@ -229,10 +310,53 @@ export async function removePostFromCollection(
         };
       }
 
-      // Remove post
+      const postToRemove = collection.posts[0];
+      if (!postToRemove) {
+        return {
+          success: false,
+          error: { message: "Post not in collection", code: "NOT_FOUND" },
+        };
+      }
+
+      // ✅ NEW: Auto-update cover image logic
+      let coverImageUpdate = {};
+      const isRemovingCoverImagePost =
+        collection.coverImage === postToRemove.coverImage;
+
+      if (isRemovingCoverImagePost) {
+        if (collection._count.posts === 1) {
+          // Last post removed - clear cover image
+          coverImageUpdate = { coverImage: null };
+        } else {
+          // Get first remaining post's cover image
+          const remainingPosts = await tx.collection.findUnique({
+            where: { id: collectionId },
+            select: {
+              posts: {
+                where: { NOT: { id: postId } },
+                take: 1,
+                select: { coverImage: true },
+              },
+            },
+          });
+
+          if (remainingPosts?.posts[0]?.coverImage) {
+            coverImageUpdate = {
+              coverImage: remainingPosts.posts[0].coverImage,
+            };
+          } else {
+            coverImageUpdate = { coverImage: null };
+          }
+        }
+      }
+
+      // Remove post and potentially update cover image
       await tx.collection.update({
-        where: { id: collectionId },
-        data: { posts: { disconnect: { id: postId } } },
+        where: { id: collectionId, userId: user.id },
+        data: {
+          posts: { disconnect: { id: postId } },
+          ...coverImageUpdate, // ✅ Apply cover image update if needed
+        },
       });
 
       return {
@@ -244,21 +368,16 @@ export async function removePostFromCollection(
     console.error("Remove post failed:", error);
     return {
       success: false,
-      error: {
-        message: "Operation failed",
-        code: "SERVER_ERROR",
-        details: error instanceof Error ? error.message : undefined,
-      },
+      error: { message: "Operation failed", code: "SERVER_ERROR" },
     };
   }
 }
-
 //Fetching all Collections of the User
 //Add that preSigned URL for the cover image if it exists
 export async function getUserCollections(userId: string) {
   const session = await getSession();
 
-  if (!session || !userId) {
+  if (!session?.id || !userId) {
     return {
       success: false,
       error: {
@@ -269,12 +388,37 @@ export async function getUserCollections(userId: string) {
   }
 
   try {
-    // Fetch all non-draft collections with posts and their users
+    const isOwner = session.id === userId;
+
+    // ✅ FIX 1: Check follow relationship FIRST (single query)
+    let isFollowing = false;
+    if (!isOwner) {
+      const follow = await prisma.follow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: session.id,
+            followingId: userId,
+          },
+        },
+      });
+      isFollowing = !!follow;
+    }
+
+    // ✅ FIX 2: Filter collections by visibility for NON-OWNERS
+    const collectionWhereClause = isOwner
+      ? { userId, isDraft: false }
+      : {
+          userId,
+          isDraft: false,
+          OR: [
+            { visibility: "PUBLIC" as Visibility },
+            { visibility: "FOLLOWERS" as Visibility }, // Only include if we check follows below
+          ],
+        };
+
+    // ✅ FIX 3: Get collections with post owners for follow checks
     const collections = await prisma.collection.findMany({
-      where: {
-        userId,
-        isDraft: false,
-      },
+      where: collectionWhereClause,
       select: {
         id: true,
         name: true,
@@ -292,7 +436,6 @@ export async function getUserCollections(userId: string) {
             visibility: true,
             userId: true,
             createdAt: true,
-            updatedAt: true,
             user: {
               select: {
                 id: true,
@@ -303,69 +446,53 @@ export async function getUserCollections(userId: string) {
           },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
     });
 
-    const isOwner = session.id === userId;
-
-    // If the session user follows the profile user
-    let isFollowing = false;
+    // ✅ FIX 4: For non-owners, filter FOLLOWERS collections
+    let visibleCollections = collections;
     if (!isOwner) {
-      const follow = await prisma.follow.findUnique({
-        where: {
-          followerId_followingId: {
-            followerId: session.id,
-            followingId: userId,
-          },
-        },
-      });
-      isFollowing = !!follow;
+      visibleCollections = collections.filter(
+        (collection) =>
+          collection.visibility === "PUBLIC" ||
+          (collection.visibility === "FOLLOWERS" && isFollowing)
+      );
     }
 
-    const postOwners = new Set<string>();
-
-    // Filter visible collections + collect post owners
-    const visibleCollections = collections.filter((collection) => {
-      if (isOwner) return true;
-      if (collection.visibility === "PUBLIC") return true;
-      if (collection.visibility === "FOLLOWERS" && isFollowing) return true;
-      return false;
-    });
-
+    // ✅ FIX 5: Collect ALL unique post owners for single follow query
+    const allPostOwners = new Set<string>();
     visibleCollections.forEach((collection) => {
       collection.posts.forEach((post) => {
-        if (post.userId !== session.id) postOwners.add(post.userId);
+        if (post.userId !== session.id) {
+          allPostOwners.add(post.userId);
+        }
       });
     });
 
-    // Check following relationships for post owners
+    // ✅ FIX 6: Single follow query for ALL post owners
     const followingRelations = await prisma.follow.findMany({
       where: {
         followerId: session.id,
-        followingId: { in: Array.from(postOwners) },
+        followingId: { in: Array.from(allPostOwners) },
       },
-      select: {
-        followingId: true,
-      },
+      select: { followingId: true },
     });
     const followingIds = new Set(followingRelations.map((f) => f.followingId));
 
-    // Process each collection: filter posts + sign URLs
+    // ✅ FIX 7: Filter posts by visibility CORRECTLY
     const enhancedCollections = await Promise.all(
       visibleCollections.map(async (collection) => {
         const visiblePosts = await Promise.all(
           collection.posts.map(async (post) => {
             const isPostOwner = post.userId === session.id;
+            const canViewPost =
+              isPostOwner ||
+              post.visibility === "PUBLIC" ||
+              (post.visibility === "FOLLOWERS" &&
+                followingIds.has(post.userId));
 
-            if (post.visibility === "PRIVATE" && !isPostOwner) return null;
-            if (
-              post.visibility === "FOLLOWERS" &&
-              !isPostOwner &&
-              !followingIds.has(post.userId)
-            )
-              return null;
+            // ✅ CRITICAL: Don't leak private post data
+            if (!canViewPost) return null;
 
             const signedCover = post.coverImage
               ? await generatePresignedViewUrl(
@@ -418,7 +545,7 @@ export async function getUserCollections(userId: string) {
 // Fetching a single collection by ID
 export async function getCollectionById(collectionId: string) {
   const session = await getSession();
-  if (!session) {
+  if (!session?.id) {
     return {
       success: false,
       error: { message: "Unauthorized access", code: "UNAUTHORIZED" },
@@ -426,9 +553,27 @@ export async function getCollectionById(collectionId: string) {
   }
 
   try {
-    // Fetch collection with posts and author
-    const collection = await prisma.collection.findUnique({
-      where: { id: collectionId },
+    // ✅ OPTIMIZED: Single query with proper access control
+    const collection = await prisma.collection.findFirst({
+      where: {
+        id: collectionId,
+        // Collection visibility check in single query
+        OR: [
+          { userId: session.id }, // Owner sees all (including drafts)
+          {
+            isDraft: false, // Non-owners only see non-drafts
+            OR: [
+              { visibility: "PUBLIC" },
+              {
+                visibility: "FOLLOWERS",
+                user: {
+                  followers: { some: { followerId: session.id } },
+                },
+              },
+            ],
+          },
+        ],
+      },
       select: {
         id: true,
         name: true,
@@ -464,108 +609,74 @@ export async function getCollectionById(collectionId: string) {
     if (!collection) {
       return {
         success: false,
-        error: { message: "Collection not found", code: "NOT_FOUND" },
+        error: {
+          message: "Collection not found or access denied",
+          code: "NOT_FOUND",
+        },
       };
     }
 
     const isOwner = collection.userId === session.id;
 
-    // Access check for the collection itself
-    if (!isOwner) {
-      if (collection.visibility === "PRIVATE") {
-        return {
-          success: false,
-          error: {
-            message: "You do not have access to this collection",
-            code: "FORBIDDEN",
-          },
-        };
+    // ✅ EFFICIENT: Get unique post owners for follow checks
+    const postOwners = new Set<string>();
+    collection.posts.forEach((post) => {
+      if (post.userId !== session.id) {
+        postOwners.add(post.userId);
       }
+    });
 
-      if (collection.visibility === "FOLLOWERS") {
-        const isFollowing = await prisma.follow.findUnique({
-          where: {
-            followerId_followingId: {
-              followerId: session.id,
-              followingId: collection.userId,
-            },
-          },
-        });
-
-        if (!isFollowing) {
-          return {
-            success: false,
-            error: {
-              message: "You do not have access to this collection",
-              code: "FORBIDDEN",
-            },
-          };
-        }
-      }
-    }
-
-    // -----------------------------
-    // Filter visible posts (optimized)
-    // -----------------------------
-
-    const postOwners = new Set(
-      collection.posts.map((post) =>
-        post.userId !== session.id ? post.userId : null
-      )
-    );
-
-    postOwners.delete(null); // Remove self
-
+    // ✅ SINGLE QUERY: Follow status for all post owners
     let followingIds: Set<string> = new Set();
     if (postOwners.size > 0) {
       const following = await prisma.follow.findMany({
         where: {
           followerId: session.id,
-          followingId: {
-            in: Array.from(postOwners).filter(
-              (owner): owner is string => owner !== null
-            ),
-          },
+          followingId: { in: Array.from(postOwners) },
         },
         select: { followingId: true },
       });
-
       followingIds = new Set(following.map((f) => f.followingId));
     }
 
-    // Filter and map only visible posts
-    const filteredPosts = await Promise.all(
-      collection.posts.map(async (post) => {
-        const isPostOwner = post.userId === session.id;
-    
-        if (post.visibility === "PRIVATE" && !isPostOwner) return null;
-        if (
-          post.visibility === "FOLLOWERS" &&
-          !isPostOwner &&
-          !followingIds.has(post.userId)
-        ) {
-          return null;
-        }
-    
-        const signedCoverImage = post.coverImage
-          ? await generatePresignedViewUrl(extractKeyFromUrl(post.coverImage))
-          : null;
-    
-        const signedAvatar = post.user.avatar
-          ? await generatePresignedViewUrl(extractKeyFromUrl(post.user.avatar))
-          : null;
-    
-        const isSaved = await prisma.savedPost.findFirst({
-          where: {
-            postId: post.id,
-            userId: session.id,
-          },
-        });
-    
+    // ✅ PRE-FILTER: Get visible post IDs for single saved posts query
+    const visiblePosts = collection.posts.filter((post) => {
+      const isPostOwner = post.userId === session.id;
+      return (
+        isPostOwner ||
+        post.visibility === "PUBLIC" ||
+        (post.visibility === "FOLLOWERS" && followingIds.has(post.userId))
+      );
+    });
+
+    const visiblePostIds = visiblePosts.map((post) => post.id);
+
+    // ✅ SINGLE QUERY: Saved status for all visible posts
+    const savedPosts = await prisma.savedPost.findMany({
+      where: {
+        userId: session.id,
+        postId: { in: visiblePostIds },
+      },
+      select: { postId: true },
+    });
+    const savedPostIds = new Set(savedPosts.map((p) => p.postId));
+
+    // ✅ PROCESS: All visible posts with signed URLs
+    const processedPosts = await Promise.all(
+      visiblePosts.map(async (post) => {
+        const [signedCoverImage, signedAvatar] = await Promise.all([
+          post.coverImage
+            ? generatePresignedViewUrl(extractKeyFromUrl(post.coverImage))
+            : null,
+          post.user.avatar
+            ? generatePresignedViewUrl(extractKeyFromUrl(post.user.avatar))
+            : null,
+        ]);
+
         return {
           ...post,
           coverImage: signedCoverImage,
-          isSaved: !!isSaved,
+          isSaved: savedPostIds.has(post.id),
           user: {
             ...post.user,
             avatar: signedAvatar,
@@ -573,45 +684,22 @@ export async function getCollectionById(collectionId: string) {
         };
       })
     );
-    
-    const filteredNonNullPosts = filteredPosts.filter(Boolean);
-    
-    // 🔹 Fetch saved posts for current user
-    const savedPosts = await prisma.savedPost.findMany({
-      where: {
-        userId: session.id,
-        postId: {
-          in: filteredNonNullPosts.map((post) => post!.id),
-        },
-      },
-      select: {
-        postId: true,
-      },
-    });
-    
-    const savedPostIds = new Set(savedPosts.map((p) => p.postId));
-    
-    // 🔹 Add `isSaved` to each post
-    const finalPosts = filteredNonNullPosts.map((post) => ({
-      ...post!,
-      isSaved: savedPostIds.has(post!.id),
-    }));
-    
+
     const signedCollectionCover = collection.coverImage
       ? await generatePresignedViewUrl(extractKeyFromUrl(collection.coverImage))
       : null;
-    
+
     return {
       success: true,
       data: {
         ...collection,
         coverImage: signedCollectionCover,
-        posts: finalPosts,
+        posts: processedPosts,
+        isOwner, // ✅ Now actually used and returned
       },
       message: "Collection fetched successfully",
       code: "SUCCESS",
     };
-    
   } catch (error) {
     console.error("getCollectionById error:", error);
     return {
@@ -639,10 +727,7 @@ export async function getUserCollectionNames(postId: string) {
   }
 
   try {
-    if (
-      !postId ||
-      typeof postId !== "string"
-    ) {
+    if (!postId || typeof postId !== "string") {
       return {
         success: false,
         error: {
@@ -705,7 +790,8 @@ export async function getUserCollectionNames(postId: string) {
 //Server Action for Getting my Own Collection(a single one for allowing updates)
 export async function getMyCollectionById(collectionId: string) {
   const session = await getSession();
-  if (!session) {
+  if (!session?.id) {
+    // ✅ FIX 1: Check session.id
     return {
       success: false,
       error: { message: "Unauthorized", code: "UNAUTHORIZED" },
@@ -713,7 +799,6 @@ export async function getMyCollectionById(collectionId: string) {
   }
 
   try {
-    // Validate input
     if (!collectionId || typeof collectionId !== "string") {
       return {
         success: false,
@@ -721,21 +806,31 @@ export async function getMyCollectionById(collectionId: string) {
       };
     }
 
-    // Fetch collection with ownership check
+    // ✅ FIX 2: Fetch collection with ownership check
     const collection = await prisma.collection.findUnique({
       where: {
         id: collectionId,
         userId: session.id,
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        coverImage: true,
+        visibility: true,
+        isDraft: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true,
         posts: {
-          where: { isDraft: false },
+          where: { isDraft: false }, // Only non-draft posts
           select: {
             id: true,
             title: true,
             description: true,
             coverImage: true,
             visibility: true,
+            userId: true, // ✅ NEEDED for access checks
             createdAt: true,
             updatedAt: true,
             user: {
@@ -761,6 +856,38 @@ export async function getMyCollectionById(collectionId: string) {
       };
     }
 
+    // ✅ FIX 3: Filter posts by visibility/access
+    const postOwners = new Set<string>();
+    collection.posts.forEach((post) => {
+      if (post.userId !== session.id) {
+        postOwners.add(post.userId);
+      }
+    });
+
+    // ✅ FIX 4: Check follow relationships for follower-only posts
+    let followingIds: Set<string> = new Set();
+    if (postOwners.size > 0) {
+      const following = await prisma.follow.findMany({
+        where: {
+          followerId: session.id,
+          followingId: { in: Array.from(postOwners) },
+        },
+        select: { followingId: true },
+      });
+      followingIds = new Set(following.map((f) => f.followingId));
+    }
+
+    // ✅ FIX 5: Filter visible posts
+    const visiblePosts = collection.posts.filter((post) => {
+      const isPostOwner = post.userId === session.id;
+      return (
+        isPostOwner ||
+        post.visibility === "PUBLIC" ||
+        (post.visibility === "FOLLOWERS" && followingIds.has(post.userId))
+      );
+      // ❌ PRIVATE posts from other users are FILTERED OUT
+    });
+
     // Helper function to extract key and generate signed URL
     const getSignedUrl = async (url: string | null) => {
       if (!url) return null;
@@ -769,23 +896,25 @@ export async function getMyCollectionById(collectionId: string) {
         return await generatePresignedViewUrl(key);
       } catch (error) {
         console.error(`Failed to sign URL: ${url}`, error);
-        return null; // Fail gracefully
+        return null;
       }
     };
 
     // Process all images in parallel
     const [collectionCover, ...postCovers] = await Promise.all([
       getSignedUrl(collection.coverImage),
-      ...collection.posts.map((post) => getSignedUrl(post.coverImage)),
+      ...visiblePosts.map((post) => getSignedUrl(post.coverImage)),
     ]);
 
     // Transform data with signed URLs
     const transformedData = {
       ...collection,
       coverImage: collectionCover,
-      posts: collection.posts.map((post, index) => ({
+      posts: visiblePosts.map((post, index) => ({
         ...post,
         coverImage: postCovers[index],
+        // ✅ OPTIONAL: Add restricted flag for consistent UI
+        restricted: false, // All posts here are accessible
       })),
     };
 
@@ -871,7 +1000,8 @@ export async function getMyCollections() {
 //For Getting my own Collections, Draft Private, etc. etc.
 export async function getMyOwnCollections() {
   const session = await getSession();
-  if (!session) {
+  if (!session?.id) {
+    // ✅ FIX 1: Check session.id specifically
     return {
       success: false,
       error: {
@@ -882,7 +1012,7 @@ export async function getMyOwnCollections() {
   }
 
   try {
-    // Fetch all collections owned by the user
+    // ✅ FIX 2: Optimized query - use _count instead of loading posts
     const collections = await prisma.collection.findMany({
       where: {
         userId: session.id,
@@ -896,9 +1026,10 @@ export async function getMyOwnCollections() {
         isDraft: true,
         createdAt: true,
         updatedAt: true,
-        posts: {
+        // ✅ OPTIMIZED: Use _count instead of loading all post objects
+        _count: {
           select: {
-            id: true,
+            posts: true, // Or add filter: posts: { where: { isDraft: false } }
           },
         },
       },
@@ -907,31 +1038,46 @@ export async function getMyOwnCollections() {
       },
     });
 
-    // Enhance collections with signed cover images
+    // ✅ FIX 3: Enhanced with signed cover images
     const enhanced = await Promise.all(
       collections.map(async (col) => {
         let signedCover = null;
         if (col.coverImage) {
           try {
-            // Use your existing extractKeyFromUrl function
             const key = extractKeyFromUrl(col.coverImage);
             signedCover = await generatePresignedViewUrl(key);
           } catch (error) {
-            console.error("Failed to sign cover image URL:", error);
-            // Fallback to original URL if signing fails
-            signedCover = col.coverImage;
+            console.error(
+              `Failed to sign cover image for collection ${col.id}:`,
+              error
+            );
+            signedCover = col.coverImage; // Fallback
           }
         }
 
         return {
-          ...col,
+          id: col.id,
+          name: col.name,
+          description: col.description,
           coverImage: signedCover,
-          postCount: col.posts.length,
-          // Remove posts array if not needed in response
-          posts: undefined,
+          visibility: col.visibility,
+          isDraft: col.isDraft,
+          createdAt: col.createdAt,
+          updatedAt: col.updatedAt,
+          postCount: col._count.posts, // ✅ From optimized _count
         };
       })
     );
+
+    // ✅ FIX 4: Better empty state handling
+    if (enhanced.length === 0) {
+      return {
+        success: true,
+        data: [],
+        message: "No collections found",
+        code: "NO_COLLECTIONS_FOUND",
+      };
+    }
 
     return {
       success: true,
@@ -973,18 +1119,45 @@ export async function updateCollection({
   tempImageKey,
 }: UpdateCollectionParams) {
   try {
-    // Validate required fields
-    if (!collectionId) {
-      throw new Error("Collection ID is required");
+    // 🔐 FIX 1: Add Authentication
+    const user = await getSession();
+    if (!user?.id) {
+      return {
+        success: false,
+        error: {
+          message: "Unauthorized access",
+          code: "UNAUTHORIZED",
+        },
+      };
     }
 
-    // Check if collection exists
-    const existingCollection = await prisma.collection.findUnique({
-      where: { id: collectionId },
+    // ✅ FIX 2: Input Validation
+    if (!collectionId) {
+      return {
+        success: false,
+        error: {
+          message: "Collection ID is required",
+          code: "INVALID_INPUT",
+        },
+      };
+    }
+
+    // 🔐 FIX 3: Check Collection Ownership
+    const existingCollection = await prisma.collection.findFirst({
+      where: {
+        id: collectionId,
+        userId: user.id, // ✅ Only user's own collections
+      },
     });
 
     if (!existingCollection) {
-      throw new Error("Collection not found");
+      return {
+        success: false,
+        error: {
+          message: "Collection not found",
+          code: "NOT_FOUND",
+        },
+      };
     }
 
     let finalCoverImage = coverImage;
@@ -1000,14 +1173,26 @@ export async function updateCollection({
         finalCoverImage = await changeFileVisibility(tempImageKey);
       } catch (error) {
         console.error("Failed to move cover image:", error);
-        throw new Error("Failed to process cover image");
+        return {
+          success: false,
+          error: {
+            message: "Failed to process cover image",
+            code: "IMAGE_PROCESSING_ERROR",
+          },
+        };
       }
     }
 
     // Validate visibility against enum values
-    const validVisibilities = ["PUBLIC", "PRIVATE", "FOLLOWERS"]; // Replace with actual valid values
+    const validVisibilities = ["PUBLIC", "PRIVATE", "FOLLOWERS"];
     if (visibility && !validVisibilities.includes(visibility)) {
-      throw new Error("Invalid visibility value");
+      return {
+        success: false,
+        error: {
+          message: "Invalid visibility value",
+          code: "INVALID_INPUT",
+        },
+      };
     }
 
     // Prepare update data
@@ -1034,9 +1219,12 @@ export async function updateCollection({
       };
     }
 
-    // Perform the update
+    // 🔐 FIX 4: Secure Update with Ownership Check
     const updatedCollection = await prisma.collection.update({
-      where: { id: collectionId },
+      where: {
+        id: collectionId,
+        userId: user.id, // ✅ Prevent unauthorized updates
+      },
       data: updateData,
     });
 
@@ -1054,7 +1242,7 @@ export async function updateCollection({
         return {
           success: false,
           error: {
-            message: "Collection not found",
+            message: "Collection not found or access denied",
             code: "NOT_FOUND",
           },
         };
