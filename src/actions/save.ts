@@ -134,20 +134,18 @@ export async function getSavedPosts({
   if (!session?.id) {
     return {
       success: false,
-      error: {
-        message: "Unauthorized",
-        code: "UNAUTHORIZED",
-      },
+      error: { message: "Unauthorized", code: "UNAUTHORIZED" },
     };
   }
 
   try {
     const skip = (page - 1) * limit;
+    const currentUserId = session.id;
 
     const [total, savedPosts] = await Promise.all([
       prisma.savedPost.count({
         where: {
-          userId: session.id,
+          userId: currentUserId,
           post: {
             ...(search.trim() && {
               OR: [
@@ -160,7 +158,7 @@ export async function getSavedPosts({
       }),
       prisma.savedPost.findMany({
         where: {
-          userId: session.id,
+          userId: currentUserId,
           post: {
             ...(search.trim() && {
               OR: [
@@ -177,68 +175,71 @@ export async function getSavedPosts({
           post: {
             include: {
               user: {
-                select: {
-                  id: true,
-                  username: true,
-                  avatar: true,
-                },
+                select: { id: true, username: true, avatar: true },
               },
               images: true,
+              // ✅ ADDED: Interaction counts
               _count: {
-                select: {
-                  likes: true,
-                  comments: true,
-                },
+                select: { likes: true, comments: true },
               },
+              // ✅ ADDED: Personal interaction state
+              likes: { where: { userId: currentUserId } },
             },
           },
         },
       }),
     ]);
 
+    // 1. Extract posts and filter visibility
     const visiblePosts = savedPosts
       .map(({ post }) => post)
       .filter((post) => {
         if (post.visibility === "PUBLIC") return true;
-        if (post.userId === session.id) return true;
-        // Add additional visibility checks if needed
+        if (post.userId === currentUserId) return true;
         return false;
       });
-      for (const post of visiblePosts) {
-        // Sign coverImage if it exists
-        if (post.coverImage) {
-          const key = extractKeyFromUrl(post.coverImage);
-          post.coverImage = await generatePresignedViewUrl(key);
-        }
-      
-        // Sign each image URL
-        post.images = await Promise.all(
-          post.images.map(async (image) => {
-            const key = extractKeyFromUrl(image.url);
-            const signedUrl = await generatePresignedViewUrl(key);
-            return {
-              ...image,
-              url: signedUrl,
-            };
-          })
-        );
-      
-        // Optionally: sign user.avatar
-        if (post.user?.avatar) {
-          const key = extractKeyFromUrl(post.user.avatar);
-          post.user.avatar = await generatePresignedViewUrl(key);
-        }
-      }
-      
-      
+
+    // Helper for S3 signing
+    const signUrl = async (url: string | null) => {
+      if (!url) return null;
+      try {
+        return await generatePresignedViewUrl(extractKeyFromUrl(url));
+      } catch { return url; }
+    };
+
+    // 2. ✅ Parallel Image Signing & Data Transformation
+    const transformedPosts = await Promise.all(
+      visiblePosts.map(async (post) => {
+        const [signedCover, signedAvatar, signedImages] = await Promise.all([
+          signUrl(post.coverImage),
+          signUrl(post.user.avatar),
+          Promise.all(post.images.map(async (img) => ({
+            ...img,
+            url: await signUrl(img.url)
+          })))
+        ]);
+
+        return {
+          ...post,
+          coverImage: signedCover,
+          createdAt: post.createdAt.toISOString(),
+          updatedAt: post.updatedAt.toISOString(),
+          user: {
+            ...post.user,
+            avatar: signedAvatar
+          },
+          images: signedImages,
+          // ✅ ADDED: Explicit booleans for Snippet
+          isSaved: true, // They are coming from the SavedPost table
+          isLiked: post.likes.length > 0,
+        };
+      })
+    );
 
     return {
       success: true,
       data: {
-        posts: visiblePosts.map((post) => ({
-          ...post,
-          isSaved: true, // Since these are saved posts
-        })),
+        posts: transformedPosts,
         pagination: {
           page,
           limit,
@@ -252,10 +253,7 @@ export async function getSavedPosts({
     console.error("getSavedPosts error:", error);
     return {
       success: false,
-      error: {
-        message: "Internal server error",
-        code: "SERVER_ERROR",
-      },
+      error: { message: "Internal server error", code: "SERVER_ERROR" },
     };
   }
 }

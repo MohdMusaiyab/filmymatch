@@ -6,6 +6,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Snippet } from "@/app/components/ui/Snippet";
 import { Post } from "@/types/Post";
+import { useSession } from "next-auth/react"; // Add this to handle ownership
 import {
   Plus, 
   Search,
@@ -38,6 +39,7 @@ interface ApiResponse {
 const PostsPage = () => {
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
+  const { data: session } = useSession(); // Get the current user session
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
@@ -59,6 +61,7 @@ const PostsPage = () => {
       setLoading(true);
       setError(null);
 
+      // Note: This matches the API route we just optimized
       const response = await api.get<ApiResponse>(
         "/posts/my-posts?page=1&limit=20"
       );
@@ -70,7 +73,7 @@ const PostsPage = () => {
       const postsData = response.data.data.posts || [];
       setPosts(postsData);
 
-      // Calculate stats
+      // Stats calculation remains the same...
       setStats({
         total: postsData.length,
         published: postsData.filter((p) => !p.isDraft).length,
@@ -360,15 +363,16 @@ const PostsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPosts.map((post) => (
                 <div key={post.id} className="h-full">
-                  <Snippet
-                    post={{
-                      ...post,
-                      linkTo: `/dashboard/my-posts/${post.id}`,
-                    }}
-                    menuOpen={menuOpen}
-                    toggleMenu={toggleMenu}
-                    showActions={true}
-                  />
+                 <Snippet
+                post={{
+                  ...post,
+                  linkTo: `/dashboard/my-posts/${post.id}`,
+                  // isLiked and isSaved are now coming directly from response.data.data.posts
+                }}
+                userId={session?.user?.id} // IMPORTANT: Pass this to show Edit/Delete buttons
+                menuOpen={menuOpen}
+                toggleMenu={toggleMenu}
+              />
                 </div>
               ))}
             </div>

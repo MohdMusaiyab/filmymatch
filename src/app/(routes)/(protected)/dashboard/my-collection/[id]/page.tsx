@@ -33,24 +33,35 @@ import Image from "next/image";
 import { Snippet } from "@/app/components/ui/Snippet";
 import Button from "@/app/components/Button";
 import Dropdown from "@/app/components/inputFields/Dropdown";
+
 const DEFAULT_COVER_IMAGE =
   "https://thumbs.dreamstime.com/b/book-open-cover-reveals-tree-growing-its-pages-bathed-radiant-light-ideal-fantasy-nature-themed-book-354676529.jpg";
-interface Post {
+
+export interface Post {
   id: string;
   title: string;
-  description: string | null;
+  description: string;
   visibility: "PUBLIC" | "PRIVATE" | "FOLLOWERS";
   coverImage: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   user: {
     id: string;
     username: string;
     avatar: string | null;
   };
+  isLiked: boolean;
+  isSaved: boolean;
+  _count: {
+    likes: number;
+    comments: number;
+  };
+  images?: { id: string; url: string; description?: string | null }[];
+  tags?: string[];
+  isDraft?: boolean;
 }
 
-interface CollectionData {
+export interface CollectionData {
   id: string;
   name: string;
   description: string | null;
@@ -59,8 +70,8 @@ interface CollectionData {
   visibility: "PUBLIC" | "PRIVATE" | "FOLLOWERS";
   userId: string;
   posts: Post[];
-  updatedAt: Date;
-  createdAt: Date;
+  updatedAt: string;
+  createdAt: string;
 }
 
 export default function CollectionDetailsPage() {
@@ -149,8 +160,9 @@ export default function CollectionDetailsPage() {
         throw new Error("Collection data not found");
       }
 
-      setCollection(response.data);
-      setEditData(response.data);
+      // We cast here because the Server Action now returns strings for dates, matching our interface
+      setCollection(response.data as unknown as CollectionData);
+      setEditData(response.data as unknown as CollectionData);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unexpected error occurred";
@@ -265,6 +277,7 @@ export default function CollectionDetailsPage() {
   useEffect(() => {
     fetchCollection();
   }, [collectionId, fetchCollection]);
+
   const handleDeleteCollection = async () => {
     if (!collectionId || !collection) return;
 
@@ -289,6 +302,7 @@ export default function CollectionDetailsPage() {
       toast.error("Failed to delete collection");
     }
   };
+
   if (loading && !collection) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -297,12 +311,8 @@ export default function CollectionDetailsPage() {
             <div className="w-16 h-16 border-4 border-[#5865F2]/20 rounded-full"></div>
             <div className="w-16 h-16 border-4 border-[#5865F2] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
           </div>
-          <p className="mt-4 text-gray-600 font-medium">
-            Loading collection...
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Fetching your curated content
-          </p>
+          <p className="mt-4 text-gray-600 font-medium">Loading collection...</p>
+          <p className="text-sm text-gray-500 mt-1">Fetching your curated content</p>
         </div>
       </div>
     );
@@ -316,9 +326,7 @@ export default function CollectionDetailsPage() {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Collection Not Found
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Collection Not Found</h3>
             <p className="text-gray-600 mb-6">{error}</p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
@@ -344,12 +352,9 @@ export default function CollectionDetailsPage() {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <FileText className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Collection Not Available
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Collection Not Available</h3>
             <p className="text-gray-600 mb-6">
-              This collection may have been deleted or you don&apos;t have
-              access to it.
+              This collection may have been deleted or you don&apos;t have access to it.
             </p>
             <Button
               onClick={() => router.push("/dashboard/my-collection")}
@@ -363,35 +368,6 @@ export default function CollectionDetailsPage() {
       </div>
     );
   }
-
-  // Helper function to format post for Snippet component
-  const formatPostForSnippet = (post: Post) => {
-    return {
-      id: post.id,
-      title: post.title || "Untitled Post",
-      description: post.description || "",
-      category: "UNKNOWN",
-      visibility: post.visibility,
-      coverImage: post.coverImage || undefined,
-      user: {
-        id: post.user.id,
-        username: post.user.username || "Unknown",
-        avatar: post.user.avatar || undefined,
-      },
-      images: [],
-      _count: {
-        likes: 0,
-        comments: 0,
-      },
-      createdAt: post.createdAt.toISOString(),
-      tags: [],
-      isDraft: false,
-      isSaved: true,
-      linkTo: `/explore/post/${post.id}`,
-      // Ensure all required properties are included
-      updatedAt: post.updatedAt.toISOString(),
-    };
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -410,53 +386,31 @@ export default function CollectionDetailsPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Collection Details
-              </h1>
-              <p className="text-gray-600">
-                Manage and organize your curated snippets
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Collection Details</h1>
+              <p className="text-gray-600">Manage and organize your curated snippets</p>
             </div>
 
             <div className="flex items-center gap-3">
               {isEditing ? (
                 <>
-                  <Button
-                    onClick={handleCancel}
-                    variant="outline"
-                    icon={<X className="w-4 h-4" />}
-                  >
+                  <Button onClick={handleCancel} variant="outline" icon={<X className="w-4 h-4" />}>
                     Cancel
                   </Button>
                   <Button
                     onClick={handleSave}
                     variant="theme-primary"
                     disabled={isSaving}
-                    icon={
-                      isSaving ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Check className="w-4 h-4" />
-                      )
-                    }
+                    icon={isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   >
                     {isSaving ? "Saving..." : "Save Changes"}
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button
-                    onClick={() => setIsEditing(true)}
-                    variant="theme-primary"
-                    icon={<Edit className="w-4 h-4" />}
-                  >
+                  <Button onClick={() => setIsEditing(true)} variant="theme-primary" icon={<Edit className="w-4 h-4" />}>
                     Edit Collection
                   </Button>
-                  <Button
-                    onClick={handleDeleteCollection}
-                    variant="danger"
-                    icon={<Trash2 className="w-4 h-4" />}
-                  >
+                  <Button onClick={handleDeleteCollection} variant="danger" icon={<Trash2 className="w-4 h-4" />}>
                     Delete Collection
                   </Button>
                 </>
@@ -466,14 +420,12 @@ export default function CollectionDetailsPage() {
         </div>
 
         {/* Stats Bar */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Total Posts</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {collection.posts.length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{collection.posts.length}</p>
               </div>
               <div className="w-10 h-10 bg-[#5865F2]/10 rounded-lg flex items-center justify-center">
                 <FileText className="w-5 h-5 text-[#5865F2]" />
@@ -535,7 +487,6 @@ export default function CollectionDetailsPage() {
 
         {/* Collection Details Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-8">
-          {/* Cover Image */}
           <div className="relative">
             {isEditing ? (
               <div
@@ -546,13 +497,7 @@ export default function CollectionDetailsPage() {
               >
                 <input {...getInputProps()} />
                 {editData.coverImage ? (
-                  <Image
-                    src={editData.coverImage}
-                    alt={editData.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
+                  <Image src={editData.coverImage} alt={editData.name} fill className="object-cover" unoptimized />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <ImageIcon className="w-12 h-12 text-gray-400" />
@@ -562,14 +507,11 @@ export default function CollectionDetailsPage() {
                   <div className="text-center p-4">
                     <Upload className="w-8 h-8 text-white mx-auto mb-2" />
                     <p className="text-white text-sm">
-                      {isDragActive
-                        ? "Drop to upload"
-                        : "Click or drag to upload cover"}
+                      {isDragActive ? "Drop to upload" : "Click or drag to upload cover"}
                     </p>
                     {isUploading && (
                       <p className="mt-2 text-sm text-white flex items-center justify-center gap-2">
-                        <Loader2 size={16} className="animate-spin" />{" "}
-                        Uploading...
+                        <Loader2 size={16} className="animate-spin" /> Uploading...
                       </p>
                     )}
                   </div>
@@ -577,7 +519,6 @@ export default function CollectionDetailsPage() {
               </div>
             ) : (
               <div className="relative h-64 bg-gray-50">
-                collection.coverImage ?
                 <Image
                   src={collection.coverImage || DEFAULT_COVER_IMAGE}
                   alt={collection.name}
@@ -589,60 +530,43 @@ export default function CollectionDetailsPage() {
             )}
           </div>
 
-          {/* Collection Info */}
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Name & Description */}
               <div className="lg:col-span-2 space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Collection Name
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Collection Name</label>
                   {isEditing ? (
                     <input
                       type="text"
                       value={editData.name}
-                      onChange={(e) =>
-                        handleFieldChange("name", e.target.value)
-                      }
+                      onChange={(e) => handleFieldChange("name", e.target.value)}
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5865F2] focus:border-transparent"
                       placeholder="Enter collection name"
                     />
                   ) : (
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {collection.name}
-                    </h2>
+                    <h2 className="text-2xl font-bold text-gray-900">{collection.name}</h2>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Description
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Description</label>
                   {isEditing ? (
                     <textarea
                       value={editData.description || ""}
-                      onChange={(e) =>
-                        handleFieldChange("description", e.target.value)
-                      }
+                      onChange={(e) => handleFieldChange("description", e.target.value)}
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5865F2] focus:border-transparent resize-none"
                       rows={3}
                       placeholder="Describe your collection..."
                     />
                   ) : (
-                    <p className="text-gray-600">
-                      {collection.description || "No description provided"}
-                    </p>
+                    <p className="text-gray-600">{collection.description || "No description provided"}</p>
                   )}
                 </div>
               </div>
 
-              {/* Right Column - Settings */}
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Visibility Settings
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Visibility Settings</label>
                   {isEditing ? (
                     <div className="space-y-3">
                       <div className="flex items-center p-4 border border-gray-200 rounded-lg">
@@ -650,9 +574,7 @@ export default function CollectionDetailsPage() {
                           type="checkbox"
                           id="draft"
                           checked={editData.isDraft}
-                          onChange={(e) =>
-                            handleFieldChange("isDraft", e.target.checked)
-                          }
+                          onChange={(e) => handleFieldChange("isDraft", e.target.checked)}
                           className="rounded text-[#5865F2] focus:ring-[#5865F2] h-5 w-5"
                         />
                         <label htmlFor="draft" className="ml-3 text-gray-900">
@@ -663,25 +585,13 @@ export default function CollectionDetailsPage() {
                       <Dropdown
                         label="Visibility"
                         options={[
-                          {
-                            value: "PRIVATE",
-                            label: "Private - Only you can see",
-                          },
-                          {
-                            value: "FOLLOWERS",
-                            label: "Followers - Visible to followers",
-                          },
-                          {
-                            value: "PUBLIC",
-                            label: "Public - Everyone can see",
-                          },
+                          { value: "PRIVATE", label: "Private - Only you can see" },
+                          { value: "FOLLOWERS", label: "Followers - Visible to followers" },
+                          { value: "PUBLIC", label: "Public - Everyone can see" },
                         ]}
                         value={editData.visibility}
                         onChange={(e) =>
-                          handleFieldChange(
-                            "visibility",
-                            e.target.value as "PUBLIC" | "PRIVATE" | "FOLLOWERS"
-                          )
+                          handleFieldChange("visibility", e.target.value as "PUBLIC" | "PRIVATE" | "FOLLOWERS")
                         }
                       />
                     </div>
@@ -698,25 +608,21 @@ export default function CollectionDetailsPage() {
                       >
                         {collection.visibility === "PUBLIC" ? (
                           <>
-                            <Globe className="w-4 h-4 mr-2" />
-                            Public
+                            <Globe className="w-4 h-4 mr-2" /> Public
                           </>
                         ) : collection.visibility === "FOLLOWERS" ? (
                           <>
-                            <Users className="w-4 h-4 mr-2" />
-                            Followers Only
+                            <Users className="w-4 h-4 mr-2" /> Followers Only
                           </>
                         ) : (
                           <>
-                            <Lock className="w-4 h-4 mr-2" />
-                            Private
+                            <Lock className="w-4 h-4 mr-2" /> Private
                           </>
                         )}
                       </div>
                       {collection.isDraft && (
                         <div className="inline-flex items-center px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg">
-                          <AlertCircle className="w-4 h-4 mr-2" />
-                          Draft
+                          <AlertCircle className="w-4 h-4 mr-2" /> Draft
                         </div>
                       )}
                     </div>
@@ -732,42 +638,29 @@ export default function CollectionDetailsPage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-1">
-                  Collection Posts
-                </h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-1">Collection Posts</h2>
                 <p className="text-gray-600">
-                  {collection.posts.length}{" "}
-                  {collection.posts.length === 1 ? "snippet" : "snippets"} in
-                  this collection
+                  {collection.posts.length} {collection.posts.length === 1 ? "snippet" : "snippets"} in this collection
                 </p>
               </div>
               {isEditing && collection.posts.length > 0 && (
                 <div className="text-sm text-gray-500">
-                  Click the remove icon on any post to delete it from this
-                  collection
+                  Click the remove icon on any post to delete it from this collection
                 </div>
               )}
             </div>
           </div>
 
-          {/* Posts Grid */}
           {collection.posts.length === 0 ? (
             <div className="p-12 text-center">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No posts yet
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No posts yet</h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Add snippets to this collection to organize your favorite
-                content.
+                Add snippets to this collection to organize your favorite content.
               </p>
-              <Button
-                onClick={() => router.push("/explore")}
-                variant="theme-primary"
-                icon={<Plus className="w-5 h-5" />}
-              >
+              <Button onClick={() => router.push("/explore")} variant="theme-primary" icon={<Plus className="w-5 h-5" />}>
                 Explore Snippets
               </Button>
             </div>
@@ -776,7 +669,6 @@ export default function CollectionDetailsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {collection.posts.map((post) => (
                   <div key={post.id} className="relative group">
-                    {/* Remove Button (only in edit mode) */}
                     {isEditing && (
                       <button
                         onClick={() => handleRemovePost(post.id)}
@@ -792,12 +684,12 @@ export default function CollectionDetailsPage() {
                       </button>
                     )}
 
-                    {/* Snippet Component with properly formatted post */}
+                    {/* No manual formatting needed - Server Action provides valid Post objects */}
                     <Snippet
-                      post={formatPostForSnippet(post)}
+                      post={post}
+                      userId={collection.userId}
                       menuOpen={menuOpen}
                       toggleMenu={toggleMenu}
-                      showActions={true}
                     />
                   </div>
                 ))}
@@ -805,24 +697,15 @@ export default function CollectionDetailsPage() {
             </div>
           )}
 
-          {/* Footer */}
           <div className="p-6 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <p className="text-sm text-gray-600">
-                  Showing {collection.posts.length} posts in this collection
-                </p>
+                <p className="text-sm text-gray-600">Showing {collection.posts.length} posts in this collection</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {collection.isDraft
-                    ? "Draft collection"
-                    : "Published collection"}
+                  {collection.isDraft ? "Draft collection" : "Published collection"}
                 </p>
               </div>
-              <Button
-                onClick={() => router.push("/explore")}
-                variant="outline"
-                icon={<Plus className="w-4 h-4" />}
-              >
+              <Button onClick={() => router.push("/explore")} variant="outline" icon={<Plus className="w-4 h-4" />}>
                 Add More Snippets
               </Button>
             </div>

@@ -30,7 +30,9 @@ interface SavedPost {
   category: string;
   tags: string[];
   createdAt: string;
+  updatedAt: string; // Added
   isSaved: boolean;
+  isLiked: boolean;  // Added - This fixes the TS error
   linkTo?: string;
 }
 
@@ -85,19 +87,6 @@ export default function SavedPostsPage() {
     fetchSavedPosts();
   }, [fetchSavedPosts]);
 
-  const handleUnsave = async (postId: string) => {
-    try {
-      await api.delete(`/posts/${postId}/save`, {
-        withCredentials: true,
-      });
-      
-      setSavedPosts((prev) => prev.filter((p) => p.id !== postId));
-      toast.success("Removed from saved");
-    } catch (error) {
-      console.error("Failed to unsave post:", error);
-      toast.error("Failed to remove from saved");
-    }
-  };
 
   const handleUnsaveAll = async () => {
     if (!confirm("Are you sure you want to remove all saved posts?")) return;
@@ -310,28 +299,16 @@ export default function SavedPostsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPosts.map((post) => (
                 <div key={post.id} className="h-full">
-                  <Snippet
-                    post={{
-                      ...post,
-                      linkTo: `/explore/post/${post.id}`,
-                      isSaved: true,
-                    }}
-                    menuOpen={menuOpen}
-                    toggleMenu={toggleMenu}
-                    showActions={true}
-                  />
-                  <div className="mt-3">
-                    <Button
-                      onClick={() => handleUnsave(post.id)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      icon={<BookmarkCheck className="w-4 h-4" />}
-                    >
-                      Remove from Saved
-                    </Button>
-                  </div>
-                </div>
+  <Snippet
+    post={{
+      ...post,
+      linkTo: `/explore/post/${post.id}`,
+    }}
+    // userId={...} // Add this if you want to show Edit/Delete for your own saved posts
+    menuOpen={menuOpen}
+    toggleMenu={toggleMenu}
+  />
+</div>
               ))}
             </div>
 

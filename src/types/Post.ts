@@ -4,11 +4,11 @@ export interface Post {
   description: string;
   category: string;
   visibility: string;
-  coverImage?: string; // ✅ Make optional to match usage
+  coverImage?: string;
   user: {
     id: string;
     username: string;
-    avatar?: string | null; // ✅ Make optional to match usage
+    avatar?: string | null;
   };
   images: {
     id: string;
@@ -22,6 +22,9 @@ export interface Post {
   createdAt: string;
   tags?: string[];
   isDraft?: boolean;
-  linkTo?: string; // ✅ new prop to allow dynamic link
-  isSaved: boolean; 
+  linkTo?: string;
+  
+  // --- ADD THESE TWO LINES ---
+  isLiked: boolean;   // Marks if the current user has liked this
+  isSaved: boolean;   // Marks if the current user has saved this
 }

@@ -1,3 +1,4 @@
+
 export interface Collection {
   id: string;
   name: string;
@@ -25,16 +26,18 @@ export interface Highlight {
 }
 
 export interface Draft {
-  id: number;
+  id: string;
   title: string;
-  description?: string | null;
-  type: string;
-  status: string;
-  timeAgo: string;
-  icon: string;
+  description: string;
+  coverImage: string | null;
+  visibility: string;
+  isDraft: boolean;
+  category: string;
+  tags: string[];
+  userId: string;
   createdAt: string;
+  updatedAt: string;
 }
-
 export type ActiveTab = 'home' | 'explore' | 'library' | 'saved';
 
 export type Visibility = 'public' | 'private' | 'followers' | 'draft';

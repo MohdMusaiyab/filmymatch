@@ -790,8 +790,9 @@ export async function getUserCollectionNames(postId: string) {
 //Server Action for Getting my Own Collection(a single one for allowing updates)
 export async function getMyCollectionById(collectionId: string) {
   const session = await getSession();
-  if (!session?.id) {
-    // ✅ FIX 1: Check session.id
+  const currentUserId = session?.id;
+
+  if (!currentUserId) {
     return {
       success: false,
       error: { message: "Unauthorized", code: "UNAUTHORIZED" },
@@ -806,11 +807,10 @@ export async function getMyCollectionById(collectionId: string) {
       };
     }
 
-    // ✅ FIX 2: Fetch collection with ownership check
     const collection = await prisma.collection.findUnique({
       where: {
         id: collectionId,
-        userId: session.id,
+        userId: currentUserId,
       },
       select: {
         id: true,
@@ -823,14 +823,14 @@ export async function getMyCollectionById(collectionId: string) {
         updatedAt: true,
         userId: true,
         posts: {
-          where: { isDraft: false }, // Only non-draft posts
+          where: { isDraft: false },
           select: {
             id: true,
             title: true,
             description: true,
             coverImage: true,
             visibility: true,
-            userId: true, // ✅ NEEDED for access checks
+            userId: true,
             createdAt: true,
             updatedAt: true,
             user: {
@@ -840,6 +840,13 @@ export async function getMyCollectionById(collectionId: string) {
                 avatar: true,
               },
             },
+            // ✅ ADDED: Interaction counts for Snippet
+            _count: {
+              select: { likes: true, comments: true }
+            },
+            // ✅ ADDED: Personal interaction state
+            likes: { where: { userId: currentUserId } },
+            savedBy: { where: { userId: currentUserId } },
           },
           orderBy: { updatedAt: "desc" },
         },
@@ -849,27 +856,21 @@ export async function getMyCollectionById(collectionId: string) {
     if (!collection) {
       return {
         success: false,
-        error: {
-          message: "Collection not found or access denied",
-          code: "NOT_FOUND",
-        },
+        error: { message: "Collection not found", code: "NOT_FOUND" },
       };
     }
 
-    // ✅ FIX 3: Filter posts by visibility/access
+    // Process visibility logic (Same as your previous fix)
     const postOwners = new Set<string>();
     collection.posts.forEach((post) => {
-      if (post.userId !== session.id) {
-        postOwners.add(post.userId);
-      }
+      if (post.userId !== currentUserId) postOwners.add(post.userId);
     });
 
-    // ✅ FIX 4: Check follow relationships for follower-only posts
     let followingIds: Set<string> = new Set();
     if (postOwners.size > 0) {
       const following = await prisma.follow.findMany({
         where: {
-          followerId: session.id,
+          followerId: currentUserId,
           followingId: { in: Array.from(postOwners) },
         },
         select: { followingId: true },
@@ -877,63 +878,60 @@ export async function getMyCollectionById(collectionId: string) {
       followingIds = new Set(following.map((f) => f.followingId));
     }
 
-    // ✅ FIX 5: Filter visible posts
     const visiblePosts = collection.posts.filter((post) => {
-      const isPostOwner = post.userId === session.id;
+      const isPostOwner = post.userId === currentUserId;
       return (
         isPostOwner ||
         post.visibility === "PUBLIC" ||
         (post.visibility === "FOLLOWERS" && followingIds.has(post.userId))
       );
-      // ❌ PRIVATE posts from other users are FILTERED OUT
     });
 
-    // Helper function to extract key and generate signed URL
-    const getSignedUrl = async (url: string | null) => {
+    // Helper for S3 signing
+    const signUrl = async (url: string | null) => {
       if (!url) return null;
       try {
-        const key = extractKeyFromUrl(url);
-        return await generatePresignedViewUrl(key);
-      } catch (error) {
-        console.error(`Failed to sign URL: ${url}`, error);
-        return null;
-      }
+        return await generatePresignedViewUrl(extractKeyFromUrl(url));
+      } catch { return url; }
     };
 
-    // Process all images in parallel
-    const [collectionCover, ...postCovers] = await Promise.all([
-      getSignedUrl(collection.coverImage),
-      ...visiblePosts.map((post) => getSignedUrl(post.coverImage)),
-    ]);
+    // ✅ FIX: Process all images including User Avatars in parallel
+    const collectionCover = await signUrl(collection.coverImage);
 
-    // Transform data with signed URLs
-    const transformedData = {
-      ...collection,
-      coverImage: collectionCover,
-      posts: visiblePosts.map((post, index) => ({
+    const transformedPosts = await Promise.all(visiblePosts.map(async (post) => {
+      const [signedPostCover, signedAvatar] = await Promise.all([
+        signUrl(post.coverImage),
+        signUrl(post.user.avatar)
+      ]);
+
+      return {
         ...post,
-        coverImage: postCovers[index],
-        // ✅ OPTIONAL: Add restricted flag for consistent UI
-        restricted: false, // All posts here are accessible
-      })),
-    };
+        coverImage: signedPostCover,
+        createdAt: post.createdAt.toISOString(),
+        updatedAt: post.updatedAt.toISOString(),
+        user: {
+          ...post.user,
+          avatar: signedAvatar
+        },
+        // ✅ ADDED: Map interaction states to booleans for Snippet
+        isLiked: post.likes.length > 0,
+        isSaved: post.savedBy.length > 0,
+      };
+    }));
 
     return {
       success: true,
-      data: transformedData,
-      message: "Collection fetched successfully",
-      code: "SUCCESS",
+      data: {
+        ...collection,
+        coverImage: collectionCover,
+        createdAt: collection.createdAt.toISOString(),
+        updatedAt: collection.updatedAt.toISOString(),
+        posts: transformedPosts,
+      },
     };
   } catch (error) {
     console.error("Collection fetch failed:", error);
-    return {
-      success: false,
-      error: {
-        message: "Failed to load collection",
-        code: "SERVER_ERROR",
-        details: error instanceof Error ? error.message : undefined,
-      },
-    };
+    return { success: false, error: { message: "Failed to load collection" } };
   }
 }
 //Now for getting all the Collection of Yours
